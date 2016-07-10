@@ -14,4 +14,5 @@ node TestRunner.js
 
 - [x] Gherkin grammar as ADT
 - [ ] Test runner
+- [ ] Plain-text Gherkin parser
 - [ ] Full set of tests from the canonical Gherkin project
