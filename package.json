@@ -17,7 +17,7 @@
 	"private": true,
 	"build": "elm-package install --yes",
 	"scripts": {
-		"pre-test": "elm-make TestRunner.elm --output TestRunner.js --yes",
+		"pretest": "elm-make TestRunner.elm --output TestRunner.js --yes",
 		"test": "node TestRunner.js"
 	},
 	"engine-strict": true,
