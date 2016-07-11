@@ -12,7 +12,9 @@ node TestRunner.js
 
 ## To do
 
-- [x] Gherkin grammar as ADT
+- [x] Basic Gherkin grammar as ADT
 - [ ] Test runner
+- [ ] Support tags
 - [ ] Plain-text Gherkin parser
 - [ ] Full set of tests from the canonical Gherkin project
+- [ ] Pretty print Gherkin ADT
