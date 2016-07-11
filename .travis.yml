@@ -1,0 +1,16 @@
+sudo: false
+language: node_js
+node_js: stable
+before_script:
+- git config --global user.name 'genthaler'
+- git config --global user.email 'genthaler@users.noreply.github.com'
+- git remote set-url origin "https://${GH_TOKEN}@github.com/genthaler/cucumber-elm.git"
+script:
+- npm run test
+cache:
+  directories:
+  - elm-stuff/packages
+env:
+  global:
+  - GH_REF: github.com/genthaler/cucumber-elm.git
+  - GITHUB_REPO: genthaler/cucumber-elm

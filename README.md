@@ -18,3 +18,5 @@ node TestRunner.js
 - [ ] Plain-text Gherkin parser
 - [ ] Full set of tests from the canonical Gherkin project
 - [ ] Pretty print Gherkin ADT
+
+[![Build Status](https://travis-ci.org/genthaler/cucumber-elm.svg?branch=master)](https://travis-ci.org/genthaler/cucumber-elm)

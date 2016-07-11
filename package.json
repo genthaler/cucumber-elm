@@ -1,0 +1,30 @@
+{
+	"name": "cucumber-elm",
+	"description": "An implementation of Cucumber in Elm",
+	"version": "0.0.1",
+	"license": "BSD3",
+	"author": "Gunther Enthaler <genthaler@users.noreply.github.com>",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/genthaler/cucumber-elm"
+	},
+	"bugs": {
+		"url": "https://github.com/genthaler/cucumber-elm/issues"
+	},
+	"keywords": [
+		"elm", "bdd", "cucumber", "gherkin"
+	],
+	"private": true,
+	"build": "elm-make TestRunner.elm --output TestRunner.js --yes",
+	"scripts": {
+		"test": "node TestRunner.js"
+	},
+	"engine-strict": true,
+	"engines": {
+		"node": ">=4.0.0"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"elm": "^0.17.1"
+	}
+}
