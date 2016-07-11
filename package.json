@@ -15,8 +15,9 @@
 		"elm", "bdd", "cucumber", "gherkin"
 	],
 	"private": true,
-	"build": "elm-make TestRunner.elm --output TestRunner.js --yes",
+	"build": "elm-package install --yes",
 	"scripts": {
+		"pre-test": "elm-make TestRunner.elm --output TestRunner.js --yes",
 		"test": "node TestRunner.js"
 	},
 	"engine-strict": true,
