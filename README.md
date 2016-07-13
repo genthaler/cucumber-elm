@@ -22,3 +22,5 @@ node TestRunner.js
 - [ ] Build and test using i18n and test data directly from the canonical Gherkin project [#6](genthaler/cucumber-elm#6)
 
 [![Build Status](https://travis-ci.org/genthaler/cucumber-elm.svg?branch=master)](https://travis-ci.org/genthaler/cucumber-elm)
+
+[![Dependency CI Status](https://dependencyci.com/github/genthaler/cucumber-elm/badge?style=flat)](https://dependencyci.com/github/genthaler/cucumber-elm/badge?style=flat)
