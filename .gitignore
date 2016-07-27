@@ -4,3 +4,5 @@ elm-stuff/
 repl-temp-*
 # generated build files
 TestRunner.js
+# ide support
+.tags*

@@ -1,11 +1,13 @@
 module GherkinParser exposing (..)
 
 import Combine exposing (..)
-import Combine.Char exposing (..)
 import Combine.Infix exposing (..)
-import Combine.Num
 import String
 import Gherkin exposing (..)
+
+
+-- import Combine.Char exposing (..)
+-- import Combine.Num
 
 
 type alias Ctx =
@@ -45,10 +47,11 @@ ws =
     between whitespace whitespace
 
 
-step : Parser Step
-step =
-    Step
-        <$> stepType
+
+-- step : Parser Step
+-- step =
+--     Step
+--         <$> stepType
 
 
 formatError : String -> List String -> Context -> String
@@ -97,29 +100,12 @@ formatError input ms cx =
             ++ String.join expectationSeparator ms
 
 
-parse : String -> Result String (List C)
-parse s =
-    case Combine.parse program (s ++ "\n") of
-        ( Ok es, _ ) ->
-            Ok es
 
-        ( Err ms, cx ) ->
-            Err <| formatError s ms cx
-
-
-test : Result String (List C)
-test =
-    parse """import os\x0D
-\x0D
-a = b = 1\x0D
-\x0D
-def rel(p):\x0D
-  return os.path.join(os.path.dirname(__file__), p)\x0D
-\x0D
-def f(a, b):\x0D
-  return a + b\x0D
-\x0D
-with open(rel('Python.elm')) as f:\x0D
-  for line in f:\x0D
-    print f\x0D
-"""
+-- parse : String -> Result String (List C)
+-- parse s =
+--     case Combine.parse program (s ++ "\n") of
+--         ( Ok es, _ ) ->
+--             Ok es
+--
+--         ( Err ms, cx ) ->
+--             Err <| formatError s ms cx

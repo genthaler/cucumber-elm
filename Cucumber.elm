@@ -2,7 +2,10 @@ module Cucumber exposing (..)
 
 import ElmTest exposing (..)
 import Gherkin exposing (..)
-import Automaton exposing (..)
+
+
+-- import Automaton exposing (..)
+
 import Regex
 
 
