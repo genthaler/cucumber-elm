@@ -62,9 +62,19 @@ iWantTo =
     string "I want to" *> whitespace *> (IWantTo <$> regex "[^#\n]*")
 
 
+docStringQuotes : Parser String
+docStringQuotes =
+    string "\"\"\""
 
--- docString : Parser DocString
--- docString = string "\"\"\"" *> regex
+
+docString : Parser StepArg
+docString =
+    string "\"\"\""
+        *> (DocString <$> regex "(.(?!\"\"\"))*")
+        <* string "\"\"\""
+
+
+
 -- step : Parser Step
 -- step =
 --     Step

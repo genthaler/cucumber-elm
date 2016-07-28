@@ -56,11 +56,14 @@ all =
                 expect result toBe ( Result.Ok (Gherkin.IWantTo iWantTo), Combine.Context "" 17 )
           -- , it "parses DocString correctly"
           --     <| let
-          --         iWantTo =
-          --             "use Elm"
+          --         docStringQuotes =
+          --             "\"\"\""
+          --
+          --         docStringContent =
+          --             "Now is the time"
           --
           --         result =
-          --             Combine.parse GherkinParser.iWantTo ("I want to" ++ " " ++ iWantTo)
+          --             Combine.parse GherkinParser.docString (docStringQuotes ++ docStringContent ++ docStringQuotes)
           --        in
-          --         expect result toBe ( Result.Ok (Gherkin.IWantTo iWantTo), Combine.Context "" 17 )
+          --         expect result toBe ( Result.Ok (Gherkin.DocString docStringContent), Combine.Context "" 17 )
         ]
