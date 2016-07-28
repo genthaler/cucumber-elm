@@ -47,7 +47,24 @@ ws =
     between whitespace whitespace
 
 
+asA : Parser AsA
+asA =
+    string "As a" *> whitespace *> (AsA <$> regex "[^#\n]*")
 
+
+inOrderTo : Parser InOrderTo
+inOrderTo =
+    string "In order to" *> whitespace *> (InOrderTo <$> regex "[^#\n]*")
+
+
+iWantTo : Parser IWantTo
+iWantTo =
+    string "I want to" *> whitespace *> (IWantTo <$> regex "[^#\n]*")
+
+
+
+-- docString : Parser DocString
+-- docString = string "\"\"\"" *> regex
 -- step : Parser Step
 -- step =
 --     Step
