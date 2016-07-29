@@ -69,9 +69,21 @@ docStringQuotes =
 
 docString : Parser StepArg
 docString =
-    string "\"\"\""
-        *> (DocString <$> regex "(.(?!\"\"\"))*")
-        <* string "\"\"\""
+    docStringQuotes
+        -- *> (DocString <$> (regex "(.(?!\"\"\"))*"))
+        *>
+            (DocString <$> (regex ".*"))
+        <*
+            docStringQuotes
+
+
+lookahead : Parser res -> Parser res
+lookahead lookaheadParser =
+    let
+        primitiveArg =
+            app lookaheadParser
+    in
+        primitive primitiveArg
 
 
 
