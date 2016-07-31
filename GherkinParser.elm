@@ -86,7 +86,7 @@ docString =
 
 pipe : Parser String
 pipe =
-    (optional "" spaces) *> (string "|") <* (optional "" spaces)
+    string "|"
 
 
 notPipe : Parser String
@@ -95,7 +95,7 @@ notPipe =
 
 
 dataTableRow =
-    between pipe pipe (sepBy pipe notPipe)
+    (optional "" spaces) *> between pipe pipe (sepBy pipe notPipe) <* (optional "" spaces)
 
 
 dataTableRows =

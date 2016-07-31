@@ -78,6 +78,10 @@ all =
                     Combine.parse GherkinParser.docString (docStringQuotes ++ docStringContent ++ docStringQuotes)
                in
                 expect result toBe ( Result.Ok (Gherkin.DocString docStringContent), Combine.Context "" 21 )
+        , it "parses pipe correctly"
+            <| expect (Combine.parse GherkinParser.pipe " | ") toBe ( Result.Ok "|", Combine.Context "" 3 )
+        , it "parses notPipe correctly"
+            <| expect (Combine.parse GherkinParser.notPipe "asdf | ") toBe ( Result.Ok "asdf", Combine.Context "| " 5 )
         , it "parses DataTable row correctly"
             <| let
                 dataTableContent =
@@ -87,15 +91,15 @@ all =
                     Combine.parse GherkinParser.dataTableRow dataTableContent
                in
                 expect result toBe ( Result.Ok [ "Now", "is", "the", "time" ], Combine.Context "" 21 )
-        , it "parses DataTable correctly"
-            <| let
-                dataTableContent =
-                    """ | Now | is | the | time |
-                    | For | all | good | men |
-                      """
-
-                result =
-                    Combine.parse GherkinParser.dataTable dataTableContent
-               in
-                expect result toBe ( Result.Ok (Gherkin.DataTable [ [ "Now", "is", "the", "time" ], [ "For", "all", "good", "men" ] ]), Combine.Context "" 21 )
+          -- , it "parses DataTable correctly"
+          --     <| let
+          --         dataTableContent =
+          --             """ | Now | is | the | time |
+          --             | For | all | good | men |
+          --               """
+          --
+          --         result =
+          --             Combine.parse GherkinParser.dataTable dataTableContent
+          --        in
+          --         expect result toBe ( Result.Ok (Gherkin.DataTable [ [ "Now", "is", "the", "time" ], [ "For", "all", "good", "men" ] ]), Combine.Context "" 21 )
         ]
