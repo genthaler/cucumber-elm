@@ -27,9 +27,14 @@ dropWhile p xs =
                 xs
 
 
+line : Parser String
+line =
+    regex "[^\n]*" <* string "\n"
+
+
 comment : Parser String
 comment =
-    regex "#[^\n]*"
+    regex "#.*" <* string "\n"
 
 
 spaces : Parser String
@@ -45,6 +50,11 @@ whitespace =
 ws : Parser res -> Parser res
 ws =
     between whitespace whitespace
+
+
+newline : Parser String
+newline =
+    string "\n"
 
 
 asA : Parser AsA
@@ -70,11 +80,32 @@ docStringQuotes =
 docString : Parser StepArg
 docString =
     docStringQuotes
-        -- *> (DocString <$> (regex "(.(?!\"\"\"))*"))
-        *>
-            (DocString <$> (regex ".*"))
-        <*
-            docStringQuotes
+        *> (DocString <$> regex "(([^\"]|\"(?!\"\")))*")
+        <* docStringQuotes
+
+
+pipe : Parser String
+pipe =
+    (optional "" spaces) *> (string "|") <* (optional "" spaces)
+
+
+notPipe : Parser String
+notPipe =
+    regex "[^|]*"
+
+
+dataTableRow =
+    between pipe pipe (sepBy pipe notPipe)
+
+
+dataTableRows =
+    sepBy1 newline dataTableRow
+
+
+dataTable : Parser StepArg
+dataTable =
+    DataTable
+        <$> dataTableRows
 
 
 lookahead : Parser res -> Parser res
