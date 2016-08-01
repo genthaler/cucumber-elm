@@ -10,8 +10,20 @@ import Gherkin exposing (..)
 -- import Combine.Num
 
 
+{-| Some observations: the pattern \s includes \n
+
+-}
 type alias Ctx =
     List Int
+
+
+lookahead : Parser res -> Parser res
+lookahead lookaheadParser =
+    let
+        primitiveArg =
+            app lookaheadParser
+    in
+        primitive primitiveArg
 
 
 dropWhile : (a -> Bool) -> List a -> List a
@@ -39,7 +51,12 @@ comment =
 
 spaces : Parser String
 spaces =
-    regex " *"
+    regex "\\s*"
+
+
+optionalSpaces : Parser String
+optionalSpaces =
+    (optional "" spaces)
 
 
 whitespace : Parser String
@@ -54,7 +71,7 @@ ws =
 
 newline : Parser String
 newline =
-    string "\n"
+    regex "\\s*\\n"
 
 
 asA : Parser AsA
@@ -84,22 +101,31 @@ docString =
         <* docStringQuotes
 
 
-pipe : Parser String
-pipe =
-    string "|"
+{-| This is saying, optional whitespace *> pipe character <* optional whitespace,
+where whitespace here excludes newlines
+-}
+dataTableCellDelimiter : Parser String
+dataTableCellDelimiter =
+    regex "[^\\n\\S|]*\\|[^\\n\\S|]*"
 
 
-notPipe : Parser String
-notPipe =
-    regex "[^|]*"
+{-| This is saying, any text bookended by non-pipe, non-whitespace characters
+-}
+dataTableCellContent : Parser String
+dataTableCellContent =
+    regex "[^|\\s]([^|\\n]*[^|\\s])?"
 
 
+dataTableRow : Parser (List String)
 dataTableRow =
-    (optional "" spaces) *> between pipe pipe (sepBy pipe notPipe) <* (optional "" spaces)
+    dataTableCellDelimiter
+        *> sepBy dataTableCellDelimiter dataTableCellContent
+        <* dataTableCellDelimiter
 
 
+dataTableRows : Parser (List (List String))
 dataTableRows =
-    sepBy1 newline dataTableRow
+    sepBy newline dataTableRow
 
 
 dataTable : Parser StepArg
@@ -108,20 +134,11 @@ dataTable =
         <$> dataTableRows
 
 
-lookahead : Parser res -> Parser res
-lookahead lookaheadParser =
-    let
-        primitiveArg =
-            app lookaheadParser
-    in
-        primitive primitiveArg
-
-
 
 -- step : Parser Step
 -- step =
 --     Step
---         <$> stepType
+--         <$> (string "Given" `or` string "When" `or` string "Then" `or` string "And")
 
 
 formatError : String -> List String -> Context -> String
