@@ -64,6 +64,11 @@ whitespace =
     comment <|> spaces <?> "whitespace"
 
 
+optionalWhitespace : Parser String
+optionalWhitespace =
+    optional "" whitespace
+
+
 ws : Parser res -> Parser res
 ws =
     between whitespace whitespace
@@ -138,7 +143,8 @@ dataTable =
 -- step : Parser Step
 -- step =
 --     Step
---         <$> (string "Given" `or` string "When" `or` string "Then" `or` string "And")
+--         <$> (string "Given" <|> string "When" <|> string "Then" <|> string "And")
+--         <*> (docString <|> dataTable <|> whitespace)
 
 
 formatError : String -> List String -> Context -> String
