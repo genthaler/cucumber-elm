@@ -1,7 +1,6 @@
 module GherkinParserTest exposing (..)
 
 import Combine
-import Combine.Infix exposing (..)
 import Gherkin
 import GherkinParser
 import ElmTestBDDStyle exposing (..)
@@ -97,10 +96,48 @@ all =
             <| let
                 dataTableContent =
                     """ | Now | is | the | time |
-                      | For | all | good | men | """
+                              | For | all | good | men | """
 
                 result =
                     Combine.parse GherkinParser.dataTable dataTableContent
                in
                 expect result toBe ( Result.Ok (Gherkin.DataTable [ [ "Now", "is", "the", "time" ], [ "For", "all", "good", "men" ] ]), Combine.Context "" (String.length dataTableContent) )
+        , it "parses Given Step with DataTable correctly"
+            <| let
+                stepContent =
+                    """Given I am trying to have fun
+                      | Now | is | the | time |
+                      | For | all | good | men | """
+
+                result =
+                    Combine.parse GherkinParser.step stepContent
+               in
+                expect result
+                    toBe
+                    ( Result.Ok
+                        (Gherkin.Given "I am trying to have fun"
+                            <| Gherkin.DataTable
+                                [ [ "Now", "is", "the", "time" ]
+                                , [ "For", "all", "good", "men" ]
+                                ]
+                        )
+                    , Combine.Context "" (String.length stepContent)
+                    )
+          -- , it "parses But Step with NoArg correctly"
+          --     <| let
+          --         stepContent =
+          --             """But I am trying not to be a toolie
+          --             """
+          --
+          --         result =
+          --             Combine.parse GherkinParser.step stepContent
+          --        in
+          --         expect result
+          --             toBe
+          --             ( Result.Ok
+          --                 (Gherkin.But "But I am trying not to be a toolie"
+          --                     <| Gherkin.NoArg
+          --                 )
+          --             , Combine.Context "" (String.length stepContent)
+          --             )
         ]

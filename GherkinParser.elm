@@ -11,7 +11,6 @@ import Gherkin exposing (..)
 
 
 {-| Some observations: the pattern \s includes \n
-
 -}
 type alias Ctx =
     List Int
@@ -139,12 +138,27 @@ dataTable =
         <$> dataTableRows
 
 
+noArg : Parser StepArg
+noArg =
+    NoArg <$ optional "" whitespace
 
--- step : Parser Step
--- step =
---     Step
---         <$> (string "Given" <|> string "When" <|> string "Then" <|> string "And")
---         <*> (docString <|> dataTable <|> whitespace)
+
+stepText : Parser String
+stepText =
+    regex ".*" <* string "\n"
+
+
+step : Parser Step
+step =
+    ((Given <$ string "Given")
+        <|> (When <$ string "When")
+        <|> (Then <$ string "Then")
+        <|> (And <$ string "And")
+        <|> (But <$ string "But")
+    )
+        <* whitespace
+        <*> stepText
+        <*> (docString <|> dataTable <|> noArg)
 
 
 formatError : String -> List String -> Context -> String
