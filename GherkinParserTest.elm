@@ -169,4 +169,44 @@ all =
                         )
                     , Combine.Context "" (String.length scenarioContent)
                     )
+        , it "parses Feature correctly"
+            <| let
+                featureContent =
+                    """Feature: Living life
+                    As a person
+                    In order to get through life
+                    I want to be able to do stuff
+                    Scenario: Have fun
+                      Given I am trying to have fun
+                        | Now | is | the | time |
+                        | For | all | good | men |
+                      But I am trying not to be a toolie
+"""
+
+                result =
+                    Combine.parse GherkinParser.feature featureContent
+               in
+                expect result
+                    toBe
+                    ( Result.Ok
+                        (Feature "Living life"
+                            (AsA "person")
+                            (InOrderTo "get through life")
+                            (IWantTo "be able to do stuff")
+                            NoBackground
+                            [ Scenario "Have fun"
+                                [ (Given "I am trying to have fun"
+                                    <| DataTable
+                                        [ [ "Now", "is", "the", "time" ]
+                                        , [ "For", "all", "good", "men" ]
+                                        ]
+                                  )
+                                , (But "I am trying not to be a toolie"
+                                    <| NoArg
+                                  )
+                                ]
+                            ]
+                        )
+                    , Combine.Context "" (String.length featureContent)
+                    )
         ]

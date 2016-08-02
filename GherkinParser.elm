@@ -57,7 +57,6 @@ newline =
 detailText : Parser String
 detailText =
     regex "[^#\\r\\n]+"
-        <* optional "" spaces
         <* optional "" comment
 
 
@@ -66,7 +65,6 @@ asA =
     string "As a"
         *> spaces
         *> (AsA <$> detailText)
-        <* optional "" spaces
         <* (comment <|> newline)
 
 
@@ -75,7 +73,6 @@ inOrderTo =
     string "In order to"
         *> spaces
         *> (InOrderTo <$> detailText)
-        <* optional "" spaces
         <* (comment <|> newline)
 
 
@@ -84,7 +81,6 @@ iWantTo =
     string "I want to"
         *> spaces
         *> (IWantTo <$> detailText)
-        <* optional "" spaces
         <* (comment <|> newline)
 
 
@@ -149,7 +145,7 @@ step =
         ]
         <* spaces
         <*> detailText
-        <* optional "" (comment <|> newline)
+        <* (comment <|> newline)
         <*> (docString <|> dataTable <|> noArg)
 
 
@@ -167,7 +163,7 @@ scenario =
 
 background : Parser Background
 background =
-    string "Background: "
+    string "Background:"
         *> optional "" spaces
         *> newline
         *> (Background <$> many1 step)
@@ -180,13 +176,22 @@ noBackground =
 
 feature : Parser Feature
 feature =
-    Feature
-        <$> detailText
-        <*> asA
-        <*> inOrderTo
-        <*> iWantTo
-        <*> (background <|> noBackground)
-        <*> (sepBy1 newline scenario)
+    string "Feature:"
+        *> optional "" spaces
+        *> (Feature
+                <$> detailText
+                <* (comment <|> newline)
+                <* optional "" spaces
+                <*> asA
+                <* optional "" spaces
+                <*> inOrderTo
+                <* optional "" spaces
+                <*> iWantTo
+                <* optional "" spaces
+                <*> (background <|> noBackground)
+                <* optional "" spaces
+                <*> (sepBy1 newline scenario)
+           )
 
 
 formatError : String -> List String -> Context -> String
