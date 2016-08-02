@@ -40,7 +40,8 @@ dropWhile p xs =
 
 comment : Parser String
 comment =
-    regex "#.*" <* newline
+    regex "#.*"
+        <* newline
 
 
 spaces : Parser String
@@ -56,21 +57,35 @@ newline =
 detailText : Parser String
 detailText =
     regex "[^#\\r\\n]+"
+        <* optional "" spaces
+        <* optional "" comment
 
 
 asA : Parser AsA
 asA =
-    string "As a" *> spaces *> (AsA <$> detailText) <* optional "" comment <* newline
+    string "As a"
+        *> spaces
+        *> (AsA <$> detailText)
+        <* optional "" spaces
+        <* (comment <|> newline)
 
 
 inOrderTo : Parser InOrderTo
 inOrderTo =
-    string "In order to" *> spaces *> (InOrderTo <$> detailText) <* optional "" comment <* newline
+    string "In order to"
+        *> spaces
+        *> (InOrderTo <$> detailText)
+        <* optional "" spaces
+        <* (comment <|> newline)
 
 
 iWantTo : Parser IWantTo
 iWantTo =
-    string "I want to" *> spaces *> (IWantTo <$> detailText) <* optional "" comment <* newline
+    string "I want to"
+        *> spaces
+        *> (IWantTo <$> detailText)
+        <* optional "" spaces
+        <* (comment <|> newline)
 
 
 docStringQuotes : Parser String
@@ -80,7 +95,8 @@ docStringQuotes =
 
 docString : Parser StepArg
 docString =
-    docStringQuotes
+    optional "" newline
+        *> docStringQuotes
         *> (DocString <$> regex "(([^\"]|\"(?!\"\")))*")
         <* docStringQuotes
 
@@ -114,8 +130,7 @@ dataTableRows =
 
 dataTable : Parser StepArg
 dataTable =
-    DataTable
-        <$> dataTableRows
+    DataTable <$> dataTableRows
 
 
 noArg : Parser StepArg
@@ -134,14 +149,44 @@ step =
         ]
         <* spaces
         <*> detailText
-        <* optional "" comment
-        <* optional "" newline
+        <* optional "" (comment <|> newline)
         <*> (docString <|> dataTable <|> noArg)
 
 
 scenario : Parser Scenario
 scenario =
-    Scenario <$> detailText <*> many1 step
+    Scenario
+        <$> (string "Scenario:"
+                *> spaces
+                *> detailText
+                <* (comment <|> newline)
+            )
+        <* spaces
+        <*> (sepBy1 (newline *> spaces) step)
+
+
+background : Parser Background
+background =
+    string "Background: "
+        *> optional "" spaces
+        *> newline
+        *> (Background <$> many1 step)
+
+
+noBackground : Parser Background
+noBackground =
+    NoBackground <$ succeed ()
+
+
+feature : Parser Feature
+feature =
+    Feature
+        <$> detailText
+        <*> asA
+        <*> inOrderTo
+        <*> iWantTo
+        <*> (background <|> noBackground)
+        <*> (sepBy1 newline scenario)
 
 
 formatError : String -> List String -> Context -> String
@@ -191,6 +236,14 @@ formatError input ms cx =
 
 
 
+-- format : Result
+-- format result =
+--     case result of
+--         ( Ok es, _ ) ->
+--             Ok es
+--
+--         ( Err ms, cx ) ->
+--             Err <| formatError s ms cx
 -- parse : String -> Result String (List C)
 -- parse s =
 --     case Combine.parse program (s ++ "\n") of

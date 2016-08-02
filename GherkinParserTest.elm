@@ -1,7 +1,7 @@
 module GherkinParserTest exposing (..)
 
 import Combine
-import Gherkin
+import Gherkin exposing (..)
 import GherkinParser
 import ElmTestBDDStyle exposing (..)
 import String
@@ -39,7 +39,7 @@ all =
                 result =
                     Combine.parse GherkinParser.asA ("As a" ++ " " ++ asA ++ "\n")
                in
-                expect result toBe ( Result.Ok (Gherkin.AsA asA), Combine.Context "" 15 )
+                expect result toBe ( Result.Ok (AsA asA), Combine.Context "" 15 )
         , it "parses InOrderTo correctly"
             <| let
                 inOrderTo =
@@ -48,7 +48,7 @@ all =
                 result =
                     Combine.parse GherkinParser.inOrderTo ("In order to" ++ " " ++ inOrderTo ++ "\n")
                in
-                expect result toBe ( Result.Ok (Gherkin.InOrderTo inOrderTo), Combine.Context "" 29 )
+                expect result toBe ( Result.Ok (InOrderTo inOrderTo), Combine.Context "" 29 )
         , it "parses IWantTo correctly"
             <| let
                 iWantTo =
@@ -57,7 +57,7 @@ all =
                 result =
                     Combine.parse GherkinParser.iWantTo ("I want to" ++ " " ++ iWantTo ++ "\n")
                in
-                expect result toBe ( Result.Ok (Gherkin.IWantTo iWantTo), Combine.Context "" 18 )
+                expect result toBe ( Result.Ok (IWantTo iWantTo), Combine.Context "" 18 )
         , it "parses DocString \"\"\" quotes correctly"
             <| let
                 docStringQuotes =
@@ -78,7 +78,7 @@ all =
                 result =
                     Combine.parse GherkinParser.docString (docStringQuotes ++ docStringContent ++ docStringQuotes)
                in
-                expect result toBe ( Result.Ok (Gherkin.DocString docStringContent), Combine.Context "" 21 )
+                expect result toBe ( Result.Ok (DocString docStringContent), Combine.Context "" 21 )
         , it "parses dataTableCellDelimiter correctly"
             <| expect (Combine.parse GherkinParser.dataTableCellDelimiter "|") toBe ( Result.Ok "|", Combine.Context "" 1 )
         , it "parses dataTableCellContent correctly"
@@ -101,7 +101,7 @@ all =
                 result =
                     Combine.parse GherkinParser.dataTable dataTableContent
                in
-                expect result toBe ( Result.Ok (Gherkin.DataTable [ [ "Now", "is", "the", "time" ], [ "For", "all", "good", "men" ] ]), Combine.Context "" (String.length dataTableContent) )
+                expect result toBe ( Result.Ok (DataTable [ [ "Now", "is", "the", "time" ], [ "For", "all", "good", "men" ] ]), Combine.Context "" (String.length dataTableContent) )
         , it "parses Given Step with DataTable correctly"
             <| let
                 stepContent =
@@ -115,8 +115,8 @@ all =
                 expect result
                     toBe
                     ( Result.Ok
-                        (Gherkin.Given "I am trying to have fun"
-                            <| Gherkin.DataTable
+                        (Given "I am trying to have fun"
+                            <| DataTable
                                 [ [ "Now", "is", "the", "time" ]
                                 , [ "For", "all", "good", "men" ]
                                 ]
@@ -134,39 +134,39 @@ all =
                 expect result
                     toBe
                     ( Result.Ok
-                        (Gherkin.But "I am trying not to be a toolie"
-                            <| Gherkin.NoArg
+                        (But "I am trying not to be a toolie"
+                            <| NoArg
                         )
                     , Combine.Context "" (String.length stepContent)
                     )
-          -- , it "parses Scenario correctly"
-          --     <| let
-          --         scenarioContent =
-          --             """Scenario: Have fun
-          --             Given I am trying to have fun
-          --               | Now | is | the | time |
-          --               | For | all | good | men |
-          --             But I am trying not to be a toolie
-          --             """
-          --
-          --         result =
-          --             Combine.parse GherkinParser.scenario scenarioContent
-          --        in
-          --         expect result
-          --             toBe
-          --             ( Result.Ok
-          --                 (Gherkin.Scenario "Have fun"
-          --                     [ (Gherkin.Given "I am trying to have fun"
-          --                         <| Gherkin.DataTable
-          --                             [ [ "Now", "is", "the", "time" ]
-          --                             , [ "For", "all", "good", "men" ]
-          --                             ]
-          --                       )
-          --                     , (Gherkin.But "I am trying not to be a toolie"
-          --                         <| Gherkin.NoArg
-          --                       )
-          --                     ]
-          --                 )
-          --             , Combine.Context "" (String.length scenarioContent)
-          --             )
+        , it "parses Scenario correctly"
+            <| let
+                scenarioContent =
+                    """Scenario: Have fun
+                      Given I am trying to have fun
+                        | Now | is | the | time |
+                        | For | all | good | men |
+                      But I am trying not to be a toolie
+"""
+
+                result =
+                    Combine.parse GherkinParser.scenario scenarioContent
+               in
+                expect result
+                    toBe
+                    ( Result.Ok
+                        (Scenario "Have fun"
+                            [ (Given "I am trying to have fun"
+                                <| DataTable
+                                    [ [ "Now", "is", "the", "time" ]
+                                    , [ "For", "all", "good", "men" ]
+                                    ]
+                              )
+                            , (But "I am trying not to be a toolie"
+                                <| NoArg
+                              )
+                            ]
+                        )
+                    , Combine.Context "" (String.length scenarioContent)
+                    )
         ]
