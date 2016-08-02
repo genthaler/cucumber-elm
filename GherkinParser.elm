@@ -38,59 +38,39 @@ dropWhile p xs =
                 xs
 
 
-line : Parser String
-line =
-    regex "[^\n]*" <* string "\n"
-
-
 comment : Parser String
 comment =
-    regex "#.*" <* string "\n"
+    regex "#.*" <* newline
 
 
 spaces : Parser String
 spaces =
-    regex "\\s*"
-
-
-optionalSpaces : Parser String
-optionalSpaces =
-    (optional "" spaces)
-
-
-whitespace : Parser String
-whitespace =
-    comment <|> spaces <?> "whitespace"
-
-
-optionalWhitespace : Parser String
-optionalWhitespace =
-    optional "" whitespace
-
-
-ws : Parser res -> Parser res
-ws =
-    between whitespace whitespace
+    regex "[^\\r\\n\\S]+"
 
 
 newline : Parser String
 newline =
-    regex "\\s*\\n"
+    regex "(\\r\\n|\\r|\\n)"
+
+
+detailText : Parser String
+detailText =
+    regex "[^#\\r\\n]+"
 
 
 asA : Parser AsA
 asA =
-    string "As a" *> whitespace *> (AsA <$> regex "[^#\n]*")
+    string "As a" *> spaces *> (AsA <$> detailText) <* optional "" comment <* newline
 
 
 inOrderTo : Parser InOrderTo
 inOrderTo =
-    string "In order to" *> whitespace *> (InOrderTo <$> regex "[^#\n]*")
+    string "In order to" *> spaces *> (InOrderTo <$> detailText) <* optional "" comment <* newline
 
 
 iWantTo : Parser IWantTo
 iWantTo =
-    string "I want to" *> whitespace *> (IWantTo <$> regex "[^#\n]*")
+    string "I want to" *> spaces *> (IWantTo <$> detailText) <* optional "" comment <* newline
 
 
 docStringQuotes : Parser String
@@ -110,14 +90,14 @@ where whitespace here excludes newlines
 -}
 dataTableCellDelimiter : Parser String
 dataTableCellDelimiter =
-    regex "[^\\n\\S|]*\\|[^\\n\\S|]*"
+    regex "[^\\r\\n\\S|]*\\|[^\\r\\n\\S|]*"
 
 
 {-| This is saying, any text bookended by non-pipe, non-whitespace characters
 -}
 dataTableCellContent : Parser String
 dataTableCellContent =
-    regex "[^|\\s]([^|\\n]*[^|\\s])?"
+    regex "[^|\\s]([^|\\r\\n]*[^|\\s])?"
 
 
 dataTableRow : Parser (List String)
@@ -129,7 +109,7 @@ dataTableRow =
 
 dataTableRows : Parser (List (List String))
 dataTableRows =
-    sepBy newline dataTableRow
+    sepBy1 newline dataTableRow
 
 
 dataTable : Parser StepArg
@@ -140,25 +120,28 @@ dataTable =
 
 noArg : Parser StepArg
 noArg =
-    NoArg <$ optional "" whitespace
-
-
-stepText : Parser String
-stepText =
-    regex ".*" <* string "\n"
+    NoArg <$ succeed ()
 
 
 step : Parser Step
 step =
-    ((Given <$ string "Given")
-        <|> (When <$ string "When")
-        <|> (Then <$ string "Then")
-        <|> (And <$ string "And")
-        <|> (But <$ string "But")
-    )
-        <* whitespace
-        <*> stepText
+    choice
+        [ (Given <$ string "Given")
+        , (When <$ string "When")
+        , (Then <$ string "Then")
+        , (And <$ string "And")
+        , (But <$ string "But")
+        ]
+        <* spaces
+        <*> detailText
+        <* optional "" comment
+        <* optional "" newline
         <*> (docString <|> dataTable <|> noArg)
+
+
+scenario : Parser Scenario
+scenario =
+    Scenario <$> detailText <*> many1 step
 
 
 formatError : String -> List String -> Context -> String

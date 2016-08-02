@@ -28,7 +28,7 @@ all =
                     "  "
 
                 result =
-                    Combine.parse GherkinParser.whitespace whitespace
+                    Combine.parse GherkinParser.spaces whitespace
                in
                 expect result toBe ( Result.Ok whitespace, Combine.Context "" 2 )
         , it "parses AsA correctly"
@@ -37,27 +37,27 @@ all =
                     "super dev"
 
                 result =
-                    Combine.parse GherkinParser.asA ("As a" ++ " " ++ asA)
+                    Combine.parse GherkinParser.asA ("As a" ++ " " ++ asA ++ "\n")
                in
-                expect result toBe ( Result.Ok (Gherkin.AsA asA), Combine.Context "" 14 )
+                expect result toBe ( Result.Ok (Gherkin.AsA asA), Combine.Context "" 15 )
         , it "parses InOrderTo correctly"
             <| let
                 inOrderTo =
                     "write super apps"
 
                 result =
-                    Combine.parse GherkinParser.inOrderTo ("In order to" ++ " " ++ inOrderTo)
+                    Combine.parse GherkinParser.inOrderTo ("In order to" ++ " " ++ inOrderTo ++ "\n")
                in
-                expect result toBe ( Result.Ok (Gherkin.InOrderTo inOrderTo), Combine.Context "" 28 )
+                expect result toBe ( Result.Ok (Gherkin.InOrderTo inOrderTo), Combine.Context "" 29 )
         , it "parses IWantTo correctly"
             <| let
                 iWantTo =
                     "use Elm"
 
                 result =
-                    Combine.parse GherkinParser.iWantTo ("I want to" ++ " " ++ iWantTo)
+                    Combine.parse GherkinParser.iWantTo ("I want to" ++ " " ++ iWantTo ++ "\n")
                in
-                expect result toBe ( Result.Ok (Gherkin.IWantTo iWantTo), Combine.Context "" 17 )
+                expect result toBe ( Result.Ok (Gherkin.IWantTo iWantTo), Combine.Context "" 18 )
         , it "parses DocString \"\"\" quotes correctly"
             <| let
                 docStringQuotes =
@@ -123,21 +123,50 @@ all =
                         )
                     , Combine.Context "" (String.length stepContent)
                     )
-          -- , it "parses But Step with NoArg correctly"
+        , it "parses But Step with NoArg correctly"
+            <| let
+                stepContent =
+                    "But I am trying not to be a toolie\n"
+
+                result =
+                    Combine.parse GherkinParser.step stepContent
+               in
+                expect result
+                    toBe
+                    ( Result.Ok
+                        (Gherkin.But "I am trying not to be a toolie"
+                            <| Gherkin.NoArg
+                        )
+                    , Combine.Context "" (String.length stepContent)
+                    )
+          -- , it "parses Scenario correctly"
           --     <| let
-          --         stepContent =
-          --             """But I am trying not to be a toolie
+          --         scenarioContent =
+          --             """Scenario: Have fun
+          --             Given I am trying to have fun
+          --               | Now | is | the | time |
+          --               | For | all | good | men |
+          --             But I am trying not to be a toolie
           --             """
           --
           --         result =
-          --             Combine.parse GherkinParser.step stepContent
+          --             Combine.parse GherkinParser.scenario scenarioContent
           --        in
           --         expect result
           --             toBe
           --             ( Result.Ok
-          --                 (Gherkin.But "But I am trying not to be a toolie"
-          --                     <| Gherkin.NoArg
+          --                 (Gherkin.Scenario "Have fun"
+          --                     [ (Gherkin.Given "I am trying to have fun"
+          --                         <| Gherkin.DataTable
+          --                             [ [ "Now", "is", "the", "time" ]
+          --                             , [ "For", "all", "good", "men" ]
+          --                             ]
+          --                       )
+          --                     , (Gherkin.But "I am trying not to be a toolie"
+          --                         <| Gherkin.NoArg
+          --                       )
+          --                     ]
           --                 )
-          --             , Combine.Context "" (String.length stepContent)
+          --             , Combine.Context "" (String.length scenarioContent)
           --             )
         ]
