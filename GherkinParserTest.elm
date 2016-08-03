@@ -14,11 +14,8 @@ all =
             <| let
                 comment =
                     "# some comment"
-
-                newline =
-                    "\n"
                in
-                expect (Combine.parse GherkinParser.comment (comment ++ newline))
+                expect (Combine.parse GherkinParser.comment (comment ++ "\n"))
                     toBe
                     ( Result.Ok comment, Combine.Context "" 15 )
         , it "parses spaces correctly"
@@ -28,31 +25,40 @@ all =
                in
                 expect (Combine.parse GherkinParser.spaces whitespace)
                     toBe
-                    ( Result.Ok whitespace, Combine.Context "" 2 )
+                    ( Result.Ok whitespace, Combine.Context "" (String.length whitespace) )
         , it "parses AsA correctly"
             <| let
                 asA =
                     "super dev"
+
+                asADesc =
+                    "As a" ++ " " ++ asA ++ "\n"
                in
-                expect (Combine.parse GherkinParser.asA ("As a" ++ " " ++ asA ++ "\n"))
+                expect (Combine.parse GherkinParser.asA (asADesc))
                     toBe
-                    ( Result.Ok (AsA asA), Combine.Context "" 15 )
+                    ( Result.Ok (AsA asA), Combine.Context "" (String.length asADesc) )
         , it "parses InOrderTo correctly"
             <| let
                 inOrderTo =
                     "write super apps"
+
+                inOrderToDesc =
+                    "In order to" ++ " " ++ inOrderTo ++ "\n"
                in
-                expect (Combine.parse GherkinParser.inOrderTo ("In order to" ++ " " ++ inOrderTo ++ "\n"))
+                expect (Combine.parse GherkinParser.inOrderTo (inOrderToDesc))
                     toBe
-                    ( Result.Ok (InOrderTo inOrderTo), Combine.Context "" 29 )
+                    ( Result.Ok (InOrderTo inOrderTo), Combine.Context "" (String.length inOrderToDesc) )
         , it "parses IWantTo correctly"
             <| let
                 iWantTo =
                     "use Elm"
+
+                iWantToDesc =
+                    "I want to" ++ " " ++ iWantTo ++ "\n"
                in
-                expect (Combine.parse GherkinParser.iWantTo ("I want to" ++ " " ++ iWantTo ++ "\n"))
+                expect (Combine.parse GherkinParser.iWantTo (iWantToDesc))
                     toBe
-                    ( Result.Ok (IWantTo iWantTo), Combine.Context "" 18 )
+                    ( Result.Ok (IWantTo iWantTo), Combine.Context "" (String.length iWantToDesc) )
         , it "parses DocString \"\"\" quotes correctly"
             <| let
                 docStringQuotes =
@@ -68,11 +74,14 @@ all =
 
                 docStringContent =
                     "Now is the time"
+
+                docString =
+                    docStringQuotes ++ docStringContent ++ docStringQuotes
                in
-                expect (Combine.parse GherkinParser.docString (docStringQuotes ++ docStringContent ++ docStringQuotes))
+                expect (Combine.parse GherkinParser.docString (docString))
                     toBe
                     ( Result.Ok (DocString docStringContent)
-                    , Combine.Context "" 21
+                    , Combine.Context "" (String.length docString)
                     )
         , it "parses dataTableCellDelimiter correctly"
             <| expect (Combine.parse GherkinParser.dataTableCellDelimiter "|")
