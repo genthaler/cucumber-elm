@@ -240,20 +240,11 @@ formatError input ms cx =
             ++ String.join expectationSeparator ms
 
 
+parse : Parser res -> String -> Result String res
+parse parser s =
+    case Combine.parse parser (s ++ "\n") of
+        ( Ok es, _ ) ->
+            Ok es
 
--- format : Result
--- format result =
---     case result of
---         ( Ok es, _ ) ->
---             Ok es
---
---         ( Err ms, cx ) ->
---             Err <| formatError s ms cx
--- parse : String -> Result String (List C)
--- parse s =
---     case Combine.parse program (s ++ "\n") of
---         ( Ok es, _ ) ->
---             Ok es
---
---         ( Err ms, cx ) ->
---             Err <| formatError s ms cx
+        ( Err ms, cx ) ->
+            Err <| formatError s ms cx

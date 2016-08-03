@@ -1,10 +1,8 @@
 module GherkinParserTest exposing (..)
 
-import Combine
 import Gherkin exposing (..)
 import GherkinParser
 import ElmTestBDDStyle exposing (..)
-import String
 
 
 all : Test
@@ -15,17 +13,17 @@ all =
                 comment =
                     "# some comment"
                in
-                expect (Combine.parse GherkinParser.comment (comment ++ "\n"))
+                expect (GherkinParser.parse GherkinParser.comment comment)
                     toBe
-                    ( Result.Ok comment, Combine.Context "" 15 )
+                    <| Result.Ok comment
         , it "parses spaces correctly"
             <| let
                 whitespace =
                     "  "
                in
-                expect (Combine.parse GherkinParser.spaces whitespace)
+                expect (GherkinParser.parse GherkinParser.spaces whitespace)
                     toBe
-                    ( Result.Ok whitespace, Combine.Context "" (String.length whitespace) )
+                    <| Result.Ok whitespace
         , it "parses AsA correctly"
             <| let
                 asA =
@@ -34,9 +32,9 @@ all =
                 asADesc =
                     "As a" ++ " " ++ asA ++ "\n"
                in
-                expect (Combine.parse GherkinParser.asA (asADesc))
+                expect (GherkinParser.parse GherkinParser.asA asADesc)
                     toBe
-                    ( Result.Ok (AsA asA), Combine.Context "" (String.length asADesc) )
+                    <| Result.Ok (AsA asA)
         , it "parses InOrderTo correctly"
             <| let
                 inOrderTo =
@@ -45,9 +43,9 @@ all =
                 inOrderToDesc =
                     "In order to" ++ " " ++ inOrderTo ++ "\n"
                in
-                expect (Combine.parse GherkinParser.inOrderTo (inOrderToDesc))
+                expect (GherkinParser.parse GherkinParser.inOrderTo inOrderToDesc)
                     toBe
-                    ( Result.Ok (InOrderTo inOrderTo), Combine.Context "" (String.length inOrderToDesc) )
+                    <| Result.Ok (InOrderTo inOrderTo)
         , it "parses IWantTo correctly"
             <| let
                 iWantTo =
@@ -56,17 +54,17 @@ all =
                 iWantToDesc =
                     "I want to" ++ " " ++ iWantTo ++ "\n"
                in
-                expect (Combine.parse GherkinParser.iWantTo (iWantToDesc))
+                expect (GherkinParser.parse GherkinParser.iWantTo iWantToDesc)
                     toBe
-                    ( Result.Ok (IWantTo iWantTo), Combine.Context "" (String.length iWantToDesc) )
+                    <| Result.Ok (IWantTo iWantTo)
         , it "parses DocString \"\"\" quotes correctly"
             <| let
                 docStringQuotes =
                     "\"\"\""
                in
-                expect (Combine.parse GherkinParser.docStringQuotes docStringQuotes)
+                expect (GherkinParser.parse GherkinParser.docStringQuotes docStringQuotes)
                     toBe
-                    ( Result.Ok docStringQuotes, Combine.Context "" (String.length docStringQuotes) )
+                    <| Result.Ok docStringQuotes
         , it "parses DocString correctly"
             <| let
                 docStringQuotes =
@@ -78,45 +76,39 @@ all =
                 docString =
                     docStringQuotes ++ docStringContent ++ docStringQuotes
                in
-                expect (Combine.parse GherkinParser.docString (docString))
+                expect (GherkinParser.parse GherkinParser.docString docString)
                     toBe
-                    ( Result.Ok (DocString docStringContent)
-                    , Combine.Context "" (String.length docString)
-                    )
+                    <| Result.Ok
+                    <| DocString docStringContent
         , it "parses dataTableCellDelimiter correctly"
-            <| expect (Combine.parse GherkinParser.dataTableCellDelimiter "|")
+            <| expect (GherkinParser.parse GherkinParser.dataTableCellDelimiter "|")
                 toBe
-                ( Result.Ok "|", Combine.Context "" 1 )
+            <| Result.Ok "|"
         , it "parses dataTableCellContent correctly"
-            <| expect (Combine.parse GherkinParser.dataTableCellContent "asdf | ")
+            <| expect (GherkinParser.parse GherkinParser.dataTableCellContent "asdf | ")
                 toBe
-                ( Result.Ok "asdf", Combine.Context " | " 4 )
+            <| Result.Ok "asdf"
         , it "parses DataTable row correctly"
             <| let
                 dataTableContent =
                     "| Now | is | the | time | "
                in
-                expect (Combine.parse GherkinParser.dataTableRow dataTableContent)
+                expect (GherkinParser.parse GherkinParser.dataTableRow dataTableContent)
                     toBe
-                    ( Result.Ok [ "Now", "is", "the", "time" ]
-                    , Combine.Context "" (String.length dataTableContent)
-                    )
+                    <| Result.Ok [ "Now", "is", "the", "time" ]
         , it "parses DataTable correctly"
             <| let
                 dataTableContent =
                     """ | Now | is | the | time |
                               | For | all | good | men | """
                in
-                expect (Combine.parse GherkinParser.dataTable dataTableContent)
+                expect (GherkinParser.parse GherkinParser.dataTable dataTableContent)
                     toBe
-                    ( Result.Ok
-                        (DataTable
-                            [ [ "Now", "is", "the", "time" ]
-                            , [ "For", "all", "good", "men" ]
-                            ]
-                        )
-                    , Combine.Context "" (String.length dataTableContent)
-                    )
+                    <| Result.Ok
+                    <| DataTable
+                        [ [ "Now", "is", "the", "time" ]
+                        , [ "For", "all", "good", "men" ]
+                        ]
         , it "parses Given Step with DataTable correctly"
             <| let
                 stepContent =
@@ -124,30 +116,23 @@ all =
                       | Now | is | the | time |
                       | For | all | good | men | """
                in
-                expect (Combine.parse GherkinParser.step stepContent)
+                expect (GherkinParser.parse GherkinParser.step stepContent)
                     toBe
-                    ( Result.Ok
-                        (Given "I am trying to have fun"
-                            <| DataTable
-                                [ [ "Now", "is", "the", "time" ]
-                                , [ "For", "all", "good", "men" ]
-                                ]
-                        )
-                    , Combine.Context "" (String.length stepContent)
-                    )
+                    <| Result.Ok
+                    <| Given "I am trying to have fun"
+                    <| DataTable
+                        [ [ "Now", "is", "the", "time" ]
+                        , [ "For", "all", "good", "men" ]
+                        ]
         , it "parses But Step with NoArg correctly"
             <| let
                 stepContent =
-                    "But I am trying not to be a toolie\n"
+                    "But I am trying not to be a fool\n"
                in
-                expect (Combine.parse GherkinParser.step stepContent)
+                expect (GherkinParser.parse GherkinParser.step stepContent)
                     toBe
-                    ( Result.Ok
-                        (But "I am trying not to be a toolie"
-                            <| NoArg
-                        )
-                    , Combine.Context "" (String.length stepContent)
-                    )
+                    <| Result.Ok
+                    <| But "I am trying not to be a fool" NoArg
         , it "parses Scenario correctly"
             <| let
                 scenarioContent =
@@ -155,26 +140,21 @@ all =
                       Given I am trying to have fun
                         | Now | is | the | time |
                         | For | all | good | men |
-                      But I am trying not to be a toolie
-"""
+                      But I am trying not to be a fool
+                    """
                in
-                expect (Combine.parse GherkinParser.scenario scenarioContent)
+                expect (GherkinParser.parse GherkinParser.scenario scenarioContent)
                     toBe
-                    ( Result.Ok
-                        (Scenario "Have fun"
-                            [ (Given "I am trying to have fun"
-                                <| DataTable
-                                    [ [ "Now", "is", "the", "time" ]
-                                    , [ "For", "all", "good", "men" ]
-                                    ]
-                              )
-                            , (But "I am trying not to be a toolie"
-                                <| NoArg
-                              )
-                            ]
-                        )
-                    , Combine.Context "" (String.length scenarioContent)
-                    )
+                    <| Result.Ok
+                    <| Scenario "Have fun"
+                        [ Given "I am trying to have fun"
+                            <| DataTable
+                                [ [ "Now", "is", "the", "time" ]
+                                , [ "For", "all", "good", "men" ]
+                                ]
+                        , But "I am trying not to be a fool"
+                            NoArg
+                        ]
         , it "parses Feature correctly"
             <| let
                 featureContent =
@@ -186,30 +166,24 @@ all =
                       Given I am trying to have fun
                         | Now | is | the | time |
                         | For | all | good | men |
-                      But I am trying not to be a toolie
-"""
+                      But I am trying not to be a fool
+                    """
                in
-                expect (Combine.parse GherkinParser.feature featureContent)
+                expect (GherkinParser.parse GherkinParser.feature featureContent)
                     toBe
-                    ( Result.Ok
-                        (Feature "Living life"
-                            (AsA "person")
-                            (InOrderTo "get through life")
-                            (IWantTo "be able to do stuff")
-                            NoBackground
-                            [ Scenario "Have fun"
-                                [ (Given "I am trying to have fun"
-                                    <| DataTable
-                                        [ [ "Now", "is", "the", "time" ]
-                                        , [ "For", "all", "good", "men" ]
-                                        ]
-                                  )
-                                , (But "I am trying not to be a toolie"
-                                    <| NoArg
-                                  )
-                                ]
+                    <| Result.Ok
+                    <| Feature "Living life"
+                        (AsA "person")
+                        (InOrderTo "get through life")
+                        (IWantTo "be able to do stuff")
+                        NoBackground
+                        [ Scenario "Have fun"
+                            [ Given "I am trying to have fun"
+                                <| DataTable
+                                    [ [ "Now", "is", "the", "time" ]
+                                    , [ "For", "all", "good", "men" ]
+                                    ]
+                            , But "I am trying not to be a fool" NoArg
                             ]
-                        )
-                    , Combine.Context "" (String.length featureContent)
-                    )
+                        ]
         ]
