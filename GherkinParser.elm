@@ -6,36 +6,13 @@ import String
 import Gherkin exposing (..)
 
 
--- import Combine.Char exposing (..)
--- import Combine.Num
-
-
-{-| Some observations: the pattern \s includes \n
--}
-type alias Ctx =
-    List Int
-
-
-lookahead : Parser res -> Parser res
-lookahead lookaheadParser =
-    let
-        primitiveArg =
-            app lookaheadParser
-    in
-        primitive primitiveArg
-
-
-dropWhile : (a -> Bool) -> List a -> List a
-dropWhile p xs =
-    case xs of
-        [] ->
-            []
-
-        x :: xs' ->
-            if p x then
-                dropWhile p xs'
-            else
-                xs
+-- lookahead : Parser res -> Parser res
+-- lookahead lookaheadParser =
+--     let
+--         primitiveArg =
+--             app lookaheadParser
+--     in
+--         primitive primitiveArg
 
 
 comment : Parser String
