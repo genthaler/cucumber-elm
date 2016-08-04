@@ -36,21 +36,20 @@ stepArgHtml stepArg =
 
 
 dataTableHtml : List (List String) -> Html msg
-dataTableHtml content =
-    let
-        makeTexts : List String -> List (Html msg)
-        makeTexts cols =
-            List.map text cols
-
-        makeTds : List (Html msg) -> List (Html msg)
-        makeTds cols =
-            List.map (td []) (List.repeat 1) cols
-
-        makeRows : List (List (Html msg)) -> List (Html msg)
-        makeRows tds =
-            List.map (tr []) tds
-    in
-        table [] makeRows (List.map makeRows (List.map makeTds (List.map make)))
+dataTableHtml =
+    table []
+        << List.map
+            (\row ->
+                (tr []
+                    <| List.map
+                        (\col ->
+                            td []
+                                <| List.repeat 1
+                                    (text col)
+                        )
+                        row
+                )
+            )
 
 
 stepHtml : Step -> Html msg
@@ -75,103 +74,35 @@ stepHtml theStep =
                 text ""
 
 
+scenarioHtml : Scenario -> Html msg
+scenarioHtml scenario =
+    case scenario of
+        Scenario detailText steps ->
+            span []
+                <| (text "Scenario")
+                :: (text detailText)
+                :: List.map stepHtml steps
 
--- scenario : Parser Scenario
--- scenario =
---     Scenario
---         <$> (string "Scenario:"
---                 *> spaces
---                 *> detailText
---                 <* (comment <|> newline)
---             )
---         <* spaces
---         <*> (sepBy1 (newline *> spaces) step)
---
---
--- background : Parser Background
--- background =
---     string "Background:"
---         *> optional "" spaces
---         *> newline
---         *> (Background <$> many1 step)
---
---
--- noBackground : Parser Background
--- noBackground =
---     NoBackground <$ succeed ()
---
---
--- feature : Parser Feature
--- feature =
---     string "Feature:"
---         *> optional "" spaces
---         *> (Feature
---                 <$> detailText
---                 <* (comment <|> newline)
---                 <* optional "" spaces
---                 <*> asA
---                 <* optional "" spaces
---                 <*> inOrderTo
---                 <* optional "" spaces
---                 <*> iWantTo
---                 <* optional "" spaces
---                 <*> (background <|> noBackground)
---                 <* optional "" spaces
---                 <*> (sepBy1 newline scenario)
---            )
---
---
--- formatError : String -> List String -> Context -> String
--- formatError input ms cx =
---     let
---         lines =
---             String.lines input
---
---         lineCount =
---             List.length lines
---
---         ( line, lineNumber, lineOffset, _ ) =
---             List.foldl
---                 (\line ( line', n, o, pos ) ->
---                     if pos < 0 then
---                         ( line', n, o, pos )
---                     else
---                         ( line, n + 1, pos, pos - 1 - String.length line' )
---                 )
---                 ( "", 0, 0, cx.position )
---                 lines
---
---         separator =
---             "|> "
---
---         expectationSeparator =
---             "\n  * "
---
---         lineNumberOffset =
---             floor (logBase 10 lineNumber) + 1
---
---         separatorOffset =
---             String.length separator
---
---         padding =
---             lineNumberOffset + separatorOffset + lineOffset + 1
---     in
---         "Parse error around line:\n\n"
---             ++ (toString lineNumber)
---             ++ separator
---             ++ line
---             ++ "\n"
---             ++ String.padLeft padding ' ' "^"
---             ++ "\nI expected one of the following:\n"
---             ++ expectationSeparator
---             ++ String.join expectationSeparator ms
---
---
--- parse : Parser res -> String -> Result String res
--- parse parser s =
---     case Combine.parse parser (s ++ "\n") of
---         ( Ok es, _ ) ->
---             Ok es
---
---         ( Err ms, cx ) ->
---             Err <| formatError s ms cx
+        _ ->
+            text ""
+
+
+backgroundHtml : Background -> Html msg
+backgroundHtml background =
+    case background of
+        Background steps ->
+            span []
+                <| (text "Background")
+                :: List.map stepHtml steps
+
+        NoBackground ->
+            text ""
+
+
+featureHtml : Feature -> Html msg
+featureHtml feature =
+    case feature of
+        Feature detailText asA inOrderTo iWantTo background scenarios ->
+            span []
+                <| [ text detailText, asAHtml asA, inOrderToHtml inOrderTo, iWantToHtml iWantTo, backgroundHtml background ]
+                ++ List.map scenarioHtml scenarios
