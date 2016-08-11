@@ -16,9 +16,9 @@ install:
   - node --version
   - npm --version
   - npm install -g elm@%ELM_VERSION%
-  - npm run deploy
+  - npm run test
 
-test_script:
-  - npm test
+# test_script:
+#   - npm test
 
 build: off
