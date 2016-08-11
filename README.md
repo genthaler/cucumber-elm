@@ -21,7 +21,9 @@ node TestRunner.js
 - [ ] Pretty print Gherkin ADT [#5](genthaler/cucumber-elm#5)
 - [ ] Build and test using i18n and test data directly from the canonical Gherkin project [#6](genthaler/cucumber-elm#6)
 
-[![Build Status](https://travis-ci.org/genthaler/cucumber-elm.svg?branch=master)](https://travis-ci.org/genthaler/cucumber-elm)
+[![Travis-CI build Status](https://travis-ci.org/genthaler/cucumber-elm.svg?branch=master)](https://travis-ci.org/genthaler/cucumber-elm)
+
+[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/tn79mfap9v0fg2qb/branch/master?svg=true)](https://ci.appveyor.com/project/genthaler/cucumber-elm/branch/master)
 
 [![Dependency CI Status](https://dependencyci.com/github/genthaler/cucumber-elm/badge?style=flat)](https://dependencyci.com/github/genthaler/cucumber-elm/badge?style=flat)
 
