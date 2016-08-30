@@ -3,14 +3,15 @@
 
 module Main exposing (..)
 
--- import Task exposing (Task)
 -- import Html.Attributes exposing (width, height, style)
 -- import Gherkin
 -- import GherkinHtml
 -- import GherkinParser
 
+import Task exposing (Task)
 import Html exposing (Html, text, div, textarea)
 import Html.App as Html
+import Http
 
 
 -- MODEL
@@ -24,11 +25,12 @@ type alias Model =
 
 
 type Msg
-    = Load
+    = Load String
     | Format
     | Run
-    | ResourceError String
-    | ResourceLoaded String
+    | FeatureError Http.Error
+    | FeatureLoaded String
+    | FeaturesLoaded (List String)
 
 
 
@@ -41,7 +43,7 @@ init =
     , features = Nothing
     , errors = Nothing
     }
-        ! []
+        ! [ Task.perform FeatureError FeatureLoaded (Http.getString ("/CucumberFiddle.feature")) ]
 
 
 
@@ -51,8 +53,8 @@ init =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Load ->
-            model ! []
+        Load feature ->
+            model ! [ Task.perform FeatureError FeatureLoaded (Http.getString ("/" ++ feature)) ]
 
         Format ->
             model ! []
@@ -60,15 +62,32 @@ update msg model =
         Run ->
             model ! []
 
-        ResourceError err ->
+        FeatureError error ->
             { model
-                | errors = Just (err :: Maybe.withDefault [] model.errors)
+                | errors = Just (displayError error :: Maybe.withDefault [] model.errors)
                 , feature = Nothing
             }
                 ! []
 
-        ResourceLoaded feature ->
+        FeatureLoaded feature ->
             { model | feature = Just feature } ! []
+
+        FeaturesLoaded features ->
+            { model | features = Just features } ! []
+
+
+
+-- VIEW
+
+
+displayError : Http.Error -> String
+displayError _ =
+    ""
+
+
+view : Model -> Html Msg
+view model =
+    div [] [ div [] [ textarea [] [] ] ]
 
 
 
@@ -83,12 +102,3 @@ main =
         , subscriptions = always Sub.none
         , update = update
         }
-
-
-
--- VIEW
-
-
-view : Model -> Html Msg
-view model =
-    div [] [ div [] [ textarea [] [] ] ]
