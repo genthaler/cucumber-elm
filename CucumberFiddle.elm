@@ -10,8 +10,13 @@ module Main exposing (..)
 
 import Task exposing (Task)
 import Html exposing (Html, text, div, textarea)
-import Html.App as Html
+
+
+-- import Html.App as Html
+
+import Html.Attributes exposing (value)
 import Http
+import TimeTravel.Html.App as TimeTravel
 
 
 -- MODEL
@@ -87,7 +92,7 @@ displayError _ =
 
 view : Model -> Html Msg
 view model =
-    div [] [ div [] [ textarea [] [] ] ]
+    div [] [ div [] [ textarea [ value (Maybe.withDefault "waiting..." model.feature) ] [] ] ]
 
 
 
@@ -96,9 +101,10 @@ view model =
 
 main : Program Never
 main =
-    Html.program
+    -- Html.program
+    TimeTravel.program
         { init = init
         , view = view
-        , subscriptions = always Sub.none
         , update = update
+        , subscriptions = always Sub.none
         }
