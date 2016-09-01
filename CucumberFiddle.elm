@@ -39,7 +39,12 @@ type Msg
 
 
 
--- INIT
+-- UPDATE
+
+
+get : String -> Cmd Msg
+get feature =
+    Task.perform FeatureError FeatureLoaded (Http.getString ("/" ++ feature))
 
 
 init : ( Model, Cmd Msg )
@@ -48,18 +53,14 @@ init =
     , features = Nothing
     , errors = Nothing
     }
-        ! [ Task.perform FeatureError FeatureLoaded (Http.getString ("/CucumberFiddle.feature")) ]
-
-
-
--- UPDATE
+        ! [ get "CucumberFiddle.feature" ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Load feature ->
-            model ! [ Task.perform FeatureError FeatureLoaded (Http.getString ("/" ++ feature)) ]
+            model ! [ get feature ]
 
         Format ->
             model ! []
