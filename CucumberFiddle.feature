@@ -6,6 +6,16 @@ Feature: Cucumber Fiddle application
     Background:
         Given I have loaded the CucumberFiddle application
 
+    Scenario: Format a feature
+        Given I have entered a feature in the feature editor
+        When I format the feature
+        Then I see the formatted feature
+
+    Scenario: Run a feature
+        Given I have entered a feature in the feature editor
+        When I run the feature
+        Then I see any errors interleaved in the output
+
     Scenario: Show list of available features on the server
         Then I can see the list of available features
 
