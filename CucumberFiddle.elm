@@ -3,18 +3,18 @@
 
 module Main exposing (..)
 
--- import Html.Attributes exposing (width, height, style)
 -- import Gherkin
 -- import GherkinHtml
 -- import GherkinParser
 
 import Task exposing (Task)
-import Html exposing (Html, text, div, textarea)
+import Html exposing (Html, text, div, textarea, button)
 
 
 -- import Html.App as Html
 
-import Html.Attributes exposing (value)
+import Html.Attributes exposing (value, name)
+import Html.Events exposing (onClick, onInput)
 import Http
 import TimeTravel.Html.App as TimeTravel
 
@@ -25,12 +25,14 @@ import TimeTravel.Html.App as TimeTravel
 type alias Model =
     { feature : Maybe String
     , features : Maybe (List String)
+    , pretty : Maybe String
     , errors : Maybe (List String)
     }
 
 
 type Msg
     = Load String
+    | Input String
     | Format
     | Run
     | FeatureError Http.Error
@@ -51,6 +53,7 @@ init : ( Model, Cmd Msg )
 init =
     { feature = Nothing
     , features = Nothing
+    , pretty = Nothing
     , errors = Nothing
     }
         ! [ get "CucumberFiddle.feature" ]
@@ -61,6 +64,9 @@ update msg model =
     case msg of
         Load feature ->
             model ! [ get feature ]
+
+        Input feature ->
+            { model | feature = Just feature } ! []
 
         Format ->
             model ! []
@@ -93,7 +99,20 @@ displayError _ =
 
 view : Model -> Html Msg
 view model =
-    div [] [ div [] [ textarea [ value (Maybe.withDefault "waiting..." model.feature) ] [] ] ]
+    div []
+        [ textarea
+            [ value (Maybe.withDefault "waiting..." model.feature)
+            , onInput Input
+            ]
+            []
+        , textarea
+            [ value (Maybe.withDefault "waiting..." model.pretty)
+            , onInput Input
+            ]
+            []
+        , button [ onClick Format ] [ text "Format" ]
+        , button [ onClick Run ] [ text "Run" ]
+        ]
 
 
 
