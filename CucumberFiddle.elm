@@ -3,16 +3,13 @@
 
 module Main exposing (..)
 
--- import Gherkin
--- import GherkinHtml
--- import GherkinParser
-
-import Task exposing (Task)
-import Html exposing (Html, text, div, textarea, button)
-
-
 -- import Html.App as Html
 
+import Gherkin
+import GherkinHtml
+import GherkinParser
+import Task exposing (Task)
+import Html exposing (Html, text, div, textarea, button, ul, li)
 import Html.Attributes exposing (value, name)
 import Html.Events exposing (onClick, onInput)
 import Http
@@ -23,10 +20,9 @@ import TimeTravel.Html.App as TimeTravel
 
 
 type alias Model =
-    { feature : Maybe String
-    , features : Maybe (List String)
-    , pretty : Maybe String
-    , errors : Maybe (List String)
+    { source : Maybe String
+    , feature : Maybe Gherkin.Feature
+    , errors : List String
     }
 
 
@@ -37,7 +33,6 @@ type Msg
     | Run
     | FeatureError Http.Error
     | FeatureLoaded String
-    | FeaturesLoaded (List String)
 
 
 
@@ -45,16 +40,15 @@ type Msg
 
 
 get : String -> Cmd Msg
-get feature =
-    Task.perform FeatureError FeatureLoaded (Http.getString ("/" ++ feature))
+get source =
+    Task.perform FeatureError FeatureLoaded (Http.getString ("/" ++ source))
 
 
 init : ( Model, Cmd Msg )
 init =
-    { feature = Nothing
-    , features = Nothing
-    , pretty = Nothing
-    , errors = Nothing
+    { source = Nothing
+    , feature = Nothing
+    , errors = []
     }
         ! [ get "CucumberFiddle.feature" ]
 
@@ -62,30 +56,42 @@ init =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Load feature ->
-            model ! [ get feature ]
+        Load source ->
+            model ! [ get source ]
 
-        Input feature ->
-            { model | feature = Just feature } ! []
+        Input source ->
+            { model | source = Just source } ! []
 
         Format ->
-            model ! []
+            case model.source of
+                Nothing ->
+                    model ! []
+
+                Just feature ->
+                    case GherkinParser.parse GherkinParser.feature feature of
+                        Err error ->
+                            { model
+                                | errors = error :: model.errors
+                                , feature = Nothing
+                            }
+                                ! []
+
+                        Ok feature ->
+                            { model | feature = Just feature } ! []
 
         Run ->
             model ! []
 
         FeatureError error ->
             { model
-                | errors = Just (displayError error :: Maybe.withDefault [] model.errors)
+                | errors = displayError error :: model.errors
+                , source = Nothing
                 , feature = Nothing
             }
                 ! []
 
-        FeatureLoaded feature ->
-            { model | feature = Just feature } ! []
-
-        FeaturesLoaded features ->
-            { model | features = Just features } ! []
+        FeatureLoaded source ->
+            { model | source = Just source } ! []
 
 
 
@@ -93,23 +99,25 @@ update msg model =
 
 
 displayError : Http.Error -> String
-displayError _ =
-    ""
+displayError err =
+    toString err
 
 
 view : Model -> Html Msg
 view model =
     div []
         [ textarea
-            [ value (Maybe.withDefault "waiting..." model.feature)
+            [ value (Maybe.withDefault "waiting..." model.source)
             , onInput Input
             ]
             []
-        , textarea
-            [ value (Maybe.withDefault "waiting..." model.pretty)
-            , onInput Input
-            ]
-            []
+        , case model.feature of
+            Nothing ->
+                text "waiting..."
+
+            Just feature ->
+                GherkinHtml.featureHtml feature
+        , ul [] (List.map (\error -> li [] [ text error ]) model.errors)
         , button [ onClick Format ] [ text "Format" ]
         , button [ onClick Run ] [ text "Run" ]
         ]
