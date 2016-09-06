@@ -1,41 +1,55 @@
-module GherkinHtml exposing (..)
+module GherkinMd exposing (..)
 
 import Gherkin exposing (..)
+import String
 
 
--- import String
+newline : String
+newline =
+    "\n"
 
 
-asAHtml : AsA -> String
-asAHtml (AsA detailText) =
-    "As a " ++ detailText ++ "\n\n"
+asAMd : AsA -> String
+asAMd (AsA detailText) =
+    "As a "
+        ++ detailText
+        ++ newline
 
 
-inOrderToHtml : InOrderTo -> String
-inOrderToHtml (InOrderTo detailText) =
-    "In order to " ++ detailText ++ "\n\n"
+inOrderToMd : InOrderTo -> String
+inOrderToMd (InOrderTo detailText) =
+    "In order to "
+        ++ detailText
+        ++ newline
 
 
-iWantToHtml : IWantTo -> String
-iWantToHtml (IWantTo detailText) =
-    "I want to " ++ detailText ++ "\n\n"
+iWantToMd : IWantTo -> String
+iWantToMd (IWantTo detailText) =
+    "I want to "
+        ++ detailText
+        ++ newline
 
 
-stepArgHtml : StepArg -> String
-stepArgHtml stepArg =
+stepArgMd : StepArg -> String
+stepArgMd stepArg =
     case stepArg of
         DocString docStringContent ->
-            "\"\"\"\n" ++ docStringContent + "\"\"\"\n"
+            "```"
+                ++ newline
+                ++ docStringContent
+                ++ newline
+                ++ "```"
+                ++ newline
 
         DataTable dataTableContent ->
-            dataTableHtml dataTableContent
+            dataTableMd dataTableContent
 
         NoArg ->
             ""
 
 
-dataTableHtml : List (List String) -> String
-dataTableHtml =
+dataTableMd : List (List String) -> String
+dataTableMd table =
     ""
 
 
@@ -55,57 +69,67 @@ dataTableHtml =
 --         )
 
 
-stepHtml : Step -> String
-stepHtml theStep =
+stepMd : Step -> String
+stepMd theStep =
     let
-        stepArgHtml' name detail theStepArg =
-            p []
-                ([ text "Given", text detail ]
-                    ++ case (stepArgHtml theStepArg) of
-                        Just element ->
-                            [ element ]
-
-                        Nothing ->
-                            []
-                )
+        stepArgMd' name detail theStepArg =
+            name
+                ++ detail
+                ++ case (stepArgMd theStepArg) of
+                    element ->
+                        element
     in
         case theStep of
             Given detail theStepArg ->
-                stepArgHtml' "Given" detail theStepArg
+                stepArgMd' "Given" detail theStepArg
 
-            _ ->
-                text ""
+            When detail theStepArg ->
+                stepArgMd' "When" detail theStepArg
+
+            Then detail theStepArg ->
+                stepArgMd' "Then" detail theStepArg
+
+            And detail theStepArg ->
+                stepArgMd' "And" detail theStepArg
+
+            But detail theStepArg ->
+                stepArgMd' "But" detail theStepArg
 
 
-scenarioHtml : Scenario -> String
-scenarioHtml scenario =
+scenarioMd : Scenario -> String
+scenarioMd scenario =
     case scenario of
         Scenario detailText steps ->
-            span []
-                <| (text "Scenario")
-                :: (text detailText)
-                :: List.map stepHtml steps
+            "Scenario "
+                ++ detailText
+                ++ newline
+                ++ (String.join newline <| List.map stepMd steps)
 
         _ ->
-            text ""
+            ""
 
 
-backgroundHtml : Background -> String
-backgroundHtml background =
+backgroundMd : Background -> String
+backgroundMd background =
     case background of
         Background steps ->
-            span []
-                <| (text "Background")
-                :: List.map stepHtml steps
+            "Background"
+                ++ newline
+                ++ (String.join newline <| List.map stepMd steps)
 
         NoBackground ->
-            text ""
+            ""
 
 
-featureHtml : Feature -> String
-featureHtml feature =
+featureMd : Feature -> String
+featureMd feature =
     case feature of
         Feature detailText asA inOrderTo iWantTo background scenarios ->
-            span []
-                <| [ text detailText, asAHtml asA, inOrderToHtml inOrderTo, iWantToHtml iWantTo, backgroundHtml background ]
-                ++ List.map scenarioHtml scenarios
+            "Feature: "
+                ++ detailText
+                ++ newline
+                ++ asAMd asA
+                ++ inOrderToMd inOrderTo
+                ++ iWantToMd iWantTo
+                ++ backgroundMd background
+                ++ (String.join newline <| List.map scenarioMd scenarios)
