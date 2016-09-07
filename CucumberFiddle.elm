@@ -14,6 +14,7 @@ import Html.Attributes exposing (value, name)
 import Html.Events exposing (onClick, onInput)
 import Http
 import TimeTravel.Html.App as TimeTravel
+import List exposing (map, repeat)
 
 
 -- MODEL
@@ -69,15 +70,15 @@ update msg model =
 
                 Just feature ->
                     case GherkinParser.parse GherkinParser.feature feature of
+                        Ok feature ->
+                            { model | feature = Just feature } ! []
+
                         Err error ->
                             { model
                                 | errors = error :: model.errors
                                 , feature = Nothing
                             }
                                 ! []
-
-                        Ok feature ->
-                            { model | feature = Just feature } ! []
 
         Run ->
             model ! []
@@ -117,7 +118,7 @@ view model =
 
             Just feature ->
                 GherkinHtml.featureHtml feature
-        , ul [] (List.map (\error -> li [] [ text error ]) model.errors)
+        , ul [] (map (li [] << repeat 1 << text) model.errors)
         , button [ onClick Format ] [ text "Format" ]
         , button [ onClick Run ] [ text "Run" ]
         ]
