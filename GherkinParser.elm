@@ -138,15 +138,14 @@ scenario =
         <*> (sepBy1 (newline *> spaces) step)
 
 
-background : Parser Background
+background : Parser Background'
 background =
     string "Background:"
-        *> optional "" spaces
-        *> newline
+        *> many1 ((optional "" spaces) <|> newline)
         *> (Background <$> many1 step)
 
 
-noBackground : Parser Background
+noBackground : Parser Background'
 noBackground =
     NoBackground <$ succeed ()
 

@@ -26,7 +26,7 @@ similarly to extant ports in other languages.
 a .feature document in BDD terms.
 -}
 type Feature
-    = Feature String AsA InOrderTo IWantTo Background (List Scenario)
+    = Feature String AsA InOrderTo IWantTo Background' (List Scenario)
 
 
 {-| From [User Stories](https://en.wikipedia.org/wiki/User_story)
@@ -51,7 +51,7 @@ type IWantTo
 
 When automating, each [Step](#Step) will be executed before each [Scenario](#Scenario)'s [Step](#Step)s
 -}
-type Background
+type Background'
     = Background (List Step)
     | NoBackground
 
