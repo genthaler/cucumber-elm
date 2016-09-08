@@ -7,7 +7,7 @@ import ElmTestBDDStyle exposing (..)
 
 all : Test
 all =
-    describe "Example Text"
+    describe "parsing Gherkin"
         [ it "parses comments correctly"
             <| let
                 comment =
