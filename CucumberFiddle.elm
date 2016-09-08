@@ -112,12 +112,14 @@ view model =
             , onInput Input
             ]
             []
-        , case model.feature of
-            Nothing ->
-                text "waiting..."
+        , div []
+            [ case model.feature of
+                Nothing ->
+                    text "waiting..."
 
-            Just feature ->
-                GherkinHtml.featureHtml feature
+                Just feature ->
+                    GherkinHtml.featureHtml feature
+            ]
         , ul [] (map (li [] << repeat 1 << text) model.errors)
         , button [ onClick Format ] [ text "Format" ]
         , button [ onClick Run ] [ text "Run" ]
