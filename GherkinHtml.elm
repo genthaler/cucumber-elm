@@ -9,17 +9,17 @@ import Html exposing (..)
 
 asAHtml : AsA -> Html msg
 asAHtml (AsA detailText) =
-    text detailText
+    li [] [ text ("As a " ++ detailText) ]
 
 
 inOrderToHtml : InOrderTo -> Html msg
 inOrderToHtml (InOrderTo detailText) =
-    text detailText
+    li [] [ text ("In order to " ++ detailText) ]
 
 
 iWantToHtml : IWantTo -> Html msg
 iWantToHtml (IWantTo detailText) =
-    text detailText
+    li [] [ text ("I want to " ++ detailText) ]
 
 
 stepArgHtml : StepArg -> Maybe (Html msg)
@@ -79,7 +79,7 @@ scenarioHtml scenario =
     case scenario of
         Scenario detailText steps ->
             span []
-                <| (text "Scenario")
+                <| (text "Scenario: ")
                 :: (text detailText)
                 :: List.map stepHtml steps
 
@@ -104,5 +104,28 @@ featureHtml feature =
     case feature of
         Feature detailText asA inOrderTo iWantTo background scenarios ->
             span []
-                <| [ text detailText, asAHtml asA, inOrderToHtml inOrderTo, iWantToHtml iWantTo, backgroundHtml background ]
-                ++ List.map scenarioHtml scenarios
+                <| [ ul []
+                        [ li []
+                            [ text "Feature: "
+                            , text detailText
+                            ]
+                        , li []
+                            [ ul []
+                                (List.map (\element -> li [] [ element ])
+                                    ([ asAHtml asA
+                                     , inOrderToHtml inOrderTo
+                                     , iWantToHtml iWantTo
+                                     ]
+                                        ++ (case background of
+                                                NoBackground ->
+                                                    []
+
+                                                _ ->
+                                                    [ backgroundHtml background ]
+                                           )
+                                        ++ List.map scenarioHtml scenarios
+                                    )
+                                )
+                            ]
+                        ]
+                   ]
