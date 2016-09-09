@@ -140,9 +140,14 @@ scenario =
 
 background : Parser Background'
 background =
-    string "Background:"
-        *> many1 ((optional "" spaces) <|> newline)
-        *> (Background <$> many1 step)
+    Background
+        <$> (string "Background:"
+                *> spaces
+                *> (optional "" detailText)
+                <* (comment <|> newline)
+            )
+        <* spaces
+        <*> (sepBy1 (newline *> spaces) step)
 
 
 noBackground : Parser Background'

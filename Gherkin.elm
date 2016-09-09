@@ -52,7 +52,7 @@ type IWantTo
 When automating, each [Step](#Step) will be executed before each [Scenario](#Scenario)'s [Step](#Step)s
 -}
 type Background'
-    = Background (List Step)
+    = Background String (List Step)
     | NoBackground
 
 

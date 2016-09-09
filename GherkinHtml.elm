@@ -87,7 +87,7 @@ scenarioHtml scenario =
             text ""
 
 
-backgroundHtml : Background -> Html msg
+backgroundHtml : Background' -> Html msg
 backgroundHtml background =
     case background of
         Background steps ->

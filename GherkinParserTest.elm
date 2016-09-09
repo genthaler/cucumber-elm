@@ -57,17 +57,17 @@ all =
                 expect (GherkinParser.parse GherkinParser.iWantTo iWantToDesc)
                     toBe
                     <| Result.Ok (IWantTo iWantTo)
-          -- , it "parses Background correctly"
-          --     <| let
-          --         backgroundContent =
-          --             """Background:
-          --                 Given The world is round
-          --             """
-          --        in
-          --         expect (GherkinParser.parse GherkinParser.background backgroundContent)
-          --             toBe
-          --             <| Result.Ok
-          --             <| Background [ Given "The world is round" NoArg ]
+        , it "parses Background correctly"
+            <| let
+                backgroundContent =
+                    """Background: Some basic facts
+                          Given The world is round
+                      """
+               in
+                expect (GherkinParser.parse GherkinParser.background backgroundContent)
+                    toBe
+                    <| Result.Ok
+                    <| Background "Some basic facts" [ Given "The world is round" NoArg ]
         , it "parses DocString \"\"\" quotes correctly"
             <| let
                 docStringQuotes =
@@ -110,7 +110,7 @@ all =
         , it "parses DataTable correctly"
             <| let
                 dataTableContent =
-                    """ | Now | is | the | time |
+                    """ | Now | is | the | time |\x0D
                               | For | all | good | men | """
                in
                 expect (GherkinParser.parse GherkinParser.dataTable dataTableContent)
@@ -123,8 +123,8 @@ all =
         , it "parses Given Step with DataTable correctly"
             <| let
                 stepContent =
-                    """Given I am trying to have fun
-                      | Now | is | the | time |
+                    """Given I am trying to have fun\x0D
+                      | Now | is | the | time |\x0D
                       | For | all | good | men | """
                in
                 expect (GherkinParser.parse GherkinParser.step stepContent)
@@ -147,11 +147,11 @@ all =
         , it "parses Scenario correctly"
             <| let
                 scenarioContent =
-                    """Scenario: Have fun
-                      Given I am trying to have fun
-                        | Now | is | the | time |
-                        | For | all | good | men |
-                      But I am trying not to be a fool
+                    """Scenario: Have fun\x0D
+                      Given I am trying to have fun\x0D
+                        | Now | is | the | time |\x0D
+                        | For | all | good | men |\x0D
+                      But I am trying not to be a fool\x0D
                     """
                in
                 expect (GherkinParser.parse GherkinParser.scenario scenarioContent)
@@ -166,37 +166,37 @@ all =
                         , But "I am trying not to be a fool"
                             NoArg
                         ]
-          -- , it "parses Feature correctly"
-          --     <| let
-          --         featureContent =
-          --             """Feature: Living life
-          --             As a person
-          --             In order to get through life
-          --             I want to be able to do stuff
-          --             Background:
-          --               Given the world is round
-          --             Scenario: Have fun
-          --               Given I am trying to have fun
-          --                 | Now | is | the | time |
-          --                 | For | all | good | men |
-          --               But I am trying not to be a fool
-          --             """
-          --        in
-          --         expect (GherkinParser.parse GherkinParser.feature featureContent)
-          --             toBe
-          --             <| Result.Ok
-          --             <| Feature "Living life"
-          --                 (AsA "person")
-          --                 (InOrderTo "get through life")
-          --                 (IWantTo "be able to do stuff")
-          --                 (Background [ Given "Given the world is round" NoArg ])
-          --                 [ Scenario "Have fun"
-          --                     [ Given "I am trying to have fun"
-          --                         <| DataTable
-          --                             [ [ "Now", "is", "the", "time" ]
-          --                             , [ "For", "all", "good", "men" ]
-          --                             ]
-          --                     , But "I am trying not to be a fool" NoArg
-          --                     ]
-          --                 ]
+        , it "parses Feature correctly"
+            <| let
+                featureContent =
+                    """Feature: Living life
+                      As a person
+                      In order to get through life
+                      I want to be able to do stuff
+                      Background: Some basic info
+                        Given the world is round
+                      Scenario: Have fun
+                        Given I am trying to have fun
+                          | Now | is | the | time |
+                          | For | all | good | men |
+                        But I am trying not to be a fool
+                      """
+               in
+                expect (GherkinParser.parse GherkinParser.feature featureContent)
+                    toBe
+                    <| Result.Ok
+                    <| Feature "Living life"
+                        (AsA "person")
+                        (InOrderTo "get through life")
+                        (IWantTo "be able to do stuff")
+                        (Background "Some basic info" [ Given "the world is round" NoArg ])
+                        [ Scenario "Have fun"
+                            [ Given "I am trying to have fun"
+                                <| DataTable
+                                    [ [ "Now", "is", "the", "time" ]
+                                    , [ "For", "all", "good", "men" ]
+                                    ]
+                            , But "I am trying not to be a fool" NoArg
+                            ]
+                        ]
         ]
