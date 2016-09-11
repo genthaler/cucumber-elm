@@ -57,7 +57,7 @@ stepHtml theStep =
     let
         stepArgHtml' name detail theStepArg =
             p []
-                ([ text "Given", text detail ]
+                ([ text name, text detail ]
                     ++ case (stepArgHtml theStepArg) of
                         Just element ->
                             [ element ]
@@ -70,8 +70,17 @@ stepHtml theStep =
             Given detail theStepArg ->
                 stepArgHtml' "Given" detail theStepArg
 
-            _ ->
-                text ""
+            When detail theStepArg ->
+                stepArgHtml' "When" detail theStepArg
+
+            Then detail theStepArg ->
+                stepArgHtml' "Then" detail theStepArg
+
+            And detail theStepArg ->
+                stepArgHtml' "And" detail theStepArg
+
+            But detail theStepArg ->
+                stepArgHtml' "But" detail theStepArg
 
 
 scenarioHtml : Scenario -> Html msg
