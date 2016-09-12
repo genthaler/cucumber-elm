@@ -56,8 +56,8 @@ stepHtml : Step -> Html msg
 stepHtml theStep =
     let
         stepArgHtml' name detail theStepArg =
-            p []
-                ([ text name, text detail ]
+            li []
+                ([ text name, text " ", text detail ]
                     ++ case (stepArgHtml theStepArg) of
                         Just element ->
                             [ element ]
@@ -87,9 +87,8 @@ scenarioHtml : Scenario -> Html msg
 scenarioHtml scenario =
     case scenario of
         Scenario detailText steps ->
-            span []
-                <| (text "Scenario: ")
-                :: (text detailText)
+            ul []
+                <| (li [] [ text "Scenario: ", text detailText ])
                 :: List.map stepHtml steps
 
         _ ->
@@ -99,9 +98,9 @@ scenarioHtml scenario =
 backgroundHtml : Background' -> Html msg
 backgroundHtml background =
     case background of
-        Background steps ->
+        Background desc steps ->
             span []
-                <| (text "Background")
+                <| (text ("Background: " ++ desc))
                 :: List.map stepHtml steps
 
         NoBackground ->
