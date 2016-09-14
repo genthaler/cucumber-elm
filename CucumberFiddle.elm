@@ -45,11 +45,6 @@ get source =
     Task.perform FeatureError FeatureLoaded (Http.getString ("/" ++ source))
 
 
-
--- Background:
---     Given I have loaded the CucumberFiddle application
-
-
 init : ( Model, Cmd Msg )
 init =
     { source = Just """Feature: Cucumber Fiddle application
@@ -57,8 +52,8 @@ init =
     In order to work in a BDD Elm environment
     I want to be able to run Gherkin features against an Elm codebase and see how well the codebase implements the features
 
-    Background: Some basic info
-      Given the world is round
+    Background:
+        Given I have loaded the CucumberFiddle application
 
     Scenario: Format a feature
         Given I have entered a feature in the feature editor
