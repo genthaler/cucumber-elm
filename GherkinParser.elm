@@ -31,6 +31,11 @@ newline =
     regex "(\\r\\n|\\r|\\n)"
 
 
+interspace : Parser (List String)
+interspace =
+    newline <|> spaces <|> comment |> many
+
+
 detailText : Parser String
 detailText =
     regex "[^#\\r\\n]+"
@@ -42,7 +47,6 @@ asA =
     string "As a"
         *> spaces
         *> (AsA <$> detailText)
-        <* (comment <|> newline)
 
 
 inOrderTo : Parser InOrderTo
@@ -50,7 +54,6 @@ inOrderTo =
     string "In order to"
         *> spaces
         *> (InOrderTo <$> detailText)
-        <* (comment <|> newline)
 
 
 iWantTo : Parser IWantTo
@@ -58,7 +61,6 @@ iWantTo =
     string "I want to"
         *> spaces
         *> (IWantTo <$> detailText)
-        <* (comment <|> newline)
 
 
 docStringQuotes : Parser String
@@ -122,7 +124,7 @@ step =
         ]
         <* spaces
         <*> detailText
-        <* (comment <|> newline)
+        <* interspace
         <*> (docString <|> dataTable <|> noArg)
 
 
@@ -132,10 +134,9 @@ scenario =
         <$> (string "Scenario:"
                 *> spaces
                 *> detailText
-                <* (comment <|> newline)
             )
-        <* spaces
-        <*> (sepBy1 (newline *> spaces) step)
+        <* interspace
+        <*> (sepBy1 interspace step)
 
 
 background : Parser Background'
@@ -144,10 +145,9 @@ background =
         <$> (string "Background:"
                 *> spaces
                 *> (optional "" detailText)
-                <* (comment <|> newline)
             )
-        <* spaces
-        <*> (sepBy1 (newline *> spaces) step)
+        <* interspace
+        <*> (sepBy1 interspace step)
 
 
 noBackground : Parser Background'
@@ -161,17 +161,16 @@ feature =
         *> optional "" spaces
         *> (Feature
                 <$> detailText
-                <* (comment <|> newline)
-                <* optional "" spaces
+                <* interspace
                 <*> asA
-                <* optional "" spaces
+                <* interspace
                 <*> inOrderTo
-                <* optional "" spaces
+                <* interspace
                 <*> iWantTo
-                <* optional "" spaces
+                <* interspace
                 <*> (background <|> noBackground)
-                <* optional "" spaces
-                <*> (sepBy1 newline scenario)
+                <* interspace
+                <*> (sepBy1 interspace scenario)
            )
 
 

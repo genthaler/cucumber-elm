@@ -55,7 +55,11 @@ init =
     { source = Just """Feature: Cucumber Fiddle application
     As a BDD practitioner
     In order to work in a BDD Elm environment
-    I want to be able to run Gherkin features against an Elm codebase and see how well the codebase matches the features
+    I want to be able to run Gherkin features against an Elm codebase and see how well the codebase implements the features
+
+    Background: Some basic info
+      Given the world is round
+
     Scenario: Format a feature
         Given I have entered a feature in the feature editor
         When I format the feature

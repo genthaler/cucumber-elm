@@ -173,8 +173,10 @@ all =
                       As a person
                       In order to get through life
                       I want to be able to do stuff
+
                       Background: Some basic info
                         Given the world is round
+
                       Scenario: Have fun
                         Given I am trying to have fun
                           | Now | is | the | time |
