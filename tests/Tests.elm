@@ -2,19 +2,15 @@ module Tests exposing (..)
 
 import Test exposing (..)
 import Expect
-import String
+import GherkinTest
+import CucumberTest
+import GherkinParserTest
 
 
 all : Test
 all =
-    describe "A Test Suite"
-        [ test "Addition" <|
-            \() ->
-                Expect.equal (3 + 7) 10
-        , test "String.left" <|
-            \() ->
-                Expect.equal "a" (String.left 1 "abcdefg")
-        , test "This test should fail" <|
-            \() ->
-                Expect.fail "failed as expected!"
+    describe "All tests"
+        [ GherkinTest.all
+        , GherkinParserTest.all
+        , CucumberTest.all
         ]

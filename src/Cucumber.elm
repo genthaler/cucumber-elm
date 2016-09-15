@@ -1,6 +1,5 @@
 module Cucumber exposing (..)
 
-import Test exposing (..)
 import Expect
 import Gherkin exposing (..)
 
@@ -30,7 +29,7 @@ type alias GlueFunction a =
 {-| A glue function returns a tuple of smodified state and Assertion.
 -}
 type alias GlueResult a =
-    ( a, Assertion )
+    ( a, Expect.Expectation )
 
 
 
@@ -127,7 +126,7 @@ runStep step state (Glue regexString glueFunction) =
     in
         case List.head found of
             Nothing ->
-                ( state, pass )
+                ( state, Expect.pass )
 
             Just match ->
                 glueFunction state match.submatches arg

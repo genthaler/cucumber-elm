@@ -16,14 +16,15 @@ stepTest : Test
 stepTest =
     describe "Features"
         [ test "successfully runs a Step against a Glue function"
-            <| (runStep step "" Glue.myGlue
+            <| \() ->
+                (runStep step "" Glue.myGlue
                     |> snd
-               )
+                )
         ]
 
 
 all : Test
 all =
-    suite "Features"
+    describe "Features"
         [ stepTest
         ]

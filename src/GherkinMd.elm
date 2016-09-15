@@ -109,11 +109,13 @@ scenarioMd scenario =
             ""
 
 
-backgroundMd : Background -> String
+backgroundMd : Background' -> String
 backgroundMd background =
     case background of
-        Background steps ->
+        Background detailText steps ->
             "Background"
+                ++ newline
+                ++ detailText
                 ++ newline
                 ++ (String.join newline <| List.map stepMd steps)
 
