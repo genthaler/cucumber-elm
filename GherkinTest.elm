@@ -1,6 +1,7 @@
 module GherkinTest exposing (..)
 
-import ElmTest exposing (..)
+import Test exposing (..)
+import Expect
 import Gherkin exposing (..)
 
 
@@ -31,11 +32,13 @@ feature =
 
 featureTest : Test
 featureTest =
-    test "Features" (assertEqual feature feature)
+    test "Features"
+        <| \() ->
+            Expect.equal (3 + 7) 10
 
 
 all : Test
 all =
-    suite "GherkinTest"
+    describe "GherkinTest"
         [ featureTest
         ]

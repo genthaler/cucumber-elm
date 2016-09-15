@@ -1,6 +1,7 @@
 module Cucumber exposing (..)
 
-import ElmTest exposing (..)
+import Test exposing (..)
+import Expect
 import Gherkin exposing (..)
 
 

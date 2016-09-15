@@ -1,6 +1,7 @@
 module Main exposing (..)
 
-import ElmTest exposing (..)
+import Test exposing (..)
+import Expect
 import GherkinTest
 import CucumberTest
 import GherkinParserTest

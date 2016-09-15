@@ -1,10 +1,10 @@
 module CucumberTest.Glue exposing (..)
 
-import ElmTest exposing (..)
+import Test exposing (..)
+import Expect
 import Gherkin exposing (..)
 import Cucumber exposing (..)
 import CucumberTest.Fixture as Fixture
-import ElmTestBDDStyle exposing (..)
 
 
 myGlue : Glue String
@@ -14,12 +14,12 @@ myGlue =
         assert state maybeMatches stepArg =
             case List.head maybeMatches of
                 Nothing ->
-                    ( state, fail "misery" )
+                    ( state, Expect.fail "misery" )
 
                 Just Nothing ->
-                    ( state, fail "misery" )
+                    ( state, Expect.fail "misery" )
 
                 Just (Just arg) ->
-                    ( state, ElmTest.assertEqual True (Fixture.myRealFunction arg) )
+                    ( state, Expect.equal True (Fixture.myRealFunction arg) )
     in
         Glue "^Now is the (.+)$" assert

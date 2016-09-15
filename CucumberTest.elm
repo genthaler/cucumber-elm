@@ -1,10 +1,10 @@
 module CucumberTest exposing (..)
 
-import ElmTest exposing (suite)
+import Test exposing (..)
+import Expect
 import Gherkin exposing (..)
 import Cucumber exposing (..)
 import CucumberTest.Glue as Glue
-import ElmTestBDDStyle exposing (..)
 
 
 step : Step
@@ -15,7 +15,7 @@ step =
 stepTest : Test
 stepTest =
     describe "Features"
-        [ it "successfully runs a Step against a Glue function"
+        [ test "successfully runs a Step against a Glue function"
             <| (runStep step "" Glue.myGlue
                     |> snd
                )
