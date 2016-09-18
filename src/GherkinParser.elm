@@ -169,21 +169,26 @@ noBackground =
 feature : Parser Feature
 feature =
     Feature
-        <$> (tags
-                <*> interspace
+        <$> tags
+        <*> (interspace
                 *> string "Feature:"
                 *> (optional "" spaces)
                 *> detailText
-                *> interspace
-                <*> asA
-                *> interspace
-                <*> inOrderTo
-                <* interspace
-                <*> iWantTo
-                <* interspace
-                <*> (background <|> noBackground)
-                <* interspace
-                <*> (sepBy1 interspace scenario)
+            )
+        <*> (interspace
+                *> asA
+            )
+        <*> (interspace
+                *> inOrderTo
+            )
+        <*> (interspace
+                *> iWantTo
+            )
+        <*> (interspace
+                *> (background <|> noBackground)
+            )
+        <*> (interspace
+                *> (sepBy1 interspace scenario)
             )
 
 

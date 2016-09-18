@@ -7,12 +7,14 @@ import Gherkin exposing (..)
 
 feature : Feature
 feature =
-    Feature "Having fun"
+    Feature []
+        "Having fun"
         (AsA "person")
         (InOrderTo "have fun")
         (IWantTo "play baseball")
         NoBackground
-        [ ScenarioOutline "guys are swimming"
+        [ ScenarioOutline []
+            "guys are swimming"
             [ Given "a precondition has value <param_1>"
                 (DocString "")
             , And "something with <param_2>" (DataTable [ [] ])
@@ -22,7 +24,8 @@ feature =
                 [ [ "" ]
                 ]
             )
-        , Scenario "guys are sailing"
+        , Scenario []
+            "guys are sailing"
             [ Given "a precondition is valid" NoArg
             , When "an action is performed" NoArg
             , Then "something should be asserted" NoArg

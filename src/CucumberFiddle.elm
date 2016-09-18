@@ -47,33 +47,33 @@ get source =
 
 init : ( Model, Cmd Msg )
 init =
-    { source = Just """Feature: Cucumber Fiddle application\x0D
-    As a BDD practitioner\x0D
-    In order to work in a BDD Elm environment\x0D
-    I want to be able to run Gherkin features against an Elm codebase and see how well the codebase implements the features\x0D
-\x0D
-    Background:\x0D
-        Given I have loaded the CucumberFiddle application\x0D
-\x0D
-    Scenario: Format a feature\x0D
-        Given I have entered a feature in the feature editor\x0D
-        When I format the feature\x0D
-        Then I see the formatted feature\x0D
-\x0D
-    Scenario: Run a feature\x0D
-        Given I have entered a feature in the feature editor\x0D
-        When I run the feature\x0D
-        Then I see any errors interleaved in the output\x0D
-\x0D
-    Scenario: Show list of available features on the server\x0D
-        Then I can see the list of available features\x0D
-\x0D
-    Scenario: Selecting a feature from the server\x0D
-        When I select a feature from the list of available features\x0D
-        Then I can see the feature\x0D
-\x0D
-    Scenario: Selecting a feature from the client\x0D
-        When I select a feature file from local\x0D
+    { source = Just """Feature: Cucumber Fiddle application
+    As a BDD practitioner
+    In order to work in a BDD Elm environment
+    I want to be able to run Gherkin features against an Elm codebase and see how well the codebase implements the features
+
+    Background:
+        Given I have loaded the CucumberFiddle application
+
+    Scenario: Format a feature
+        Given I have entered a feature in the feature editor
+        When I format the feature
+        Then I see the formatted feature
+
+    Scenario: Run a feature
+        Given I have entered a feature in the feature editor
+        When I run the feature
+        Then I see any errors interleaved in the output
+
+    Scenario: Show list of available features on the server
+        Then I can see the list of available features
+
+    Scenario: Selecting a feature from the server
+        When I select a feature from the list of available features
+        Then I can see the feature
+
+    Scenario: Selecting a feature from the client
+        When I select a feature file from local
         Then I can see the feature"""
     , feature = Nothing
     , errors = []

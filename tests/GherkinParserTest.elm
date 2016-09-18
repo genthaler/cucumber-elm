@@ -113,7 +113,7 @@ all =
             <| \() ->
                 let
                     dataTableContent =
-                        """ | Now | is | the | time |\x0D
+                        """ | Now | is | the | time |
                               | For | all | good | men | """
                 in
                     Expect.equal (GherkinParser.parse GherkinParser.dataTable dataTableContent)
@@ -127,8 +127,8 @@ all =
             <| \() ->
                 let
                     stepContent =
-                        """Given I am trying to have fun\x0D
-                      | Now | is | the | time |\x0D
+                        """Given I am trying to have fun
+                      | Now | is | the | time |
                       | For | all | good | men | """
                 in
                     Expect.equal (GherkinParser.parse GherkinParser.step stepContent)
@@ -154,16 +154,17 @@ all =
             <| \() ->
                 let
                     scenarioContent =
-                        """Scenario: Have fun\x0D
-                      Given I am trying to have fun\x0D
-                        | Now | is | the | time |\x0D
-                        | For | all | good | men |\x0D
-                      But I am trying not to be a fool\x0D
+                        """Scenario: Have fun
+                      Given I am trying to have fun
+                        | Now | is | the | time |
+                        | For | all | good | men |
+                      But I am trying not to be a fool
                     """
                 in
                     Expect.equal (GherkinParser.parse GherkinParser.scenario scenarioContent)
                         <| Result.Ok
-                        <| Scenario "Have fun"
+                        <| Scenario []
+                            "Have fun"
                             [ Given "I am trying to have fun"
                                 <| DataTable
                                     [ [ "Now", "is", "the", "time" ]
@@ -172,6 +173,31 @@ all =
                             , But "I am trying not to be a fool"
                                 NoArg
                             ]
+          -- , test "parses Scenario with tags correctly"
+          --     <| \() ->
+          --         let
+          --             scenarioContent =
+          --                 """@foo
+          --             @bar
+          --             Scenario: Have fun
+          --               Given I am trying to have fun
+          --                 | Now | is | the | time |
+          --                 | For | all | good | men |
+          --               But I am trying not to be a fool
+          --             """
+          --         in
+          --             Expect.equal (GherkinParser.parse GherkinParser.scenario scenarioContent)
+          --                 <| Result.Ok
+          --                 <| Scenario [ "foo", "bar" ]
+          --                     "Have fun"
+          --                     [ Given "I am trying to have fun"
+          --                         <| DataTable
+          --                             [ [ "Now", "is", "the", "time" ]
+          --                             , [ "For", "all", "good", "men" ]
+          --                             ]
+          --                     , But "I am trying not to be a fool"
+          --                         NoArg
+          --                     ]
         , test "parses Feature correctly"
             <| \() ->
                 let
@@ -193,12 +219,14 @@ all =
                 in
                     Expect.equal (GherkinParser.parse GherkinParser.feature featureContent)
                         <| Result.Ok
-                        <| Feature "Living life"
+                        <| Feature []
+                            "Living life"
                             (AsA "person")
                             (InOrderTo "get through life")
                             (IWantTo "be able to do stuff")
                             (Background "Some basic info" [ Given "the world is round" NoArg ])
-                            [ Scenario "Have fun"
+                            [ Scenario []
+                                "Have fun"
                                 [ Given "I am trying to have fun"
                                     <| DataTable
                                         [ [ "Now", "is", "the", "time" ]

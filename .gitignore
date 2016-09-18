@@ -2,9 +2,6 @@
 elm-stuff/
 # elm-repl generated files
 repl-temp-*
-# generated build files
-TestRunner.js
 # ide support
 .tags*
-
 *.log

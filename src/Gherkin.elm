@@ -71,7 +71,7 @@ Steps
 -}
 type Scenario
     = Scenario (List Tag) String (List Step)
-    | ScenarioOutline String (List Step) Examples
+    | ScenarioOutline (List Tag) String (List Step) Examples
 
 
 {-| A Step describes an action or assertion.
