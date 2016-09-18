@@ -49,6 +49,16 @@ asA =
         *> (AsA <$> detailText)
 
 
+tag : Parser Tag
+tag =
+    string "@" *> detailText
+
+
+tags : Parser (List Tag)
+tags =
+    sepBy interspace tag
+
+
 inOrderTo : Parser InOrderTo
 inOrderTo =
     string "In order to"
@@ -131,7 +141,8 @@ step =
 scenario : Parser Scenario
 scenario =
     Scenario
-        <$> (string "Scenario:"
+        <$> tags
+        <*> (string "Scenario:"
                 *> spaces
                 *> detailText
             )
@@ -157,13 +168,15 @@ noBackground =
 
 feature : Parser Feature
 feature =
-    string "Feature:"
-        *> optional "" spaces
-        *> (Feature
-                <$> detailText
-                <* interspace
+    Feature
+        <$> (tags
+                <*> interspace
+                *> string "Feature:"
+                *> (optional "" spaces)
+                *> detailText
+                *> interspace
                 <*> asA
-                <* interspace
+                *> interspace
                 <*> inOrderTo
                 <* interspace
                 <*> iWantTo
@@ -171,7 +184,7 @@ feature =
                 <*> (background <|> noBackground)
                 <* interspace
                 <*> (sepBy1 interspace scenario)
-           )
+            )
 
 
 formatError : String -> List String -> Context -> String

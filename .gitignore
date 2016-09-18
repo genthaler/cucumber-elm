@@ -6,3 +6,5 @@ repl-temp-*
 TestRunner.js
 # ide support
 .tags*
+
+*.log
