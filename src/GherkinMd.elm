@@ -99,7 +99,7 @@ stepMd theStep =
 scenarioMd : Scenario -> String
 scenarioMd scenario =
     case scenario of
-        Scenario detailText steps ->
+        Scenario tags detailText steps ->
             "Scenario "
                 ++ detailText
                 ++ newline
@@ -126,7 +126,7 @@ backgroundMd background =
 featureMd : Feature -> String
 featureMd feature =
     case feature of
-        Feature detailText asA inOrderTo iWantTo background scenarios ->
+        Feature tags detailText asA inOrderTo iWantTo background scenarios ->
             "Feature: "
                 ++ detailText
                 ++ newline

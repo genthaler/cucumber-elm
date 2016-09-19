@@ -4,9 +4,6 @@ import Gherkin exposing (..)
 import Html exposing (..)
 
 
--- import String
-
-
 asAHtml : AsA -> Html msg
 asAHtml (AsA detailText) =
     li [] [ text ("As a " ++ detailText) ]
@@ -86,7 +83,7 @@ stepHtml theStep =
 scenarioHtml : Scenario -> Html msg
 scenarioHtml scenario =
     case scenario of
-        Scenario detailText steps ->
+        Scenario tags detailText steps ->
             ul []
                 <| (li [] [ text "Scenario: ", text detailText ])
                 :: List.map stepHtml steps
@@ -110,7 +107,7 @@ backgroundHtml background =
 featureHtml : Feature -> Html msg
 featureHtml feature =
     case feature of
-        Feature detailText asA inOrderTo iWantTo background scenarios ->
+        Feature tags detailText asA inOrderTo iWantTo background scenarios ->
             span []
                 <| [ ul []
                         [ li []

@@ -10,9 +10,9 @@ import Regex
 
 
 {-| According to this definition, glue is defined by a
-regular expression string, plus a glue function
+   regular expression string, plus a glue function
 
-In OOP implementations of Cucumber, the state is usually the Step class itself.
+   In OOP implementations of Cucumber, the state is usually the Step class itself.
 -}
 type Glue a
     = Glue String (GlueFunction a)

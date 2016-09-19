@@ -26,7 +26,14 @@ similarly to extant ports in other languages.
 a .feature document in BDD terms.
 -}
 type Feature
-    = Feature String AsA InOrderTo IWantTo Background' (List Scenario)
+    = Feature (List Tag) String AsA InOrderTo IWantTo Background' (List Scenario)
+
+
+{-| This is the datatype for tags, which can be specified at Feature, Scenario &
+Scenario Example levels
+-}
+type alias Tag =
+    String
 
 
 {-| From [User Stories](https://en.wikipedia.org/wiki/User_story)
@@ -63,8 +70,8 @@ the template is executed once per example, substituting tokens in the Scenario's
 Steps
 -}
 type Scenario
-    = Scenario String (List Step)
-    | ScenarioOutline String (List Step) Examples
+    = Scenario (List Tag) String (List Step)
+    | ScenarioOutline (List Tag) String (List Step) Examples
 
 
 {-| A Step describes an action or assertion.
