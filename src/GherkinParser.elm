@@ -133,21 +133,16 @@ step =
         , (But <$ string "But")
         ]
         <* spaces
-        <*> detailText
-        <* interspace
+        <*> (detailText <* interspace)
         <*> (docString <|> dataTable <|> noArg)
 
 
 scenario : Parser Scenario
 scenario =
     Scenario
-        <$> tags
-        <*> (string "Scenario:"
-                *> spaces
-                *> detailText
-            )
-        <* interspace
-        <*> (sepBy1 interspace step)
+        <$> (tags <* interspace)
+        <*> (string "Scenario:" *> spaces *> detailText <* interspace)
+        <*> sepBy1 interspace step
 
 
 background : Parser Background'
@@ -156,9 +151,9 @@ background =
         <$> (string "Background:"
                 *> spaces
                 *> (optional "" detailText)
+                <* interspace
             )
-        <* interspace
-        <*> (sepBy1 interspace step)
+        <*> sepBy1 interspace step
 
 
 noBackground : Parser Background'
@@ -169,27 +164,17 @@ noBackground =
 feature : Parser Feature
 feature =
     Feature
-        <$> tags
-        <*> (interspace
-                *> string "Feature:"
+        <$> (tags <* interspace)
+        <*> (string "Feature:"
                 *> (optional "" spaces)
                 *> detailText
+                <* interspace
             )
-        <*> (interspace
-                *> asA
-            )
-        <*> (interspace
-                *> inOrderTo
-            )
-        <*> (interspace
-                *> iWantTo
-            )
-        <*> (interspace
-                *> (background <|> noBackground)
-            )
-        <*> (interspace
-                *> (sepBy1 interspace scenario)
-            )
+        <*> (asA <* interspace)
+        <*> (inOrderTo <* interspace)
+        <*> (iWantTo <* interspace)
+        <*> (background <|> noBackground <* interspace)
+        <*> sepBy1 interspace scenario
 
 
 formatError : String -> List String -> Context -> String

@@ -173,32 +173,65 @@ all =
                             , But "I am trying not to be a fool"
                                 NoArg
                             ]
-          -- , test "parses Scenario with tags correctly"
-          --     <| \() ->
-          --         let
-          --             scenarioContent =
-          --                 """@foo
-          --             @bar
-          --             Scenario: Have fun
-          --               Given I am trying to have fun
-          --                 | Now | is | the | time |
-          --                 | For | all | good | men |
-          --               But I am trying not to be a fool
-          --             """
-          --         in
-          --             Expect.equal (GherkinParser.parse GherkinParser.scenario scenarioContent)
-          --                 <| Result.Ok
-          --                 <| Scenario [ "foo", "bar" ]
-          --                     "Have fun"
-          --                     [ Given "I am trying to have fun"
-          --                         <| DataTable
-          --                             [ [ "Now", "is", "the", "time" ]
-          --                             , [ "For", "all", "good", "men" ]
-          --                             ]
-          --                     , But "I am trying not to be a fool"
-          --                         NoArg
-          --                     ]
+        , test "parses Scenario with tags correctly"
+            <| \() ->
+                let
+                    scenarioContent =
+                        """@foo
+                      @bar
+                      Scenario: Have fun
+                        Given I am trying to have fun
+                          | Now | is | the | time |
+                          | For | all | good | men |
+                        But I am trying not to be a fool
+                      """
+                in
+                    Expect.equal (GherkinParser.parse GherkinParser.scenario scenarioContent)
+                        <| Result.Ok
+                        <| Scenario [ "foo", "bar" ]
+                            "Have fun"
+                            [ Given "I am trying to have fun"
+                                <| DataTable
+                                    [ [ "Now", "is", "the", "time" ]
+                                    , [ "For", "all", "good", "men" ]
+                                    ]
+                            , But "I am trying not to be a fool"
+                                NoArg
+                            ]
         , test "parses Feature correctly"
+            <| \() ->
+                let
+                    featureContent =
+                        """@foo
+                      @bar
+                      Feature: Living life
+                      As a person
+                      In order to get through life
+                      I want to be able to do stuff
+
+                      Background: Some basic info
+                        Given the world is round
+
+                      Scenario: Have fun
+                        Given I am trying to have fun
+                        But I am trying not to be a fool
+                      """
+                in
+                    Expect.equal (GherkinParser.parse GherkinParser.feature featureContent)
+                        <| Result.Ok
+                        <| Feature [ "foo", "bar" ]
+                            "Living life"
+                            (AsA "person")
+                            (InOrderTo "get through life")
+                            (IWantTo "be able to do stuff")
+                            (Background "Some basic info" [ Given "the world is round" NoArg ])
+                            [ Scenario []
+                                "Have fun"
+                                [ Given "I am trying to have fun" NoArg
+                                , But "I am trying not to be a fool" NoArg
+                                ]
+                            ]
+        , test "parses Feature with tags correctly"
             <| \() ->
                 let
                     featureContent =
