@@ -62,8 +62,8 @@ all =
             <| \() ->
                 let
                     backgroundContent =
-                        """Background: Some basic facts
-                          Given The world is round
+                        """Background: Some basic facts\x0D
+                          Given The world is round\x0D
                       """
                 in
                     Expect.equal (GherkinParser.parse GherkinParser.background backgroundContent)
@@ -93,42 +93,41 @@ all =
                 in
                     Expect.equal (GherkinParser.parse GherkinParser.docString docString)
                         (Result.Ok <| DocString docStringContent)
-        , test "parses dataTableCellDelimiter correctly"
+        , test "parses tableCellDelimiter correctly"
             <| \() ->
-                Expect.equal (GherkinParser.parse GherkinParser.dataTableCellDelimiter "|")
+                Expect.equal (GherkinParser.parse GherkinParser.tableCellDelimiter "|")
                     (Result.Ok "|")
-        , test "parses dataTableCellContent correctly"
+        , test "parses tableCellContent correctly"
             <| \() ->
-                Expect.equal (GherkinParser.parse GherkinParser.dataTableCellContent "asdf | ")
+                Expect.equal (GherkinParser.parse GherkinParser.tableCellContent "asdf | ")
                     (Result.Ok "asdf")
         , test "parses DataTable row correctly"
             <| \() ->
                 let
-                    dataTableContent =
+                    tableContent =
                         "| Now | is | the | time | "
                 in
-                    Expect.equal (GherkinParser.parse GherkinParser.dataTableRow dataTableContent)
+                    Expect.equal (GherkinParser.parse GherkinParser.tableRow tableContent)
                         (Result.Ok [ "Now", "is", "the", "time" ])
         , test "parses DataTable correctly"
             <| \() ->
                 let
-                    dataTableContent =
-                        """ | Now | is | the | time |
+                    tableContent =
+                        """ | Now | is | the | time |\x0D
                               | For | all | good | men | """
                 in
-                    Expect.equal (GherkinParser.parse GherkinParser.dataTable dataTableContent)
+                    Expect.equal (GherkinParser.parse GherkinParser.table tableContent)
                         (Result.Ok
-                            <| DataTable
-                                [ [ "Now", "is", "the", "time" ]
-                                , [ "For", "all", "good", "men" ]
-                                ]
+                            <| [ [ "Now", "is", "the", "time" ]
+                               , [ "For", "all", "good", "men" ]
+                               ]
                         )
         , test "parses Given Step with DataTable correctly"
             <| \() ->
                 let
                     stepContent =
-                        """Given I am trying to have fun
-                      | Now | is | the | time |
+                        """Given I am trying to have fun\x0D
+                      | Now | is | the | time |\x0D
                       | For | all | good | men | """
                 in
                     Expect.equal (GherkinParser.parse GherkinParser.step stepContent)
@@ -154,11 +153,11 @@ all =
             <| \() ->
                 let
                     scenarioContent =
-                        """Scenario: Have fun
-                      Given I am trying to have fun
-                        | Now | is | the | time |
-                        | For | all | good | men |
-                      But I am trying not to be a fool
+                        """Scenario: Have fun\x0D
+                      Given I am trying to have fun\x0D
+                        | Now | is | the | time |\x0D
+                        | For | all | good | men |\x0D
+                      But I am trying not to be a fool\x0D
                     """
                 in
                     Expect.equal (GherkinParser.parse GherkinParser.scenario scenarioContent)
@@ -177,13 +176,13 @@ all =
             <| \() ->
                 let
                     scenarioContent =
-                        """@foo
-                      @bar
-                      Scenario: Have fun
-                        Given I am trying to have fun
-                          | Now | is | the | time |
-                          | For | all | good | men |
-                        But I am trying not to be a fool
+                        """@foo\x0D
+                      @bar\x0D
+                      Scenario: Have fun\x0D
+                        Given I am trying to have fun\x0D
+                          | Now | is | the | time |\x0D
+                          | For | all | good | men |\x0D
+                        But I am trying not to be a fool\x0D
                       """
                 in
                     Expect.equal (GherkinParser.parse GherkinParser.scenario scenarioContent)
@@ -198,23 +197,57 @@ all =
                             , But "I am trying not to be a fool"
                                 NoArg
                             ]
+          -- , test "parses Scenario Outline with tags correctly"
+          --     <| \() ->
+          --         let
+          --             scenarioContent =
+          --                 """@foo
+          --               @bar
+          --               Scenario Outline: Have fun
+          --                 Given I am trying to have fun
+          --                   | Now | is | the | time |
+          --                   | For | all | good | men |
+          --                 But I am trying not to be a fool
+          --                 @blah
+          --                 Examples:
+          --                   | Now |
+          --                   | For |
+          --               """
+          --         in
+          --             Expect.equal (GherkinParser.parse GherkinParser.scenario scenarioContent)
+          --                 <| Result.Ok
+          --                 <| ScenarioOutline [ "foo", "bar" ]
+          --                     "Have fun"
+          --                     [ Given "I am trying to have fun"
+          --                         <| DataTable
+          --                             [ [ "Now", "is", "the", "time" ]
+          --                             , [ "For", "all", "good", "men" ]
+          --                             ]
+          --                     , But "I am trying not to be a fool"
+          --                         NoArg
+          --                     ]
+          --                     [ Examples [ "blah" ]
+          --                         [ [ "Now" ]
+          --                         , [ "For" ]
+          --                         ]
+          --                     ]
         , test "parses Feature correctly"
             <| \() ->
                 let
                     featureContent =
-                        """@foo
-                      @bar
-                      Feature: Living life
-                      As a person
-                      In order to get through life
-                      I want to be able to do stuff
-
-                      Background: Some basic info
-                        Given the world is round
-
-                      Scenario: Have fun
-                        Given I am trying to have fun
-                        But I am trying not to be a fool
+                        """@foo\x0D
+                      @bar\x0D
+                      Feature: Living life\x0D
+                      As a person\x0D
+                      In order to get through life\x0D
+                      I want to be able to do stuff\x0D
+\x0D
+                      Background: Some basic info\x0D
+                        Given the world is round\x0D
+\x0D
+                      Scenario: Have fun\x0D
+                        Given I am trying to have fun\x0D
+                        But I am trying not to be a fool\x0D
                       """
                 in
                     Expect.equal (GherkinParser.parse GherkinParser.feature featureContent)
@@ -235,19 +268,19 @@ all =
             <| \() ->
                 let
                     featureContent =
-                        """Feature: Living life
-                      As a person
-                      In order to get through life
-                      I want to be able to do stuff
-
-                      Background: Some basic info
-                        Given the world is round
-
-                      Scenario: Have fun
-                        Given I am trying to have fun
-                          | Now | is | the | time |
-                          | For | all | good | men |
-                        But I am trying not to be a fool
+                        """Feature: Living life\x0D
+                      As a person\x0D
+                      In order to get through life\x0D
+                      I want to be able to do stuff\x0D
+\x0D
+                      Background: Some basic info\x0D
+                        Given the world is round\x0D
+\x0D
+                      Scenario: Have fun\x0D
+                        Given I am trying to have fun\x0D
+                          | Now | is | the | time |\x0D
+                          | For | all | good | men |\x0D
+                        But I am trying not to be a fool\x0D
                       """
                 in
                     Expect.equal (GherkinParser.parse GherkinParser.feature featureContent)

@@ -89,33 +89,33 @@ docString =
 {-| This is saying, optional whitespace *> pipe character <* optional whitespace,
 where whitespace here excludes newlines
 -}
-dataTableCellDelimiter : Parser String
-dataTableCellDelimiter =
+tableCellDelimiter : Parser String
+tableCellDelimiter =
     regex "[^\\r\\n\\S|]*\\|[^\\r\\n\\S|]*"
 
 
 {-| This is saying, any text bookended by non-pipe, non-whitespace characters
 -}
-dataTableCellContent : Parser String
-dataTableCellContent =
+tableCellContent : Parser String
+tableCellContent =
     regex "[^|\\s]([^|\\r\\n]*[^|\\s])?"
 
 
-dataTableRow : Parser (List String)
-dataTableRow =
-    dataTableCellDelimiter
-        *> sepBy dataTableCellDelimiter dataTableCellContent
-        <* dataTableCellDelimiter
+tableRow : Parser (List String)
+tableRow =
+    tableCellDelimiter
+        *> sepBy tableCellDelimiter tableCellContent
+        <* tableCellDelimiter
 
 
-dataTableRows : Parser (List (List String))
-dataTableRows =
-    sepBy1 newline dataTableRow
+tableRows : Parser (List (List String))
+tableRows =
+    sepBy1 newline tableRow
 
 
-dataTable : Parser StepArg
-dataTable =
-    DataTable <$> dataTableRows
+table : Parser Table
+table =
+    tableRows
 
 
 noArg : Parser StepArg
@@ -134,15 +134,29 @@ step =
         ]
         <* spaces
         <*> (detailText <* interspace)
-        <*> (docString <|> dataTable <|> noArg)
+        <*> (docString <|> (DataTable <$> table) <|> noArg)
+
+
+examples : Parser Examples
+examples =
+    Examples
+        <$> (tags <* interspace)
+        <*> (string "Examples:" *> interspace *> table)
 
 
 scenario : Parser Scenario
 scenario =
-    Scenario
+    (Scenario
         <$> (tags <* interspace)
         <*> (string "Scenario:" *> spaces *> detailText <* interspace)
         <*> sepBy1 interspace step
+    )
+        <|> (ScenarioOutline
+                <$> (tags <* interspace)
+                <*> (string "Scenario:" *> spaces *> detailText <* interspace)
+                <*> sepBy1 interspace step
+                <*> sepBy1 interspace examples
+            )
 
 
 background : Parser Background'

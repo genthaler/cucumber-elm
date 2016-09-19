@@ -20,9 +20,10 @@ feature =
             , And "something with <param_2>" (DataTable [ [] ])
             , Then "check <param_3> is the output" NoArg
             ]
-            (Examples
+            ([ Examples []
                 [ [ "" ]
                 ]
+             ]
             )
         , Scenario []
             "guys are sailing"
