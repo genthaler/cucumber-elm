@@ -146,17 +146,19 @@ examples =
 
 scenario : Parser Scenario
 scenario =
-    (Scenario
+    Scenario
         <$> (tags <* interspace)
         <*> (string "Scenario:" *> spaces *> detailText <* interspace)
         <*> sepBy1 interspace step
-    )
-        <|> (ScenarioOutline
-                <$> (tags <* interspace)
-                <*> (string "Scenario:" *> spaces *> detailText <* interspace)
-                <*> sepBy1 interspace step
-                <*> sepBy1 interspace examples
-            )
+
+
+scenarioOutline : Parser Scenario
+scenarioOutline =
+    ScenarioOutline
+        <$> (tags <* interspace)
+        <*> (string "Scenario Outline:" *> spaces *> detailText <* interspace)
+        <*> ((sepBy1 interspace step) <* interspace)
+        <*> sepBy1 interspace examples
 
 
 background : Parser Background'
@@ -188,7 +190,7 @@ feature =
         <*> (inOrderTo <* interspace)
         <*> (iWantTo <* interspace)
         <*> (background <|> noBackground <* interspace)
-        <*> sepBy1 interspace scenario
+        <*> sepBy1 interspace (scenario <|> scenarioOutline)
 
 
 formatError : String -> List String -> Context -> String

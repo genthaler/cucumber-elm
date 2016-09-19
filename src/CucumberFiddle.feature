@@ -3,7 +3,7 @@ Feature: Cucumber Fiddle application
     In order to work in a BDD Elm environment
     I want to be able to run Gherkin features against an Elm codebase and see how well the codebase matches the features
 
-    Background:
+    Background: The world is round
         Given I have loaded the CucumberFiddle application
 
     Scenario: Format a feature
