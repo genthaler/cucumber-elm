@@ -16,21 +16,30 @@ import Regex
    In OOP implementations of Cucumber, the state is usually the Step class itself.
 -}
 type Glue a
-    = Glue String (GlueFunction a)
+    = Glue Regex.Regex (GlueFunction a)
 
 
 {-| A glue function transforms an initial state, a list of Strings extracted
 from the matched regular expression, and any StepArg, into a tuple of
 modified state and Assertion.
 -}
-type alias GlueFunction a =
-    a -> List (Maybe String) -> StepArg -> GlueResult a
+type alias GlueFunction state =
+    state -> List (Maybe String) -> StepArg -> GlueResult state
 
 
-{-| A glue function returns a tuple of smodified state and Assertion.
+{-| A glue function returns a tuple of modified state, list of GlueOutput and Assertion.
 -}
 type alias GlueResult a =
-    ( a, Expect.Expectation )
+    ( a, List GlueOutput, Expect.Expectation )
+
+
+{-| A glue function can send some output to be displayed inline in the
+pretty-print of the Gherkin text. Right now only support text, but eventually
+want to support images, in particular screenshots from webdriver.
+-- | GlueOutputImage Blob
+-}
+type GlueOutput
+    = GlueOutputString String
 
 
 
@@ -97,7 +106,7 @@ returning an updated state (to pass to the next Glue function and/or Step) and a
 Assertion.
 -}
 runStep : Step -> a -> Glue a -> GlueResult a
-runStep step state (Glue regexString glueFunction) =
+runStep step state (Glue regex glueFunction) =
     let
         ( stepName, string, arg ) =
             case step of
@@ -116,9 +125,6 @@ runStep step state (Glue regexString glueFunction) =
                 But string arg ->
                     ( "But", string, arg )
 
-        regex =
-            Regex.regex regexString
-
         found =
             Regex.find Regex.All regex string
 
@@ -127,7 +133,7 @@ runStep step state (Glue regexString glueFunction) =
     in
         case List.head found of
             Nothing ->
-                ( state, Expect.pass )
+                ( state, [], Expect.pass )
 
             Just match ->
                 glueFunction state match.submatches arg
