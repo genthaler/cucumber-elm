@@ -1,6 +1,7 @@
 module Cucumber exposing (..)
 
-import Expect
+import Test exposing (Test, describe, test)
+import Expect exposing (pass, fail)
 import Gherkin exposing (..)
 
 
@@ -34,23 +35,21 @@ type alias GlueResult a =
 
 
 -- verify : Feature -> List (Glue a) -> Test
--- verify (Feature description (AsA asA) (InOrderTo inOrderTo) (IWantTo iWantTo) background scenarios) glueFunctions =
+-- verify (Feature tags description (AsA asA) (InOrderTo inOrderTo) (IWantTo iWantTo) background scenarios) glueFunctions =
 --     let
 --         backgroundTest : Test
 --         backgroundTest =
 --             case background of
 --                 NoBackground ->
---                     test "No Background" pass
+--                     test "No Background" (\() -> pass)
 --
---                 Background backgroundSteps ->
+--                 Background backgroundTags backgroundSteps ->
 --                     runSteps "Background" glueFunctions backgroundSteps
 --
 --         scenarioTests =
 --             List.map (runScenario glueFunctions backgroundTest) scenarios
 --     in
---         suite description [ backgroundTest ]
---
---
+--         describe description [ backgroundTest ]
 -- {-|
 -- Run all the steps for a particular scenario, including any background.
 --
@@ -80,14 +79,16 @@ type alias GlueResult a =
 -- runScenario : List (Glue a) -> Test -> Scenario -> Test
 -- runScenario glueFunctions backgroundTest scenario =
 --     case scenario of
---         Scenario description steps ->
---             suite ("Scenario " ++ description) [ backgroundTest, (runSteps "Scenario Steps" glueFunctions steps) ]
+--         Scenario tags description steps ->
+--             describe ("Scenario " ++ description) [ backgroundTest, (runSteps "Scenario Steps" glueFunctions steps) ]
 --
 --         _ ->
---             test "Scenario Outline" (fail "not yet implemented")
+--             describe (test "Scenario Outline" (fail "not yet implemented"))
+--
+--
 -- runSteps : String -> List (Glue String) -> List Step -> Test
 -- runSteps description glueFunctions steps =
---     suite description (List.map (runStep glueFunctions) steps)
+--     describe description (List.map (runStep glueFunctions) steps)
 
 
 {-|
