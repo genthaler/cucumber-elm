@@ -1,5 +1,27 @@
 module Cucumber exposing (..)
 
+{-| Tons of useful functions that get imported by default.
+
+# Glue
+These types describe
+@docs Glue, GlueFunction, GlueResult, GlueOutput
+
+# Running
+
+These functions are for running glue functions with the step arguments as arguments.
+
+It's the glue function's responsibility to decide whether it can handle a
+particular step, though we can certainly help with pulling out matching groups.
+
+The execution order is:
+- for each Scenario or Scenario Outline+Example
+
+
+@docs runStep, runSteps, verify, run,
+
+# Reporting
+-}
+
 import Test exposing (Test, describe, test)
 import Expect exposing (pass, fail)
 import Gherkin exposing (..)

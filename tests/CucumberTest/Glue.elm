@@ -13,10 +13,10 @@ myGlue =
         assert state maybeMatches stepArg =
             case List.head maybeMatches of
                 Nothing ->
-                    ( state, [], Expect.fail "misery" )
+                    Debug.log "case" ( state, [], Expect.fail "misery1" )
 
                 Just Nothing ->
-                    ( state, [], Expect.fail "misery" )
+                    ( state, [], Expect.fail "misery2" )
 
                 Just (Just arg) ->
                     ( state, [], Expect.equal True (Fixture.myRealFunction arg) )

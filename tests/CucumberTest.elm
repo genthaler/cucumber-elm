@@ -14,12 +14,14 @@ step =
 
 stepTest : Test
 stepTest =
-    describe "Features"
+    describe "Steps"
         [ test "successfully runs a Step against a Glue function"
             <| \() ->
-                (runStep step "" Glue.myGlue
-                    |> snd
-                )
+                let
+                    ( _, _, assertion ) =
+                        runStep step "" Glue.myGlue
+                in
+                    assertion
         ]
 
 
