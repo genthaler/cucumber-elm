@@ -3,7 +3,7 @@ module Cucumber exposing (..)
 {-| This module is responsible for the actual running of a Gherkin feature against a set of functions.
 
 The functions need to have the type signature of
-``` Regex -> String ->
+`Regex -> String ->
 
 # This API exposes methods to run Glue functions, and for Glue functions to run
 
@@ -17,7 +17,8 @@ The functions need to have the type signature of
 
 
 # Glue
-These types describe
+These types describe a glue function
+
 @docs Glue, GlueFunction, GlueResult, GlueOutput
 
 # Running
@@ -29,6 +30,12 @@ particular step, though we can certainly help with pulling out matching groups.
 
 The execution order is:
 - for each Scenario or Scenario Outline+Example
+  - execute each Background Step
+  - `andThen`
+  - execute each Scenario Step
+
+I want to be able to plug any assertions, as well as any extra info provided
+by the glue functions, into the pretty-print of the feature.
 
 
 # Reporting
@@ -37,6 +44,7 @@ The execution order is:
 import Test exposing (Test, describe, test)
 import Expect exposing (pass, fail)
 import Gherkin exposing (..)
+import GherkinParser exposing (..)
 
 
 -- import Automaton exposing (..)
@@ -48,6 +56,7 @@ import Regex
    regular expression string, plus a glue function
 
    In OOP implementations of Cucumber, the state is usually the Step class itself.
+   Here we pass the state around explicitly.
 -}
 type Glue a
     = Glue Regex.Regex (GlueFunction a)
@@ -58,12 +67,12 @@ from the matched regular expression, and any StepArg, into a tuple of
 modified state and Assertion.
 -}
 type alias GlueFunction state =
-    state -> List (Maybe String) -> StepArg -> GlueResult state
+    state -> List (Maybe String) -> List StepArg -> GlueFunctionResult state
 
 
 {-| A glue function returns a tuple of modified state, list of GlueOutput and Assertion.
 -}
-type alias GlueResult a =
+type alias GlueFunctionResult a =
     ( a, List GlueOutput, Expect.Expectation )
 
 
@@ -76,8 +85,41 @@ type GlueOutput
     = GlueOutputString String
 
 
-verify : Feature -> List (Glue a) -> Test
-verify (Feature tags description (AsA asA) (InOrderTo inOrderTo) (IWantTo iWantTo) background scenarios) glueFunctions =
+{-| Running a feature returns a tuple of `(Boolean, FeatureRun)`
+-}
+type CucumberResult
+    = CucumberResult Bool FeatureRun
+
+
+{-| The regular `Scenario` and `ScenarioOutline` types won't suffice for reporting,
+since we'll have multiple invocations of a set of `Background` `Step`s in the cases
+of `Scenario`s and `ScenarioOutline`s, and
+
+-}
+type FeatureRun
+    = FeatureRun Bool
+
+
+{-| This is the main entry point to the module.
+- Takes a String containing a feature definition,
+- Parses it,
+- Runs it against against a set of glue functions,
+- Reports the results.
+-}
+testFeature : List (GlueFunction state) -> state -> String -> Test
+testFeature glueFunctions initialState featureText =
+    case GherkinParser.parse GherkinParser.feature featureText of
+        Err error ->
+            test "Parsing error" <| \() -> fail error
+
+        Ok feature ->
+            verify glueFunctions initialState feature
+
+
+{-| verify a `Feature`
+-}
+verify : List (GlueFunction state) -> state -> Feature -> Test
+verify glueFunctions (Feature tags description (AsA asA) (InOrderTo inOrderTo) (IWantTo iWantTo) background scenarios) =
     let
         backgroundTest : Test
         backgroundTest =
@@ -130,6 +172,13 @@ runScenario glueFunctions backgroundTest scenario =
             describe (test "Scenario Outline" (fail "not yet implemented"))
 
 
+
+-- scenarioTests =
+--     List.map (runScenario glueFunctions backgroundTest) scenarios
+-- in
+--     describe description [ backgroundTest ]
+
+
 runSteps : String -> List (Glue String) -> List Step -> Test
 runSteps description glueFunctions steps =
     describe description (List.map (runStep glueFunctions) steps)
@@ -140,7 +189,7 @@ runStep will take a Step and an initial state and run them against a Glue functi
 returning an updated state (to pass to the next Glue function and/or Step) and an
 Assertion.
 -}
-runStep : Step -> a -> Glue a -> GlueResult a
+runStep : Step -> a -> Glue a -> GlueFunctionResult a
 runStep step state (Glue regex glueFunction) =
     let
         ( stepName, string, arg ) =
@@ -172,10 +221,3 @@ runStep step state (Glue regex glueFunction) =
 
             Just match ->
                 glueFunction state match.submatches arg
-
-
-{-| The regular `Scenario` and `ScenarioOutline` types won't suffice for reporting,
-since we'll have multiple invocations of a set of `Background` `Step`s in the cases
-of `Scenario`s and `ScenarioOutline`s, and
-
--}
