@@ -37,12 +37,19 @@ The execution order is:
 I want to be able to plug any assertions, as well as any extra info provided
 by the glue functions, into the pretty-print of the feature.
 
+I'm a little bit hobbled here by the fact that tests are now separated;
+i.e. a Test is passed in a closure that returns an Assertion, rather than
+just an Assertion. This is a good thing generally,
+since it keeps tests separated, but it's bad for me since the whole feature
+needs to be run as a "test". This means I need to deal more with Assertions, and
+create my own abstractions to pass in the result of eagerly evaluated,
+stateful tests.
 
 # Reporting
 -}
 
 import Test exposing (Test, describe, test)
-import Expect exposing (pass, fail)
+import Expect exposing (Expectation, pass, fail)
 import Gherkin exposing (..)
 import GherkinParser exposing (..)
 
@@ -116,25 +123,26 @@ testFeature glueFunctions initialState featureText =
             verify glueFunctions initialState feature
 
 
-{-| verify a `Feature`
+{-| verify a `Feature` against a set of glue functions.
 -}
-verify : List (GlueFunction state) -> state -> Feature -> Test
-verify glueFunctions (Feature tags description (AsA asA) (InOrderTo inOrderTo) (IWantTo iWantTo) background scenarios) =
+featureTest : List (GlueFunction state) -> state -> Feature -> Test
+featureTest glueFunctions initialState (Feature tags featureDescription (AsA asA) (InOrderTo inOrderTo) (IWantTo iWantTo) background scenarios) =
     let
-        backgroundTest : Test
-        backgroundTest =
-            case background of
-                NoBackground ->
-                    test "No Background" (\() -> pass)
-
-                Background backgroundTags backgroundSteps ->
-                    runSteps "Background" glueFunctions backgroundSteps
 
         scenarioTests =
-            List.map (runScenario glueFunctions backgroundTest) scenarios
+            List.map (scenarioTest glueFunctions backgroundTest) scenarios
     in
-        describe description [ backgroundTest ]
+        describe featureDescription [(backgroundTest background), scenarioTests]
 
+backgroundTest : state -> Background -> (state, Test)
+backgroundTest state background =
+      describe "Background"
+          <| case background of
+              NoBackground ->
+                  [ test "No Background" (\() -> pass) ]
+
+              Background backgroundTags backgroundSteps ->
+                  stepsTest glueFunctions initialState backgroundSteps
 
 {-|
 Run all the steps for a particular scenario, including any background.
@@ -152,6 +160,8 @@ For each Scenario, run Feature Background followed by the Scenario steps
 For each Scenario Outline, for each Example, run Feature Background followed by the Scenario steps (filtered by Example tokens)
 
 So I want to fold a list of steps, starting with a Nothing Assertion and a Nothing state datastructure
+-}
+
 
 run : List Step -> List (Step, Assertion)
 run  =
@@ -162,11 +172,11 @@ run  =
     List.foldl (Nothing, Nothing) steps
 
 -}
-runScenario : List (Glue a) -> Test -> Scenario -> Test
-runScenario glueFunctions backgroundTest scenario =
+scenarioTest : List (Glue a) -> Test -> Scenario -> Test
+scenarioTest glueFunctions backgroundTest scenario =
     case scenario of
         Scenario tags description steps ->
-            describe ("Scenario " ++ description) [ backgroundTest, (runSteps "Scenario Steps" glueFunctions steps) ]
+            describe ("Scenario " ++ description) [ backgroundTest, (stepsTest "Scenario Steps" glueFunctions steps) ]
 
         _ ->
             describe (test "Scenario Outline" (fail "not yet implemented"))
@@ -179,9 +189,9 @@ runScenario glueFunctions backgroundTest scenario =
 --     describe description [ backgroundTest ]
 
 
-runSteps : String -> List (Glue String) -> List Step -> Test
-runSteps description glueFunctions steps =
-    describe description (List.map (runStep glueFunctions) steps)
+stepsTest : String -> List (Glue String) -> List Step -> Test
+stepsTest description glueFunctions steps =
+    describe description (List.map (stepTest glueFunctions) steps)
 
 
 {-|
@@ -189,8 +199,8 @@ runStep will take a Step and an initial state and run them against a Glue functi
 returning an updated state (to pass to the next Glue function and/or Step) and an
 Assertion.
 -}
-runStep : Step -> a -> Glue a -> GlueFunctionResult a
-runStep step state (Glue regex glueFunction) =
+stepTest : Step -> a -> Glue a -> GlueFunctionResult a
+stepTest step state (Glue regex glueFunction) =
     let
         ( stepName, string, arg ) =
             case step of
