@@ -52,21 +52,18 @@ import Test exposing (Test, describe, test)
 import Expect exposing (Expectation, pass, fail)
 import Gherkin exposing (..)
 import GherkinParser exposing (..)
+import List
 
 
 -- import Automaton exposing (..)
-
-import Regex
-
-
-{-| According to this definition, glue is defined by a
-   regular expression string, plus a glue function
-
-   In OOP implementations of Cucumber, the state is usually the Step class itself.
-   Here we pass the state around explicitly.
--}
-type Glue a
-    = Glue Regex.Regex (GlueFunction a)
+-- {-| According to this definition, glue is defined by a
+--    regular expression string, plus a glue function
+--
+--    In OOP implementations of Cucumber, the state is usually the Step class itself.
+--    Here we pass the state around explicitly.
+-- -}
+-- type Glue a
+--     = Glue Regex.Regex (GlueFunction a)
 
 
 {-| A glue function transforms an initial state, a list of Strings extracted
@@ -77,10 +74,20 @@ type alias GlueFunction state =
     state -> List (Maybe String) -> List StepArg -> GlueFunctionResult state
 
 
+type alias GlueFunctions state =
+    List (GlueFunction state)
+
+
 {-| A glue function returns a tuple of modified state, list of GlueOutput and Assertion.
 -}
 type alias GlueFunctionResult a =
-    ( a, List GlueOutput, Expect.Expectation )
+    ( a, Expectation )
+
+
+{-| Elsewhere we return a tuple of state and `List Test`
+-}
+type alias ContinuationResult a =
+    ( a, Test )
 
 
 {-| A glue function can send some output to be displayed inline in the
@@ -107,6 +114,13 @@ type FeatureRun
     = FeatureRun Bool
 
 
+{-| defer execution
+-}
+defer : a -> (() -> a)
+defer x =
+    \() -> x
+
+
 {-| This is the main entry point to the module.
 - Takes a String containing a feature definition,
 - Parses it,
@@ -120,78 +134,50 @@ testFeature glueFunctions initialState featureText =
             test "Parsing error" <| \() -> fail error
 
         Ok feature ->
-            verify glueFunctions initialState feature
+            featureTest glueFunctions initialState feature
 
 
 {-| verify a `Feature` against a set of glue functions.
 -}
-featureTest : List (GlueFunction state) -> state -> Feature -> Test
+featureTest : GlueFunctions state -> state -> Feature -> Test
 featureTest glueFunctions initialState (Feature tags featureDescription (AsA asA) (InOrderTo inOrderTo) (IWantTo iWantTo) background scenarios) =
     let
+        ( backgroundState, backgroundSuite ) =
+            backgroundTest glueFunctions initialState background
 
         scenarioTests =
-            List.map (scenarioTest glueFunctions backgroundTest) scenarios
+            List.map (scenarioTest glueFunctions backgroundState) scenarios
     in
-        describe featureDescription [(backgroundTest background), scenarioTests]
+        describe featureDescription scenarioTests
 
-backgroundTest : state -> Background -> (state, Test)
-backgroundTest state background =
-      describe "Background"
-          <| case background of
-              NoBackground ->
-                  [ test "No Background" (\() -> pass) ]
 
-              Background backgroundTags backgroundSteps ->
-                  stepsTest glueFunctions initialState backgroundSteps
-
-{-|
-Run all the steps for a particular scenario, including any background.
-
-We need to pass state from one step invocation to another, so we use a continuation style for this.
-
-Options I've found so far are evancz/automaton, Task.andThen, Maybe.andThen, Result.andThen, Basic.>>
-
-List Step -> List Glue -> List (Step, Maybe Assertion)
-
-Remember that I want to retain information about what Step is being executed.
-
-For each Scenario, run Feature Background followed by the Scenario steps
-
-For each Scenario Outline, for each Example, run Feature Background followed by the Scenario steps (filtered by Example tokens)
-
-So I want to fold a list of steps, starting with a Nothing Assertion and a Nothing state datastructure
+{-| "Run" a `Background`
 -}
+backgroundTest : GlueFunctions state -> state -> Background' -> ContinuationResult state
+backgroundTest glueFunctions initialState background =
+    case background of
+        NoBackground ->
+            ( initialState, test "No Background" <| defer pass )
+
+        Background backgroundTags backgroundSteps ->
+            stepsTest glueFunctions initialState backgroundSteps
 
 
-run : List Step -> List (Step, Assertion)
-run  =
-  let
-    reduce start step =
-
-  in
-    List.foldl (Nothing, Nothing) steps
-
--}
-scenarioTest : List (Glue a) -> Test -> Scenario -> Test
-scenarioTest glueFunctions backgroundTest scenario =
+scenarioTest : Test -> GlueFunctions state -> state -> Scenario -> Test
+scenarioTest backgroundTest glueFunctions initialState scenario =
     case scenario of
         Scenario tags description steps ->
-            describe ("Scenario " ++ description) [ backgroundTest, (stepsTest "Scenario Steps" glueFunctions steps) ]
+            describe ("Scenario " ++ description) [ backgroundTest, (stepsTest glueFunctions initialState steps) ]
 
         _ ->
-            describe (test "Scenario Outline" (fail "not yet implemented"))
+            test "Scenario Outline" <| defer <| fail "not yet implemented"
 
 
-
--- scenarioTests =
---     List.map (runScenario glueFunctions backgroundTest) scenarios
--- in
---     describe description [ backgroundTest ]
-
-
-stepsTest : String -> List (Glue String) -> List Step -> Test
-stepsTest description glueFunctions steps =
-    describe description (List.map (stepTest glueFunctions) steps)
+{-| Run a `List` of `Step`s against a set of `GlueFunctions` using an inital state.
+-}
+stepsTest : GlueFunctions state -> state -> List Step -> ContinuationResult state
+stepsTest glueFunctions initialState steps =
+    describe "Steps" (List.map (stepTest glueFunctions) steps)
 
 
 {-|
@@ -199,8 +185,8 @@ runStep will take a Step and an initial state and run them against a Glue functi
 returning an updated state (to pass to the next Glue function and/or Step) and an
 Assertion.
 -}
-stepTest : Step -> a -> Glue a -> GlueFunctionResult a
-stepTest step state (Glue regex glueFunction) =
+stepTest : GlueFunctions state -> state -> Step -> ContinuationResult state
+stepTest glueFunctions initialState step =
     let
         ( stepName, string, arg ) =
             case step of
@@ -219,15 +205,11 @@ stepTest step state (Glue regex glueFunction) =
                 But string arg ->
                     ( "But", string, arg )
 
-        found =
-            Regex.find Regex.All regex string
-
-        oneFound =
-            (List.length found) == 1
+        apply glueFunction ( state, output, expectations ) =
+            let
+                ( newState, expectation ) =
+                    glueFunction state
+            in
+                ( newState, expectation :: expectations )
     in
-        case List.head found of
-            Nothing ->
-                ( state, [], Expect.pass )
-
-            Just match ->
-                glueFunction state match.submatches arg
+        List.foldr apply ( initialState, [] ) glueFunctions
