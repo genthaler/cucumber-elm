@@ -127,47 +127,50 @@ defer x =
 - Runs it against against a set of glue functions,
 - Reports the results.
 -}
-testFeature : List (GlueFunction state) -> state -> String -> Test
-testFeature glueFunctions initialState featureText =
+testFeatureText : GlueFunctions state -> state -> String -> Test
+testFeatureText glueFunctions initialState featureText =
     case GherkinParser.parse GherkinParser.feature featureText of
         Err error ->
             test "Parsing error" <| \() -> fail error
 
         Ok feature ->
-            featureTest glueFunctions initialState feature
+            testFeature glueFunctions initialState feature
 
 
 {-| verify a `Feature` against a set of glue functions.
 -}
-featureTest : GlueFunctions state -> state -> Feature -> Test
-featureTest glueFunctions initialState (Feature tags featureDescription (AsA asA) (InOrderTo inOrderTo) (IWantTo iWantTo) background scenarios) =
+testFeature : GlueFunctions state -> state -> Feature -> Test
+testFeature glueFunctions initialState (Feature tags featureDescription (AsA asA) (InOrderTo inOrderTo) (IWantTo iWantTo) background scenarios) =
     let
         ( backgroundState, backgroundSuite ) =
-            backgroundTest glueFunctions initialState background
+            testBackground glueFunctions initialState background
 
         scenarioTests =
-            List.map (scenarioTest glueFunctions backgroundState) scenarios
+            scenarios |> List.map (testScenario glueFunctions backgroundState)
     in
         describe featureDescription scenarioTests
 
 
 {-| "Run" a `Background`
 -}
-backgroundTest : GlueFunctions state -> state -> Background' -> ContinuationResult state
-backgroundTest glueFunctions initialState background =
+testBackground : GlueFunctions state -> state -> Background' -> ContinuationResult state
+testBackground glueFunctions initialState background =
     case background of
         NoBackground ->
             ( initialState, test "No Background" <| defer pass )
 
         Background backgroundTags backgroundSteps ->
-            stepsTest glueFunctions initialState backgroundSteps
+            testSteps glueFunctions initialState backgroundSteps
 
 
-scenarioTest : Test -> GlueFunctions state -> state -> Scenario -> Test
-scenarioTest backgroundTest glueFunctions initialState scenario =
+testScenario : Test -> GlueFunctions state -> state -> Scenario -> Test
+testScenario backgroundTest glueFunctions initialState scenario =
     case scenario of
         Scenario tags description steps ->
-            describe ("Scenario " ++ description) [ backgroundTest, (stepsTest glueFunctions initialState steps) ]
+          let
+            testSteps glueFunctions initialState steps
+          in
+            describe ("Scenario " ++ description) (backgroundTest ++ )
 
         _ ->
             test "Scenario Outline" <| defer <| fail "not yet implemented"
@@ -175,9 +178,9 @@ scenarioTest backgroundTest glueFunctions initialState scenario =
 
 {-| Run a `List` of `Step`s against a set of `GlueFunctions` using an inital state.
 -}
-stepsTest : GlueFunctions state -> state -> List Step -> ContinuationResult state
-stepsTest glueFunctions initialState steps =
-    describe "Steps" (List.map (stepTest glueFunctions) steps)
+testSteps : GlueFunctions state -> state -> List Step -> ContinuationResult state
+testSteps glueFunctions initialState steps =
+    describe "Steps" (List.map (testStep glueFunctions) steps)
 
 
 {-|
@@ -185,8 +188,8 @@ runStep will take a Step and an initial state and run them against a Glue functi
 returning an updated state (to pass to the next Glue function and/or Step) and an
 Assertion.
 -}
-stepTest : GlueFunctions state -> state -> Step -> ContinuationResult state
-stepTest glueFunctions initialState step =
+testStep : GlueFunctions state -> state -> Step -> ContinuationResult state
+testStep glueFunctions initialState step =
     let
         ( stepName, string, arg ) =
             case step of
