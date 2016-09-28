@@ -34,16 +34,6 @@ The execution order is:
   - `andThen`
   - execute each Scenario Step
 
-I want to be able to plug any assertions, as well as any extra info provided
-by the glue functions, into the pretty-print of the feature.
-
-I'm a little bit hobbled here by the fact that tests are now separated;
-i.e. a Test is passed in a closure that returns an Assertion, rather than
-just an Assertion. This is a good thing generally,
-since it keeps tests separated, but it's bad for me since the whole feature
-needs to be run as a "test". This means I need to deal more with Assertions, and
-create my own abstractions to pass in the result of eagerly evaluated,
-stateful tests.
 
 # Reporting
 -}
@@ -142,11 +132,8 @@ testFeatureText glueFunctions initialState featureText =
 testFeature : GlueFunctions state -> state -> Feature -> Test
 testFeature glueFunctions initialState (Feature tags featureDescription (AsA asA) (InOrderTo inOrderTo) (IWantTo iWantTo) background scenarios) =
     let
-        ( backgroundState, backgroundSuite ) =
-            testBackground glueFunctions initialState background
-
         scenarioTests =
-            scenarios |> List.map (testScenario glueFunctions backgroundState)
+            List.map (testScenario glueFunctions initialState background) scenarios
     in
         describe featureDescription scenarioTests
 
@@ -163,14 +150,17 @@ testBackground glueFunctions initialState background =
             testSteps glueFunctions initialState backgroundSteps
 
 
-testScenario : Test -> GlueFunctions state -> state -> Scenario -> Test
-testScenario backgroundTest glueFunctions initialState scenario =
+testScenario glueFunctions initialState background scenario =
     case scenario of
         Scenario tags description steps ->
-          let
-            testSteps glueFunctions initialState steps
-          in
-            describe ("Scenario " ++ description) (backgroundTest ++ )
+            let
+                ( backgroundState, backgroundTest ) =
+                    testBackground glueFunctions initialState background
+
+                a =
+                    testSteps glueFunctions backgroundTest steps
+            in
+                describe ("Scenario " ++ description) [ backgroundTest ]
 
         _ ->
             test "Scenario Outline" <| defer <| fail "not yet implemented"
@@ -208,7 +198,7 @@ testStep glueFunctions initialState step =
                 But string arg ->
                     ( "But", string, arg )
 
-        apply glueFunction ( state, output, expectations ) =
+        apply glueFunction ( state, expectations ) =
             let
                 ( newState, expectation ) =
                     glueFunction state
