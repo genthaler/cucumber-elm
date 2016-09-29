@@ -12,14 +12,14 @@ step =
     Given "Now is the time" (DocString "")
 
 
-stepTest : Test
-stepTest =
+testTestStep : Test
+testTestStep =
     describe "Steps"
         [ test "successfully runs a Step against a Glue function"
             <| \() ->
                 let
-                    ( _, _, assertion ) =
-                        runStep step "" Glue.myGlue
+                    ( _, assertion ) =
+                        testStep [ Glue.myGlue ] "initial state" step
                 in
                     assertion
         ]
@@ -28,5 +28,5 @@ stepTest =
 all : Test
 all =
     describe "Features"
-        [ stepTest
+        [ testTestStep
         ]
