@@ -41,7 +41,7 @@ The execution order is:
 import Test exposing (Test, describe, test)
 import Expect exposing (Expectation, pass, fail)
 import Gherkin exposing (..)
-import GherkinParser exposing (..)
+import GherkinParser exposing (feature, parse)
 import List
 
 
@@ -61,7 +61,7 @@ from the matched regular expression, and any StepArg, into a tuple of
 modified state and Assertion.
 -}
 type alias GlueFunction state =
-    state -> String -> StepArg -> GlueFunctionResult state
+    state -> List Tag -> String -> StepArg -> GlueFunctionResult state
 
 
 type alias GlueFunctions state =
@@ -167,11 +167,26 @@ defer x =
 --             test "Scenario Outline" <| defer <| fail "not yet implemented"
 --
 --
--- {-| Run a `List` of `Step`s against a set of `GlueFunctions` using an inital state.
--- -}
--- testSteps : GlueFunctions state -> state -> List Step -> ContinuationResult state
--- testSteps glueFunctions initialState steps =
---     describe "Steps" (List.map (testStep glueFunctions) steps)
+
+
+{-| Run a `List` of `Step`s against a set of `GlueFunctions` using an inital state.
+-}
+testSteps : GlueFunctions state -> state -> List Tag -> List Step -> Test
+testSteps glueFunctions initialState tags steps =
+    let
+        results =
+            List.foldr
+                (\step ( state, tests ) ->
+                    let
+                        ( newState, test ) =
+                            testStep glueFunctions state tags step
+                    in
+                        ( newState, test :: tests )
+                )
+                ( initialState, [] )
+                steps
+    in
+        results |> snd >> describe "Steps"
 
 
 {-|
@@ -179,8 +194,8 @@ runStep will take a Step and an initial state and run them against a Glue functi
 returning an updated state (to pass to the next Glue function and/or Step) and an
 Assertion.
 -}
-testStep : List (GlueFunction state) -> state -> Step -> ( state, Expectation )
-testStep glueFunctions initialState step =
+testStep : List (GlueFunction state) -> state -> List Tag -> Step -> ( state, Test )
+testStep glueFunctions initialState tags step =
     let
         ( stepName, string, arg ) =
             case step of
@@ -200,7 +215,7 @@ testStep glueFunctions initialState step =
                     ( "But", string, arg )
 
         apply function =
-            function initialState string arg
+            function initialState tags string arg
 
         results =
             glueFunctions
@@ -208,8 +223,8 @@ testStep glueFunctions initialState step =
                 >> List.filter ((/=) Nothing)
     in
         case results of
-            (Just onlyValidResult) :: [] ->
-                onlyValidResult
+            (Just ( newState, expectation )) :: [] ->
+                ( newState, test string <| defer <| expectation )
 
             _ ->
-                ( initialState, fail "There should be exactly one glue function that accepts the given Step description and returns a Just Expectation" )
+                ( initialState, test string <| defer <| (fail "There should be exactly one glue function that accepts the given Step description and returns a Just Expectation") )

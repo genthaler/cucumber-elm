@@ -6,5 +6,5 @@ import CucumberTest.Fixture as Fixture
 
 
 myGlue : GlueFunction String
-myGlue initialState description stepArg =
+myGlue initialState tags description stepArg =
     Just ( description, Expect.pass )
