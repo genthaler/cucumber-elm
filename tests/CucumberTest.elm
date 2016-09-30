@@ -19,16 +19,16 @@ step2 =
 
 testTestSteps : Test
 testTestSteps =
-    describe "Steps"
+    describe "testing testSteps"
         [ describe "successfully runs Steps against a Glue function"
-            [ testSteps [ Glue.myGlue ] "initial state" [] [ step1, step2 ]
+            [ testSteps [ Glue.myGlue ] "initial state" [] [ step1, step2 ] |> snd
             ]
         ]
 
 
 testTestStep : Test
 testTestStep =
-    describe "Step"
+    describe "testing testStep"
         [ describe "successfully runs a Step against a Glue function"
             [ testStep [ Glue.myGlue ] "initial state" [] step1
                 |> snd
@@ -38,6 +38,7 @@ testTestStep =
 
 all : Test
 all =
-    describe "Features"
+    describe "CucumberTest"
         [ testTestStep
+        , testTestSteps
         ]

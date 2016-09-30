@@ -137,8 +137,6 @@ defer x =
 --             List.map (testScenario glueFunctions initialState background) scenarios
 --     in
 --         describe featureDescription scenarioTests
---
---
 -- {-| "Run" a `Background`
 -- -}
 -- testBackground : GlueFunctions state -> state -> Background' -> ContinuationResult state
@@ -149,8 +147,8 @@ defer x =
 --
 --         Background backgroundTags backgroundSteps ->
 --             testSteps glueFunctions initialState backgroundSteps
---
---
+-- {-| Run a `Scenario` against a set of `GlueFunctions` using an initial state
+-- -}
 -- testScenario glueFunctions initialState background scenario =
 --     case scenario of
 --         Scenario tags description steps ->
@@ -165,16 +163,14 @@ defer x =
 --
 --         _ ->
 --             test "Scenario Outline" <| defer <| fail "not yet implemented"
---
---
 
 
 {-| Run a `List` of `Step`s against a set of `GlueFunctions` using an inital state.
 -}
-testSteps : GlueFunctions state -> state -> List Tag -> List Step -> Test
+testSteps : GlueFunctions state -> state -> List Tag -> List Step -> ContinuationResult state
 testSteps glueFunctions initialState tags steps =
     let
-        results =
+        ( finalState, finalTests ) =
             List.foldr
                 (\step ( state, tests ) ->
                     let
@@ -186,7 +182,7 @@ testSteps glueFunctions initialState tags steps =
                 ( initialState, [] )
                 steps
     in
-        results |> snd >> describe "Steps"
+        ( finalState, describe "Steps" finalTests )
 
 
 {-|
@@ -194,7 +190,7 @@ runStep will take a Step and an initial state and run them against a Glue functi
 returning an updated state (to pass to the next Glue function and/or Step) and an
 Assertion.
 -}
-testStep : List (GlueFunction state) -> state -> List Tag -> Step -> ( state, Test )
+testStep : List (GlueFunction state) -> state -> List Tag -> Step -> ContinuationResult state
 testStep glueFunctions initialState tags step =
     let
         ( stepName, string, arg ) =
@@ -227,4 +223,4 @@ testStep glueFunctions initialState tags step =
                 ( newState, test string <| defer <| expectation )
 
             _ ->
-                ( initialState, test string <| defer <| (fail "There should be exactly one glue function that accepts the given Step description and returns a Just Expectation") )
+                ( initialState, test string <| defer <| (fail "There should be exactly one GlueFunction that accepts the given Step description and returns a Just Expectation") )
