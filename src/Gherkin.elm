@@ -26,7 +26,7 @@ similarly to extant ports in other languages.
 a .feature document in BDD terms.
 -}
 type Feature
-    = Feature (List Tag) String AsA InOrderTo IWantTo Background' (List Scenario)
+    = Feature (List Tag) String AsA InOrderTo IWantTo Background (List Scenario)
 
 
 {-| This is the datatype for tags, which can be specified at Feature, Scenario &
@@ -58,7 +58,7 @@ type IWantTo
 
 When automating, each [Step](#Step) will be executed before each [Scenario](#Scenario)'s [Step](#Step)s
 -}
-type Background'
+type Background
     = Background String (List Step)
     | NoBackground
 
@@ -71,7 +71,7 @@ Steps
 -}
 type Scenario
     = Scenario (List Tag) String (List Step)
-    | ScenarioOutline (List Tag) String (List Step) Examples
+    | ScenarioOutline (List Tag) String (List Step) (List Examples)
 
 
 {-| A Step describes an action or assertion.
@@ -97,17 +97,17 @@ Available options are DataTables and DocStrings.
 -}
 type StepArg
     = NoArg
-    | DataTable DataTable
+    | DataTable Table
     | DocString String
 
 
 {-| Used in Scenario Outlines
 -}
 type Examples
-    = Examples DataTable
+    = Examples (List Tag) Table
 
 
 {-| Used in Steps i.e. a kind of StepArg.
 -}
-type alias DataTable =
+type alias Table =
     List (List String)

@@ -5,3 +5,5 @@ repl-temp-*
 # ide support
 .tags*
 *.log
+
+dep-check.html

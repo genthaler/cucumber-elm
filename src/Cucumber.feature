@@ -1,13 +1,12 @@
-Feature: Cucumber Fiddle application
+Feature: Cucumber
     As a BDD practitioner
     In order to work in a BDD Elm environment
     I want to be able to run Gherkin features against an Elm codebase and see how well the codebase matches the features
 
-    Background: The world is round
-        Given I have loaded the CucumberFiddle application
 
-    Scenario: Format a feature
-        Given I have entered a feature in the feature editor
+    Scenario: Happy path
+        Given I have a feature
+        And A list of Glue functions that take a state
         When I format the feature
         Then I see the formatted feature
 
