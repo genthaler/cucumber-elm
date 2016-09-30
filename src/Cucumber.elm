@@ -74,12 +74,6 @@ type alias GlueFunctionResult a =
     Maybe ( a, Expectation )
 
 
-{-| Elsewhere we return a tuple of state and `List Test`
--}
-type alias ContinuationResult a =
-    ( a, Test )
-
-
 {-| A glue function can send some output to be displayed inline in the
 pretty-print of the Gherkin text. Right now only support text, but eventually
 want to support images, in particular screenshots from webdriver.
@@ -111,63 +105,71 @@ defer x =
     \() -> x
 
 
+{-| This is the main entry point to the module.
+- Takes a String containing a feature definition,
+- Parses it,
+- Runs it against against a set of glue functions,
+- Reports the results.
+-}
+testFeatureText : GlueFunctions state -> state -> String -> Test
+testFeatureText glueFunctions initialState featureText =
+    case GherkinParser.parse GherkinParser.feature featureText of
+        Err error ->
+            test "Parsing error" <| \() -> fail error
 
--- {-| This is the main entry point to the module.
--- - Takes a String containing a feature definition,
--- - Parses it,
--- - Runs it against against a set of glue functions,
--- - Reports the results.
--- -}
--- testFeatureText : GlueFunctions state -> state -> String -> Test
--- testFeatureText glueFunctions initialState featureText =
---     case GherkinParser.parse GherkinParser.feature featureText of
---         Err error ->
---             test "Parsing error" <| \() -> fail error
---
---         Ok feature ->
---             testFeature glueFunctions initialState feature
---
---
--- {-| verify a `Feature` against a set of glue functions.
--- -}
--- testFeature : GlueFunctions state -> state -> Feature -> Test
--- testFeature glueFunctions initialState (Feature tags featureDescription (AsA asA) (InOrderTo inOrderTo) (IWantTo iWantTo) background scenarios) =
---     let
---         scenarioTests =
---             List.map (testScenario glueFunctions initialState background) scenarios
---     in
---         describe featureDescription scenarioTests
--- {-| "Run" a `Background`
--- -}
--- testBackground : GlueFunctions state -> state -> Background' -> ContinuationResult state
--- testBackground glueFunctions initialState background =
---     case background of
---         NoBackground ->
---             ( initialState, test "No Background" <| defer pass )
---
---         Background backgroundTags backgroundSteps ->
---             testSteps glueFunctions initialState backgroundSteps
--- {-| Run a `Scenario` against a set of `GlueFunctions` using an initial state
--- -}
--- testScenario glueFunctions initialState background scenario =
---     case scenario of
---         Scenario tags description steps ->
---             let
---                 ( backgroundState, backgroundTest ) =
---                     testBackground glueFunctions initialState background
---
---                 a =
---                     testSteps glueFunctions backgroundTest steps
---             in
---                 describe ("Scenario " ++ description) [ backgroundTest ]
---
---         _ ->
---             test "Scenario Outline" <| defer <| fail "not yet implemented"
+        Ok feature ->
+            testFeature glueFunctions initialState feature
+
+
+{-| verify a `Feature` against a set of glue functions.
+-}
+testFeature : GlueFunctions state -> state -> Feature -> Test
+testFeature glueFunctions initialState (Feature tags featureDescription (AsA asA) (InOrderTo inOrderTo) (IWantTo iWantTo) background scenarios) =
+    let
+        scenarioTests =
+            List.map (testScenario glueFunctions initialState background) scenarios
+    in
+        describe featureDescription scenarioTests
+
+
+{-| "Run" a `Background`
+-}
+testBackground : GlueFunctions state -> state -> Background' -> ( state, Test )
+testBackground glueFunctions initialState background =
+    case background of
+        NoBackground ->
+            ( initialState, test "No Background" <| defer pass )
+
+        Background backgroundDescription backgroundSteps ->
+            let
+                ( finalState, finalTest ) =
+                    (testSteps glueFunctions initialState [] backgroundSteps)
+            in
+                ( finalState, describe ("Background " ++ backgroundDescription) [ finalTest ] )
+
+
+{-| Run a `Scenario` against a set of `GlueFunctions` using an initial state
+-}
+testScenario : GlueFunctions state -> state -> Background' -> Scenario -> Test
+testScenario glueFunctions initialState background scenario =
+    case scenario of
+        Scenario tags description steps ->
+            let
+                ( backgroundState, backgroundTest ) =
+                    testBackground glueFunctions initialState background
+
+                ( _, scenarioTest ) =
+                    testSteps glueFunctions backgroundState tags steps
+            in
+                describe ("Scenario " ++ description) [ backgroundTest, scenarioTest ]
+
+        _ ->
+            test "Scenario Outline" <| defer <| fail "not yet implemented"
 
 
 {-| Run a `List` of `Step`s against a set of `GlueFunctions` using an inital state.
 -}
-testSteps : GlueFunctions state -> state -> List Tag -> List Step -> ContinuationResult state
+testSteps : GlueFunctions state -> state -> List Tag -> List Step -> ( state, Test )
 testSteps glueFunctions initialState tags steps =
     let
         ( finalState, finalTests ) =
@@ -190,7 +192,7 @@ runStep will take a Step and an initial state and run them against a Glue functi
 returning an updated state (to pass to the next Glue function and/or Step) and an
 Assertion.
 -}
-testStep : List (GlueFunction state) -> state -> List Tag -> Step -> ContinuationResult state
+testStep : List (GlueFunction state) -> state -> List Tag -> Step -> ( state, Test )
 testStep glueFunctions initialState tags step =
     let
         ( stepName, string, arg ) =
