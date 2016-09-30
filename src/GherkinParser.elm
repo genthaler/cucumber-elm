@@ -215,7 +215,7 @@ scenarioOutline =
 
 {-| Parse a background section.
 -}
-background : Parser Background'
+background : Parser Background
 background =
     Background
         <$> (string "Background:"
@@ -228,7 +228,7 @@ background =
 
 {-| Parse an absent background section.
 -}
-noBackground : Parser Background'
+noBackground : Parser Background
 noBackground =
     NoBackground <$ succeed ()
 

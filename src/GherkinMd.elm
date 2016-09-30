@@ -109,7 +109,7 @@ scenarioMd scenario =
             ""
 
 
-backgroundMd : Background' -> String
+backgroundMd : Background -> String
 backgroundMd background =
     case background of
         Background detailText steps ->

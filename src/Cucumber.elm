@@ -134,7 +134,7 @@ testFeature glueFunctions initialState (Feature tags featureDescription (AsA asA
 
 {-| "Run" a `Background`
 -}
-testBackground : GlueFunctions state -> state -> Background' -> ( state, Test )
+testBackground : GlueFunctions state -> state -> Background -> ( state, Test )
 testBackground glueFunctions initialState background =
     case background of
         NoBackground ->
@@ -150,7 +150,7 @@ testBackground glueFunctions initialState background =
 
 {-| Run a `Scenario` against a set of `GlueFunctions` using an initial state
 -}
-testScenario : GlueFunctions state -> state -> Background' -> Scenario -> Test
+testScenario : GlueFunctions state -> state -> Background -> Scenario -> Test
 testScenario glueFunctions initialState background scenario =
     case scenario of
         Scenario tags description steps ->

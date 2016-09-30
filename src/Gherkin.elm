@@ -26,7 +26,7 @@ similarly to extant ports in other languages.
 a .feature document in BDD terms.
 -}
 type Feature
-    = Feature (List Tag) String AsA InOrderTo IWantTo Background' (List Scenario)
+    = Feature (List Tag) String AsA InOrderTo IWantTo Background (List Scenario)
 
 
 {-| This is the datatype for tags, which can be specified at Feature, Scenario &
@@ -58,7 +58,7 @@ type IWantTo
 
 When automating, each [Step](#Step) will be executed before each [Scenario](#Scenario)'s [Step](#Step)s
 -}
-type Background'
+type Background
     = Background String (List Step)
     | NoBackground
 
