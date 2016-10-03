@@ -10,6 +10,10 @@ defer x =
     \() -> x
 
 
+noTags =
+    []
+
+
 tag =
     [ "blah" ]
 
@@ -87,7 +91,7 @@ backgroundContent2 =
   """
 
 
-scenario1 =
+simpleScenario =
     Scenario [] "with five dozen liquor jugs" [ givenTheQuickBrownFox, givenJumpsOverTheLazyDog ]
 
 
@@ -175,22 +179,22 @@ examplesContentWithTag =
       | For | """
 
 
-feature : Feature
-feature =
+simpleFeature : Feature
+simpleFeature =
     Feature []
         "Feature Runner"
         (AsA "regular person")
         (InOrderTo "verify a feature")
         (IWantTo "supply some glue code and run it against the feature")
         background1
-        [ scenario1 ]
+        [ simpleScenario ]
 
 
-featureContent =
+simpleFeatureContent =
     """Feature: Feature Runner
 As a regular person
-In order to verify a feature
-I want to supply some glue code and run it against the feature
+In order to verify a simpleFeature
+I want to supply some glue code and run it against the simpleFeature
 Background: pack my box
 Given the quick brown fox
 Scenario: with five dozen liquor jugs
@@ -199,20 +203,17 @@ When jumps over the lazy dog
 """
 
 
-feature2 =
+feature =
     Feature []
         "Living life"
         (AsA "person")
         (InOrderTo "get through life")
         (IWantTo "be able to do stuff")
         background2
-        [ Scenario []
-            "Have fun"
-            [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
-        ]
+        [ scenario ]
 
 
-featureContent2 =
+featureContent =
     """Feature: Living life
   As a person
   In order to get through life
@@ -229,7 +230,47 @@ featureContent2 =
   """
 
 
-feature3 =
+featureWithTags =
+    Feature tags
+        "Living life"
+        (AsA "person")
+        (InOrderTo "get through life")
+        (IWantTo "be able to do stuff")
+        (Background "Some basic info" [ givenTheWorldIsRound ])
+        [ Scenario []
+            "Have fun"
+            [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
+        ]
+
+
+featureWithScenarioWithTags =
+    Feature []
+        "Living life"
+        (AsA "person")
+        (InOrderTo "get through life")
+        (IWantTo "be able to do stuff")
+        (Background "Some basic info" [ givenTheWorldIsRound ])
+        [ Scenario tags
+            "Have fun"
+            [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
+        ]
+
+
+featureWithScenarioOutlineWithExamplesWithTags =
+    Feature tags
+        "Living life"
+        (AsA "person")
+        (InOrderTo "get through life")
+        (IWantTo "be able to do stuff")
+        (Background "Some basic info" [ givenTheWorldIsRound ])
+        [ ScenarioOutline []
+            "Have fun"
+            [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
+            [ Examples tag table2 ]
+        ]
+
+
+featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTags =
     Feature tags
         "Living life"
         (AsA "person")
@@ -246,7 +287,7 @@ feature3 =
         ]
 
 
-featureContent3 =
+featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTagsContent =
     """@foo
   @bar
   Feature: Living life

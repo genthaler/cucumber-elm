@@ -130,10 +130,10 @@ all =
             <| Result.Ok scenarioOutlineWithTags
         , test "parses Feature correctly"
             <| defer
-            <| Expect.equal (GherkinParser.parse GherkinParser.feature featureContent2)
-            <| Result.Ok feature2
+            <| Expect.equal (GherkinParser.parse GherkinParser.feature featureContent)
+            <| Result.Ok feature
         , test "parses Feature with tags correctly"
             <| defer
-            <| Expect.equal (GherkinParser.parse GherkinParser.feature featureContent3)
-            <| Result.Ok feature3
+            <| Expect.equal (GherkinParser.parse GherkinParser.feature featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTagsContent)
+            <| Result.Ok featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTags
         ]
