@@ -135,7 +135,7 @@ tableCellContent =
 
 This is saying, any text bookended by non-pipe, non-whitespace characters
 -}
-tableRow : Parser (List String)
+tableRow : Parser Row
 tableRow =
     tableCellDelimiter
         *> sepBy tableCellDelimiter tableCellContent
@@ -146,7 +146,7 @@ tableRow =
 
 This is saying, any text bookended by non-pipe, non-whitespace characters
 -}
-tableRows : Parser (List (List String))
+tableRows : Parser (List Row)
 tableRows =
     sepBy1 newline tableRow
 
@@ -157,7 +157,7 @@ This is saying, any text bookended by non-pipe, non-whitespace characters
 -}
 table : Parser Table
 table =
-    tableRows
+    Table <$> tableRow <* newline <*> tableRows
 
 
 {-| Parse an absent step argument.

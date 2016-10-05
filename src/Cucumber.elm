@@ -10,11 +10,9 @@ The functions need to have the type signature of
 # Running Glue functions
 @docs runStep, runSteps, verify, run,
 
-
 @docs
 # Run by Glue functions
 @docs include
-
 
 # Glue
 These types describe a glue function
@@ -184,7 +182,7 @@ testScenario glueFunctions initialState background filterTags scenario =
                 ( _, scenarioTest ) =
                     testSteps glueFunctions backgroundState steps
             in
-                describe ("Scenario " ++ description)
+                describe ("Scenario: " ++ description)
                     <| if matchTags scenarioTags filterTags then
                         [ backgroundTest, scenarioTest ]
                        else
@@ -198,7 +196,7 @@ testScenario glueFunctions initialState background filterTags scenario =
                 ( _, scenarioTest ) =
                     testSteps glueFunctions backgroundState steps
             in
-                describe ("Scenario " ++ description)
+                describe ("Scenario Outline: " ++ description)
                     <| if matchTags scenarioTags filterTags then
                         [ backgroundTest, scenarioTest ]
                        else
@@ -208,6 +206,8 @@ testScenario glueFunctions initialState background filterTags scenario =
 
 -- {-| For each Example (where tags agree), substitute values from Examples Table, and run just like a Scenario-}
 -- iterateExample :
+-- applyExamplesToScenario : String -> List Step -> Examples -> Scenario
+-- applyExamplesToScenario scenarioDescriptoin steps examples =
 
 
 {-| Run a `List` of `Step`s against a set of `GlueFunctions` using an inital state.

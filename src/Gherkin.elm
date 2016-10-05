@@ -109,5 +109,13 @@ type Examples
 
 {-| Used in Steps i.e. a kind of StepArg.
 -}
-type alias Table =
-    List (List String)
+type alias Row =
+    List String
+
+
+{-| Used in Steps i.e. a kind of StepArg, and in Examples.
+
+There must be at least one row.
+-}
+type Table
+    = Table Row (List Row)
