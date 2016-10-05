@@ -41,6 +41,7 @@ import Expect exposing (Expectation, pass, fail)
 import Gherkin exposing (..)
 import GherkinParser exposing (feature, parse)
 import List
+import Set
 
 
 -- import Automaton exposing (..)
@@ -90,7 +91,6 @@ type CucumberResult
 {-| The regular `Scenario` and `ScenarioOutline` types won't suffice for reporting,
 since we'll have multiple invocations of a set of `Background` `Step`s in the cases
 of `Scenario`s and `ScenarioOutline`s, and
-
 -}
 type FeatureRun
     = FeatureRun Bool
@@ -103,27 +103,30 @@ defer x =
     \() -> x
 
 
-{-| If there are any specified filter tags, and any tags associated with the
-Feature/Scenario/ScenarioOutline/Examples element, then this predicate will
-check whether there is any match between the two.
-
-Don't anticipate large numbers of tags, so just use O(n^2) algorithm.
+{-| If there are any tags associated with the
+`Feature`/`Scenario`/`ScenarioOutline`/`Examples` element, then this predicate will
+check whether the tag was specified in the filterTags `List`.
 -}
 matchTags : List Tag -> List Tag -> Bool
 matchTags elementTags filterTags =
-    if elementTags == [] || filterTags == [] then
+    if elementTags == [] then
         True
     else
-        List.any (Basics.flip List.member filterTags) elementTags
+        Set.intersect (Set.fromList elementTags) (Set.fromList filterTags)
+            |> Set.isEmpty
+            |> not
 
 
-makeSkipTest : String -> Test
-makeSkipTest element =
+{-| Helper function to generate an `Expectation.pass` if an element was skipped
+due to tag mismatch
+-}
+skipElement : String -> Test
+skipElement element =
     test (element ++ "skipped due to tag mismatch") <| defer pass
 
 
 {-| This is the main entry point to the module.
-- Takes a String containing a feature definition,
+- Takes a `String` containing a `Feature` definition,
 - Parses it,
 - Runs it against against a set of glue functions,
 - Reports the results.
@@ -150,7 +153,7 @@ testFeature glueFunctions initialState filterTags (Feature featureTags featureDe
             <| if matchTags featureTags filterTags then
                 scenarioTests
                else
-                [ makeSkipTest "Feature" ]
+                [ skipElement "Feature" ]
 
 
 {-| "Run" a `Background`
@@ -186,7 +189,7 @@ testScenario glueFunctions initialState background filterTags scenario =
                     <| if matchTags scenarioTags filterTags then
                         [ backgroundTest, scenarioTest ]
                        else
-                        [ makeSkipTest "Scenario" ]
+                        [ skipElement "Scenario" ]
 
         ScenarioOutline scenarioTags description steps examplesList ->
             let
@@ -195,12 +198,21 @@ testScenario glueFunctions initialState background filterTags scenario =
 
                 ( _, scenarioTest ) =
                     testSteps glueFunctions backgroundState steps
+
+                filterExamples (Examples examplesTags datatable) =
+                    matchTags examplesTags filterTags
+
+                filteredExamplesList =
+                    List.filter filterExamples filteredExamplesList
+
+                -- substituteExampleText =
+                --     List.map substituteExampleTextInSteps filteredExamplesList
             in
                 describe ("Scenario Outline: " ++ description)
                     <| if matchTags scenarioTags filterTags then
                         [ backgroundTest, scenarioTest ]
                        else
-                        [ makeSkipTest "Scenario Outline" ]
+                        [ skipElement "Scenario Outline" ]
 
 
 

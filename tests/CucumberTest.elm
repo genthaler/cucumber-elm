@@ -74,18 +74,18 @@ testTestStep =
 testMatchTags : Test
 testMatchTags =
     describe "testing matchTags"
-        [ test "no filter tags"
+        [ test "no element tags"
             <| \() ->
                 Expect.true "if either of the supplied tag lists are empty, then return True"
                     <| matchTags [] tags
-        , test "no element tags"
-            <| \() ->
-                Expect.true "if either of the supplied tag lists are empty, then return True"
-                    <| matchTags tags []
         , test "a matching tag"
             <| \() ->
                 Expect.true "if there's at least one match, then return True"
                     <| matchTags [ "q", "w", "e" ] [ "e", "r", "t" ]
+        , test "no filter tags"
+            <| \() ->
+                Expect.false "if either of the supplied tag lists are empty, then return True"
+                    <| matchTags tags []
         , test "no matching tags"
             <| \() ->
                 Expect.false "if there's at least one match, then return True"
