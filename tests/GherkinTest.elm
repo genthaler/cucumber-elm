@@ -17,12 +17,14 @@ feature =
             "guys are swimming"
             [ Given "a precondition has value <param_1>"
                 (DocString "")
-            , And "something with <param_2>" (DataTable [ [] ])
+            , And "something with <param_2>" (DataTable (Table [] [ [] ]))
             , Then "check <param_3> is the output" NoArg
             ]
             ([ Examples []
-                [ [ "" ]
-                ]
+                (Table []
+                    [ [ "" ]
+                    ]
+                )
              ]
             )
         , Scenario []
