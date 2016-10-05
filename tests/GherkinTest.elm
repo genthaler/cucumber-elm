@@ -15,10 +15,11 @@ feature =
         NoBackground
         [ ScenarioOutline []
             "guys are swimming"
-            [ Given "a precondition has value <param_1>"
+            [ Step Given
+                "a precondition has value <param_1>"
                 (DocString "")
-            , And "something with <param_2>" (DataTable (Table [] [ [] ]))
-            , Then "check <param_3> is the output" NoArg
+            , Step And "something with <param_2>" (DataTable (Table [] [ [] ]))
+            , Step Then "check <param_3> is the output" NoArg
             ]
             ([ Examples []
                 (Table []
@@ -29,9 +30,9 @@ feature =
             )
         , Scenario []
             "guys are sailing"
-            [ Given "a precondition is valid" NoArg
-            , When "an action is performed" NoArg
-            , Then "something should be asserted" NoArg
+            [ Step Given "a precondition is valid" NoArg
+            , Step When "an action is performed" NoArg
+            , Step Then "something should be asserted" NoArg
             ]
         ]
 

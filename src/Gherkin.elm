@@ -84,11 +84,17 @@ There is no functional distinction between Given, When, Then, And or But
 See the Cucumber module for examples.
 -}
 type Step
-    = Given String StepArg
-    | When String StepArg
-    | Then String StepArg
-    | And String StepArg
-    | But String StepArg
+    = Step StepType String StepArg
+
+
+{-| Given/When/Then/etc
+-}
+type StepType
+    = Given
+    | When
+    | Then
+    | And
+    | But
 
 
 {-| An argument to the Glue function, that's not extracted from the Step description.

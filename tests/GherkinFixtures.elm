@@ -23,19 +23,19 @@ tags =
 
 
 givenTheQuickBrownFox =
-    Given "the quick brown fox" NoArg
+    Step Given "the quick brown fox" NoArg
 
 
 givenJumpsOverTheLazyDog =
-    Given "jumps over the lazy dog" NoArg
+    Step Given "jumps over the lazy dog" NoArg
 
 
 givenIAmTryingToHaveFun =
-    Given "I am trying to have fun" <| DataTable table1
+    Step Given "I am trying to have fun" <| DataTable table1
 
 
 givenTheWorldIsRound =
-    Given "the world is round" NoArg
+    Step Given "the world is round" NoArg
 
 
 nowIsTheTime =
@@ -74,7 +74,7 @@ stepContent2 =
 
 
 butIAmTryingNotToBeAFool =
-    But "I am trying not to be a fool" NoArg
+    Step But "I am trying not to be a fool" NoArg
 
 
 background1 =

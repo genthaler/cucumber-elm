@@ -171,13 +171,14 @@ noArg =
 -}
 step : Parser Step
 step =
-    choice
-        [ (Given <$ string "Given")
-        , (When <$ string "When")
-        , (Then <$ string "Then")
-        , (And <$ string "And")
-        , (But <$ string "But")
-        ]
+    Step
+        <$> choice
+                [ (Given <$ string "Given")
+                , (When <$ string "When")
+                , (Then <$ string "Then")
+                , (And <$ string "And")
+                , (But <$ string "But")
+                ]
         <* spaces
         <*> (detailText <* interspace)
         <*> (docString <|> (DataTable <$> table) <|> noArg)
