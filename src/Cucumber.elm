@@ -46,20 +46,12 @@ import Regex
 import Set
 
 
--- import Automaton exposing (..)
--- {-| According to this definition, glue is defined by a
---    regular expression string, plus a glue function
---
---    In OOP implementations of Cucumber, the state is usually the Step class itself.
---    Here we pass the state around explicitly.
--- -}
--- type Glue a
---     = Glue Regex.Regex (GlueFunction a)
-
-
 {-| A glue function transforms an initial state, a list of Strings extracted
 from the matched regular expression, and any `StepArg`, into a tuple of
 modified state and `Expectation`.
+
+In OOP implementations of Cucumber, the state is usually the Step class itself.
+Elm is a pure functional language, so we pass the state around explicitly.
 -}
 type alias GlueFunction state =
     state -> String -> StepArg -> GlueFunctionResult state
@@ -78,6 +70,9 @@ type alias GlueFunctionResult a =
 {-| A glue function can send some output to be displayed inline in the
 pretty-print of the Gherkin text. Right now only support text, but eventually
 want to support images, in particular screenshots from webdriver.
+
+Currently not supported #22.
+
 -- | GlueOutputImage Blob
 -}
 type GlueOutput
@@ -127,6 +122,24 @@ skipElement element =
     test (element ++ "skipped due to tag mismatch") <| defer pass
 
 
+{-| For a given header and row and string, substitute all <header> tokens
+with the corresponding value from the example `Row`
+-}
+filterTokens : Row -> Row -> String -> String
+filterTokens header row string =
+    let
+        zip =
+            List.map2 (,) header row
+
+        replace ( token, value ) oldString =
+            Regex.replace Regex.All
+                (Regex.regex (Regex.escape ("<" ++ token ++ ">")))
+                (always value)
+                oldString
+    in
+        List.foldl replace string zip
+
+
 {-| This is the main entry point to the module.
 - Takes a `String` containing a `Feature` definition,
 - Parses it,
@@ -143,7 +156,7 @@ testFeatureText glueFunctions initialState filterTags featureText =
             testFeature glueFunctions initialState filterTags feature
 
 
-{-| verify a `Feature` against a set of glue functions.
+{-| Verify a `Feature` against a set of glue functions.
 -}
 testFeature : GlueFunctions state -> state -> List Tag -> Feature -> Test
 testFeature glueFunctions initialState filterTags (Feature featureTags featureDescription _ _ _ background scenarios) =
@@ -158,7 +171,7 @@ testFeature glueFunctions initialState filterTags (Feature featureTags featureDe
                 [ skipElement "Feature" ]
 
 
-{-| "Run" a `Background`
+{-| Run a `Background` against a set of `GlueFunctions` using an initial state
 -}
 testBackground : GlueFunctions state -> state -> Background -> ( state, Test )
 testBackground glueFunctions initialState background =
@@ -229,30 +242,32 @@ substituteExamplesInScenario scenarioDescription steps (Examples _ (Table header
 -}
 substituteExampleInScenario : String -> List Step -> Row -> Row -> Scenario
 substituteExampleInScenario scenarioDescription steps header row =
-    -- let
-    --   filterStep (Step stepType stepDescription stepArg) =
-    --     = Step stepType stepDescription stepArg
-    -- in
-    -- Scenario [] (filterTokens header row (filterTokens header row scenarioDescription)) filteredSteps
-    Scenario [] "" []
-
-
-{-| For a given header and row and string, substitute all <header> tokens
-with the corresponding value from the example `Row`
--}
-filterTokens : Row -> Row -> String -> String
-filterTokens header row string =
     let
-        zip =
-            List.map2 (,) header row
+        filter =
+            filterTokens header row
 
-        replace ( token, value ) oldString =
-            Regex.replace Regex.All
-                (Regex.regex (Regex.escape ("<" ++ token ++ ">")))
-                (always value)
-                oldString
+        filterStepArg stepArg =
+            case stepArg of
+                DocString string ->
+                    DocString <| filter string
+
+                DataTable (Table header rows) ->
+                    DataTable (Table header rows)
+
+                _ ->
+                    stepArg
+
+        filterStep (Step stepType stepDescription stepArg) =
+            Step stepType (filter stepDescription) (filterStepArg stepArg)
+
+        filteredSteps =
+            List.map filterStep steps
     in
-        List.foldl replace string zip
+        Scenario [] (filter scenarioDescription) filteredSteps
+
+
+
+-- Scenario [] "" []
 
 
 {-| Run a `List` of `Step`s against a set of `GlueFunctions` using an inital state.

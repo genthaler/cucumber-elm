@@ -53,7 +53,7 @@ table1 =
 
 
 tableContent1 =
-    """ | Now | is | the | time |\x0D
+    """ | Now | is | the | time |
           | For | all | good | men | """
 
 
@@ -64,8 +64,8 @@ table2 =
 
 
 stepContent =
-    """Given I am trying to have fun\x0D
-  | Now | is | the | time |\x0D
+    """Given I am trying to have fun
+  | Now | is | the | time |
   | For | all | good | men | """
 
 
@@ -86,8 +86,8 @@ background2 =
 
 
 backgroundContent2 =
-    """Background: Some basic info\x0D
-      Given the world is round\x0D
+    """Background: Some basic info
+      Given the world is round
   """
 
 
@@ -96,11 +96,11 @@ simpleScenario =
 
 
 scenarioContent =
-    """Scenario: Have fun\x0D
-  Given I am trying to have fun\x0D
-    | Now | is | the | time |\x0D
-    | For | all | good | men |\x0D
-  But I am trying not to be a fool\x0D
+    """Scenario: Have fun
+  Given I am trying to have fun
+    | Now | is | the | time |
+    | For | all | good | men |
+  But I am trying not to be a fool
 """
 
 
@@ -109,13 +109,13 @@ scenario =
 
 
 scenarioWithTagsContent =
-    """@foo\x0D
-  @bar\x0D
-  Scenario: Have fun\x0D
-    Given I am trying to have fun\x0D
-      | Now | is | the | time |\x0D
-      | For | all | good | men |\x0D
-    But I am trying not to be a fool\x0D
+    """@foo
+  @bar
+  Scenario: Have fun
+    Given I am trying to have fun
+      | Now | is | the | time |
+      | For | all | good | men |
+    But I am trying not to be a fool
   """
 
 
@@ -124,14 +124,14 @@ scenarioWithTags =
 
 
 scenarioOutlineContent =
-    """Scenario Outline: Have fun\x0D
-      Given I am trying to have fun\x0D
-        | Now | is | the | time |\x0D
-        | For | all | good | men |\x0D
-      But I am trying not to be a fool\x0D
-      Examples:\x0D
-        | Now |\x0D
-        | For |\x0D
+    """Scenario Outline: Have fun
+      Given I am trying to have fun
+        | Now | is | the | time |
+        | For | all | good | men |
+      But I am trying not to be a fool
+      Examples:
+        | Now |
+        | For |
     """
 
 
@@ -143,17 +143,17 @@ scenarioOutline =
 
 
 scenarioOutlineWithTagsContent =
-    """@foo\x0D
-    @bar\x0D
-    Scenario Outline: Have fun\x0D
-      Given I am trying to have fun\x0D
-        | Now | is | the | time |\x0D
-        | For | all | good | men |\x0D
-      But I am trying not to be a fool\x0D
-      @blah\x0D
-      Examples:\x0D
-        | Now |\x0D
-        | For |\x0D
+    """@foo
+    @bar
+    Scenario Outline: Have fun
+      Given I am trying to have fun
+        | Now | is | the | time |
+        | For | all | good | men |
+      But I am trying not to be a fool
+      @blah
+      Examples:
+        | Now |
+        | For |
     """
 
 
@@ -173,9 +173,9 @@ examplesWithTag =
 
 
 examplesContentWithTag =
-    """@blah\x0D
-    Examples:\x0D
-      | Now |\x0D
+    """@blah
+    Examples:
+      | Now |
       | For | """
 
 
@@ -191,15 +191,15 @@ simpleFeature =
 
 
 simpleFeatureContent =
-    """Feature: Feature Runner\x0D
-As a regular person\x0D
-In order to verify a simpleFeature\x0D
-I want to supply some glue code and run it against the simpleFeature\x0D
-Background: pack my box\x0D
-Given the quick brown fox\x0D
-Scenario: with five dozen liquor jugs\x0D
-Given the quick brown fox\x0D
-When jumps over the lazy dog\x0D
+    """Feature: Feature Runner
+As a regular person
+In order to verify a simpleFeature
+I want to supply some glue code and run it against the simpleFeature
+Background: pack my box
+Given the quick brown fox
+Scenario: with five dozen liquor jugs
+Given the quick brown fox
+When jumps over the lazy dog
 """
 
 
@@ -214,19 +214,19 @@ feature =
 
 
 featureContent =
-    """Feature: Living life\x0D
-  As a person\x0D
-  In order to get through life\x0D
-  I want to be able to do stuff\x0D
-\x0D
-  Background: Some basic info\x0D
-    Given the world is round\x0D
-\x0D
-  Scenario: Have fun\x0D
-    Given I am trying to have fun\x0D
-      | Now | is | the | time |\x0D
-      | For | all | good | men |\x0D
-    But I am trying not to be a fool\x0D
+    """Feature: Living life
+  As a person
+  In order to get through life
+  I want to be able to do stuff
+
+  Background: Some basic info
+    Given the world is round
+
+  Scenario: Have fun
+    Given I am trying to have fun
+      | Now | is | the | time |
+      | For | all | good | men |
+    But I am trying not to be a fool
   """
 
 
@@ -288,33 +288,33 @@ featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTags
 
 
 featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTagsContent =
-    """@foo\x0D
-  @bar\x0D
-  Feature: Living life\x0D
-  As a person\x0D
-  In order to get through life\x0D
-  I want to be able to do stuff\x0D
-\x0D
-  Background: Some basic info\x0D
-    Given the world is round\x0D
-\x0D
-  @foo\x0D
-  @bar\x0D
-  Scenario: Have fun\x0D
-    Given I am trying to have fun\x0D
-      | Now | is | the | time |\x0D
-      | For | all | good | men |\x0D
-    But I am trying not to be a fool\x0D
-\x0D
-  @foo\x0D
-  @bar\x0D
-  Scenario Outline: Have fun\x0D
-    Given I am trying to have fun\x0D
-      | Now | is | the | time |\x0D
-      | For | all | good | men |\x0D
-    But I am trying not to be a fool\x0D
-    @blah\x0D
-    Examples:\x0D
-      | Now |\x0D
-      | For |\x0D
+    """@foo
+  @bar
+  Feature: Living life
+  As a person
+  In order to get through life
+  I want to be able to do stuff
+
+  Background: Some basic info
+    Given the world is round
+
+  @foo
+  @bar
+  Scenario: Have fun
+    Given I am trying to have fun
+      | Now | is | the | time |
+      | For | all | good | men |
+    But I am trying not to be a fool
+
+  @foo
+  @bar
+  Scenario Outline: Have fun
+    Given I am trying to have fun
+      | Now | is | the | time |
+      | For | all | good | men |
+    But I am trying not to be a fool
+    @blah
+    Examples:
+      | Now |
+      | For |
   """

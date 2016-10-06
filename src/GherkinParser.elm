@@ -54,10 +54,24 @@ detailText =
         <* optional "" comment
 
 
-{-| Parse a tag line.
+{-| Parse a tag.
 -}
 tag : Parser Tag
 tag =
+    string "@" *> detailText
+
+
+{-| Parse `Tag`s on a line.
+-}
+andTags : Parser Tag
+andTags =
+    string "@" *> detailText
+
+
+{-| Parse `Tag`s on separate lines.
+-}
+orTags : Parser Tag
+orTags =
     string "@" *> detailText
 
 

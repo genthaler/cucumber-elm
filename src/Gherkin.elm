@@ -36,6 +36,18 @@ type alias Tag =
     String
 
 
+{-| This is the datatype for and-ed tags,
+-}
+type alias AndTags =
+    List String
+
+
+{-| This is the datatype for or-ed tags,
+-}
+type alias OrTags =
+    List AndTags
+
+
 {-| From [User Stories](https://en.wikipedia.org/wiki/User_story)
 -}
 type AsA

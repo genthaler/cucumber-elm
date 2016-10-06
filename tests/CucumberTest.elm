@@ -1,17 +1,26 @@
 module CucumberTest exposing (..)
 
-import Test exposing (..)
-import Expect exposing (..)
 import Cucumber exposing (..)
 import CucumberTest.Glue as Glue
+import Expect exposing (..)
 import GherkinFixtures exposing (..)
+import Test exposing (..)
+
+
+-- import Test.Runner
+-- import Random.Pcg
+-- run : Test -> List Expectation
+-- run test =
+--     test
+--         |> Test.Runner.fromTest 100 (Random.Pcg.initialSeed 2577323462)
+--         |> Test.Runner.run
 
 
 testFeatureWithTags : Test
 testFeatureWithTags =
     describe "testing tags on features"
         [ describe "successfully applies tags"
-            [ testSteps [ Glue.glue ] "initial state" [ givenTheQuickBrownFox, givenJumpsOverTheLazyDog ] |> snd
+            [ testFeature [ Glue.alwaysPass ] "initial state" tag featureWithTags
             ]
         ]
 
@@ -20,7 +29,7 @@ testTestFeatureText : Test
 testTestFeatureText =
     describe "testing testFeatureText "
         [ describe "successfully runs a Feature against a Glue function"
-            [ testFeatureText [ Glue.glue ] "initial state" noTags simpleFeatureContent
+            [ testFeatureText [ Glue.alwaysPass ] "initial state" noTags simpleFeatureContent
             ]
         ]
 
@@ -29,7 +38,7 @@ testTestFeature : Test
 testTestFeature =
     describe "testing testFeature "
         [ describe "successfully runs a Feature against a Glue function"
-            [ testFeature [ Glue.glue ] "initial state" noTags simpleFeature
+            [ testFeature [ Glue.alwaysPass ] "initial state" noTags simpleFeature
             ]
         ]
 
@@ -38,7 +47,7 @@ testTestScenario : Test
 testTestScenario =
     describe "testing testScenario"
         [ describe "successfully runs a Background and Scenario against a Glue function"
-            [ testScenario [ Glue.glue ] "initial state" background1 noTags simpleScenario
+            [ testScenario [ Glue.alwaysPass ] "initial state" background1 noTags simpleScenario
             ]
         ]
 
@@ -47,7 +56,7 @@ testTestBackground : Test
 testTestBackground =
     describe "testing testBackground"
         [ describe "successfully runs Background against a Glue function"
-            [ testBackground [ Glue.glue ] "initial state" background1 |> snd
+            [ testBackground [ Glue.alwaysPass ] "initial state" background1 |> snd
             ]
         ]
 
@@ -56,7 +65,7 @@ testTestSteps : Test
 testTestSteps =
     describe "testing testBackground"
         [ describe "successfully runs Steps against a Glue function"
-            [ testSteps [ Glue.glue ] "initial state" [ givenTheQuickBrownFox, givenJumpsOverTheLazyDog ] |> snd
+            [ testSteps [ Glue.alwaysPass ] "initial state" [ givenTheQuickBrownFox, givenJumpsOverTheLazyDog ] |> snd
             ]
         ]
 
@@ -65,8 +74,11 @@ testTestStep : Test
 testTestStep =
     describe "testing testStep"
         [ describe "successfully runs a Step against a Glue function"
-            [ testStep [ Glue.glue ] "initial state" givenTheQuickBrownFox
+            [ testStep [ Glue.alwaysPass ] "initial state" givenTheQuickBrownFox
                 |> snd
+              -- , testStep [ Glue.alwaysPass, Glue.alwaysPass ] "initial state" givenTheQuickBrownFox
+              --     |> snd
+              --     |> test "expect multiple glue functions that return a Just Expectation to fail testing"
             ]
         ]
 

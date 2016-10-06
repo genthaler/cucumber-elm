@@ -20,7 +20,9 @@
         "evancz/elm-http": "3.0.1 <= v < 4.0.0",
         "jinjor/elm-time-travel": "1.0.17 <= v < 2.0.0",
         "rtfeldman/html-test-runner": "1.0.0 <= v < 2.0.0",
-        "rtfeldman/node-test-runner": "2.0.0 <= v < 3.0.0"
+        "rtfeldman/node-test-runner": "2.0.0 <= v < 3.0.0",
+        "mgold/elm-random-pcg": "3.0.4 <= v < 4.0.0"
+
     },
     "elm-version": "0.17.0 <= v < 0.18.0"
 }
