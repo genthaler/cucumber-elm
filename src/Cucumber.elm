@@ -134,24 +134,6 @@ skipElement element =
     test (element ++ "skipped due to tag mismatch") <| defer pass
 
 
-{-| For a given header and row and string, substitute all <header> tokens
-with the corresponding value from the example `Row`
--}
-filterTokens : Row -> Row -> String -> String
-filterTokens header row string =
-    let
-        zip =
-            List.map2 (,) header row
-
-        replace ( token, value ) oldString =
-            Regex.replace Regex.All
-                (Regex.regex (Regex.escape ("<" ++ token ++ ">")))
-                (always value)
-                oldString
-    in
-        List.foldl replace string zip
-
-
 {-| This is the main entry point to the module.
 - Takes a `String` containing a `Feature` definition,
 - Parses it,
@@ -194,7 +176,7 @@ testBackground glueFunctions initialState background =
         Background backgroundDescription backgroundSteps ->
             let
                 ( finalState, finalTest ) =
-                    (testSteps glueFunctions initialState backgroundSteps)
+                    testSteps glueFunctions initialState backgroundSteps
             in
                 ( finalState, describe ("Background " ++ backgroundDescription) [ finalTest ] )
 
@@ -232,6 +214,53 @@ testScenario glueFunctions initialState background filterTags scenario =
                 filteredExamplesList =
                     List.filter filterExamples filteredExamplesList
 
+                substituteExamplesInScenario scenarioDescription steps (Examples _ (Table header rows)) =
+                    List.map (substituteExampleInScenario scenarioDescription steps header)
+                        rows
+
+                substituteExampleInScenario scenarioDescription steps header row =
+                    let
+                        filterTokens string =
+                            let
+                                zip =
+                                    List.map2 (,) header row
+
+                                replace ( token, value ) oldString =
+                                    Regex.replace Regex.All
+                                        (Regex.regex (Regex.escape ("<" ++ token ++ ">")))
+                                        (always value)
+                                        oldString
+                            in
+                                List.foldl replace string zip
+
+                        filterRow =
+                            List.map filterTokens
+
+                        filterTable =
+                            List.map filterRow
+
+                        filterStepArg stepArg =
+                            case stepArg of
+                                DocString string ->
+                                    DocString <| filterTokens string
+
+                                DataTable (Table dataTableHeader dataTableRows) ->
+                                    DataTable
+                                        (Table (filterRow dataTableHeader)
+                                            (filterTable dataTableRows)
+                                        )
+
+                                NoArg ->
+                                    NoArg
+
+                        filterStep (Step stepType stepDescription stepArg) =
+                            Step stepType (filterTokens stepDescription) (filterStepArg stepArg)
+
+                        filteredSteps =
+                            List.map filterStep steps
+                    in
+                        Scenario [] (filterTokens scenarioDescription) filteredSteps
+
                 instantiatedScenarios =
                     List.map (substituteExamplesInScenario scenarioDescription steps) filteredExamplesList
             in
@@ -240,46 +269,6 @@ testScenario glueFunctions initialState background filterTags scenario =
                         [ backgroundTest, scenarioTest ]
                        else
                         [ skipElement "Scenario Outline" ]
-
-
-{-| For each Example (where tags agree), substitute values from Examples Table, and run just like a Scenario
--}
-substituteExamplesInScenario : String -> List Step -> Examples -> List Scenario
-substituteExamplesInScenario scenarioDescription steps (Examples _ (Table header rows)) =
-    List.map (substituteExampleInScenario scenarioDescription steps header)
-        rows
-
-
-{-| For a given example, substitute values in the Scenario's description and `Step`s
--}
-substituteExampleInScenario : String -> List Step -> Row -> Row -> Scenario
-substituteExampleInScenario scenarioDescription steps header row =
-    let
-        filter =
-            filterTokens header row
-
-        filterStepArg stepArg =
-            case stepArg of
-                DocString string ->
-                    DocString <| filter string
-
-                DataTable (Table header rows) ->
-                    DataTable (Table header rows)
-
-                _ ->
-                    stepArg
-
-        filterStep (Step stepType stepDescription stepArg) =
-            Step stepType (filter stepDescription) (filterStepArg stepArg)
-
-        filteredSteps =
-            List.map filterStep steps
-    in
-        Scenario [] (filter scenarioDescription) filteredSteps
-
-
-
--- Scenario [] "" []
 
 
 {-| Run a `List` of `Step`s against a set of `GlueFunctions` using an inital state.

@@ -7,15 +7,6 @@ import GherkinFixtures exposing (..)
 import Test exposing (..)
 
 
--- import Test.Runner
--- import Random.Pcg
--- run : Test -> List Expectation
--- run test =
---     test
---         |> Test.Runner.fromTest 100 (Random.Pcg.initialSeed 2577323462)
---         |> Test.Runner.run
-
-
 testFeatureWithTags : Test
 testFeatureWithTags =
     describe "testing tags on features"
