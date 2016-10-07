@@ -25,7 +25,7 @@ stepArgHtml stepArg =
         DocString docStringContent ->
             Just (text docStringContent)
 
-        DataTable dataTableContent ->
+        DataTable (Table dataTableHeader dataTableRows) ->
             Just (dataTableHtml dataTableContent)
 
         NoArg ->
@@ -64,19 +64,19 @@ stepHtml theStep =
                 )
     in
         case theStep of
-            Given detail theStepArg ->
+            Step Given detail theStepArg ->
                 stepArgHtml' "Given" detail theStepArg
 
-            When detail theStepArg ->
+            Step When detail theStepArg ->
                 stepArgHtml' "When" detail theStepArg
 
-            Then detail theStepArg ->
+            Step Then detail theStepArg ->
                 stepArgHtml' "Then" detail theStepArg
 
-            And detail theStepArg ->
+            Step And detail theStepArg ->
                 stepArgHtml' "And" detail theStepArg
 
-            But detail theStepArg ->
+            Step But detail theStepArg ->
                 stepArgHtml' "But" detail theStepArg
 
 

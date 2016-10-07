@@ -43,7 +43,6 @@ import Gherkin exposing (..)
 import GherkinParser exposing (feature, parse)
 import List
 import Regex
-import Set
 
 
 {-| A glue function transforms an initial state, a list of Strings extracted
@@ -115,15 +114,20 @@ defer x =
 {-| If there are any tags associated with the
 `Feature`/`Scenario`/`ScenarioOutline`/`Examples` element, then this predicate will
 check whether the tag was specified in the filterTags `List`.
+
+The interpretation of tags is documented here:
+https://github.com/cucumber/cucumber/wiki/Tags .
+
+The gist of it is that the outer layer of lists is or-ed together,
+the inner list is and-ed together.
 -}
-matchTags : List Tag -> List Tag -> Bool
-matchTags elementTags filterTags =
+matchTags : OrTags -> List Tag -> Bool
+matchTags filterTags elementTags =
     if elementTags == [] then
         True
     else
-        Set.intersect (Set.fromList elementTags) (Set.fromList filterTags)
-            |> Set.isEmpty
-            |> not
+        List.any (List.all (Basics.flip List.member elementTags))
+            filterTags
 
 
 {-| Helper function to generate an `Expectation.pass` if an element was skipped
@@ -140,7 +144,7 @@ skipElement element =
 - Runs it against against a set of glue functions,
 - Reports the results.
 -}
-testFeatureText : GlueFunctions state -> state -> List Tag -> String -> Test
+testFeatureText : GlueFunctions state -> state -> OrTags -> String -> Test
 testFeatureText glueFunctions initialState filterTags featureText =
     case GherkinParser.parse GherkinParser.feature featureText of
         Err error ->
@@ -152,14 +156,14 @@ testFeatureText glueFunctions initialState filterTags featureText =
 
 {-| Verify a `Feature` against a set of glue functions.
 -}
-testFeature : GlueFunctions state -> state -> List Tag -> Feature -> Test
+testFeature : GlueFunctions state -> state -> OrTags -> Feature -> Test
 testFeature glueFunctions initialState filterTags (Feature featureTags featureDescription _ _ _ background scenarios) =
     let
         scenarioTests =
             List.map (testScenario glueFunctions initialState background filterTags) scenarios
     in
         describe featureDescription
-            <| if matchTags featureTags filterTags then
+            <| if matchTags filterTags featureTags then
                 scenarioTests
                else
                 [ skipElement "Feature" ]
@@ -183,7 +187,7 @@ testBackground glueFunctions initialState background =
 
 {-| Run a `Scenario` against a set of `GlueFunctions` using an initial state
 -}
-testScenario : GlueFunctions state -> state -> Background -> List Tag -> Scenario -> Test
+testScenario : GlueFunctions state -> state -> Background -> OrTags -> Scenario -> Test
 testScenario glueFunctions initialState background filterTags scenario =
     case scenario of
         Scenario scenarioTags description steps ->
@@ -195,7 +199,7 @@ testScenario glueFunctions initialState background filterTags scenario =
                     testSteps glueFunctions backgroundState steps
             in
                 describe ("Scenario: " ++ description)
-                    <| if matchTags scenarioTags filterTags then
+                    <| if matchTags filterTags scenarioTags then
                         [ backgroundTest, scenarioTest ]
                        else
                         [ skipElement "Scenario" ]
@@ -209,7 +213,7 @@ testScenario glueFunctions initialState background filterTags scenario =
                     testSteps glueFunctions backgroundState steps
 
                 filterExamples (Examples examplesTags datatable) =
-                    matchTags examplesTags filterTags
+                    matchTags filterTags examplesTags
 
                 filteredExamplesList =
                     List.filter filterExamples filteredExamplesList
@@ -265,7 +269,7 @@ testScenario glueFunctions initialState background filterTags scenario =
                     List.map (substituteExamplesInScenario scenarioDescription steps) filteredExamplesList
             in
                 describe ("Scenario Outline: " ++ scenarioDescription)
-                    <| if matchTags scenarioTags filterTags then
+                    <| if matchTags filterTags scenarioTags then
                         [ backgroundTest, scenarioTest ]
                        else
                         [ skipElement "Scenario Outline" ]

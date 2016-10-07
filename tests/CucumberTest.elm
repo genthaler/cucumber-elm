@@ -5,22 +5,63 @@ import CucumberTest.Glue as Glue
 import Expect exposing (..)
 import GherkinFixtures exposing (..)
 import Test exposing (..)
+import Gherkin exposing (..)
 
 
 testFeatureWithTags : Test
 testFeatureWithTags =
-    describe "testing tags on features"
+    describe "testing tagsFooBar on features"
         [ describe "successfully applies tags"
-            [ testFeature [ Glue.alwaysPass ] "initial state" tag featureWithTags
+            [ testFeature [ Glue.alwaysFail ]
+                "initial state"
+                [ [ "blah" ] ]
+                featureWithTags
+            , testFeature [ Glue.alwaysPass ]
+                "initial state"
+                [ [ "foo" ] ]
+                featureWithTags
             ]
         ]
+
+
+testFeatureWithScenarioWithTags : Test
+testFeatureWithScenarioWithTags =
+    describe "testing tagsFooBar on features"
+        [ describe "successfully applies tags"
+            [ testFeature [ Glue.alwaysFail ]
+                "initial state"
+                [ [ "blah" ] ]
+                featureWithScenarioWithTags
+            , testFeature [ Glue.alwaysPass ]
+                "initial state"
+                [ [ "foo" ] ]
+                featureWithScenarioWithTags
+            ]
+        ]
+
+
+
+-- testFeatWithOutlineWithExWithTags : Test
+-- testFeatWithOutlineWithExWithTags =
+--     describe "testing tagsFooBar on features"
+--         [ describe "successfully applies tags"
+--             [ testFeature [ Glue.alwaysFail ]
+--                 "initial state"
+--                 [ [ "blah" ] ]
+--                 featureWithScenarioWithTags
+--             , testFeature [ Glue.alwaysPass ]
+--                 "initial state"
+--                 [ [ "foo" ] ]
+--                 featureWithScenarioWithTags
+--             ]
+--         ]
 
 
 testTestFeatureText : Test
 testTestFeatureText =
     describe "testing testFeatureText "
         [ describe "successfully runs a Feature against a Glue function"
-            [ testFeatureText [ Glue.alwaysPass ] "initial state" noTags simpleFeatureContent
+            [ testFeatureText [ Glue.alwaysPass ] "initial state" [ noTags ] simpleFeatureContent
             ]
         ]
 
@@ -29,7 +70,7 @@ testTestFeature : Test
 testTestFeature =
     describe "testing testFeature "
         [ describe "successfully runs a Feature against a Glue function"
-            [ testFeature [ Glue.alwaysPass ] "initial state" noTags simpleFeature
+            [ testFeature [ Glue.alwaysPass ] "initial state" [ noTags ] simpleFeature
             ]
         ]
 
@@ -38,7 +79,7 @@ testTestScenario : Test
 testTestScenario =
     describe "testing testScenario"
         [ describe "successfully runs a Background and Scenario against a Glue function"
-            [ testScenario [ Glue.alwaysPass ] "initial state" background1 noTags simpleScenario
+            [ testScenario [ Glue.alwaysPass ] "initial state" background1 [ noTags ] simpleScenario
             ]
         ]
 
@@ -79,20 +120,32 @@ testMatchTags =
     describe "testing matchTags"
         [ test "no element tags"
             <| \() ->
-                Expect.true "if either of the supplied tag lists are empty, then return True"
-                    <| matchTags [] tags
+                Expect.true "if the element list is empty, then return True"
+                    <| matchTags [ tagsFooBar ] []
         , test "a matching tag"
             <| \() ->
                 Expect.true "if there's at least one match, then return True"
-                    <| matchTags [ "q", "w", "e" ] [ "e", "r", "t" ]
+                    <| matchTags [ [ "e" ] ] [ "e", "r", "t" ]
+        , test "more matching tags"
+            <| \() ->
+                Expect.true "if there's at least one match, then return True"
+                    <| matchTags [ [ "e", "r" ], [ "z" ] ] [ "e", "r", "t" ]
+        , test "more matching tags"
+            <| \() ->
+                Expect.true "if some and-ed tags don't match, but some do, then return True"
+                    <| matchTags [ [ "e", "x" ], [ "t" ] ] [ "e", "r", "t" ]
+        , test "not enough matching tags"
+            <| \() ->
+                Expect.false "if and-ed tags don't match, then return False"
+                    <| matchTags [ [ "e", "x" ], [ "z" ] ] [ "e", "r", "t" ]
         , test "no filter tags"
             <| \() ->
-                Expect.false "if either of the supplied tag lists are empty, then return True"
-                    <| matchTags tags []
+                Expect.true "if there are filter tags, but no element tags, then return True"
+                    <| matchTags [ tagsFooBar ] []
         , test "no matching tags"
             <| \() ->
                 Expect.false "if there's at least one match, then return True"
-                    <| matchTags [ "q", "w", "e" ] [ "a", "s", "d" ]
+                    <| matchTags [ [ "q", "w", "e" ] ] [ "a", "s", "d" ]
         ]
 
 
@@ -106,4 +159,7 @@ all =
         , testTestScenario
         , testTestFeature
         , testTestFeatureText
+        , testFeatureWithTags
+        , testFeatureWithScenarioWithTags
+          -- , testFeatWithOutlineWithExWithTags
         ]

@@ -14,11 +14,11 @@ noTags =
     []
 
 
-tag =
+tagBlah =
     [ "blah" ]
 
 
-tags =
+tagsFooBar =
     [ "foo", "bar" ]
 
 
@@ -120,7 +120,7 @@ scenarioWithTagsContent =
 
 
 scenarioWithTags =
-    Scenario tags "Have fun" [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
+    Scenario tagsFooBar "Have fun" [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
 
 
 scenarioOutlineContent =
@@ -158,7 +158,7 @@ scenarioOutlineWithTagsContent =
 
 
 scenarioOutlineWithTags =
-    ScenarioOutline tags
+    ScenarioOutline tagsFooBar
         "Have fun"
         [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
         [ examplesWithTag ]
@@ -169,7 +169,7 @@ examples =
 
 
 examplesWithTag =
-    Examples tag table2
+    Examples tagBlah table2
 
 
 examplesContentWithTag =
@@ -231,7 +231,7 @@ featureContent =
 
 
 featureWithTags =
-    Feature tags
+    Feature tagsFooBar
         "Living life"
         (AsA "person")
         (InOrderTo "get through life")
@@ -250,14 +250,14 @@ featureWithScenarioWithTags =
         (InOrderTo "get through life")
         (IWantTo "be able to do stuff")
         (Background "Some basic info" [ givenTheWorldIsRound ])
-        [ Scenario tags
+        [ Scenario tagsFooBar
             "Have fun"
             [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
         ]
 
 
-featureWithScenarioOutlineWithExamplesWithTags =
-    Feature tags
+featWithExWithTags =
+    Feature tagsFooBar
         "Living life"
         (AsA "person")
         (InOrderTo "get through life")
@@ -266,24 +266,24 @@ featureWithScenarioOutlineWithExamplesWithTags =
         [ ScenarioOutline []
             "Have fun"
             [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
-            [ Examples tag table2 ]
+            [ Examples tagBlah table2 ]
         ]
 
 
 featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTags =
-    Feature tags
+    Feature tagsFooBar
         "Living life"
         (AsA "person")
         (InOrderTo "get through life")
         (IWantTo "be able to do stuff")
         (Background "Some basic info" [ givenTheWorldIsRound ])
-        [ Scenario tags
+        [ Scenario tagsFooBar
             "Have fun"
             [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
-        , ScenarioOutline tags
+        , ScenarioOutline tagsFooBar
             "Have fun"
             [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
-            [ Examples tag table2 ]
+            [ Examples tagBlah table2 ]
         ]
 
 
