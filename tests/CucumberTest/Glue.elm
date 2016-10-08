@@ -22,7 +22,12 @@ failIfDescriptionContainsFail : GlueFunction String
 failIfDescriptionContainsFail initialState description stepArg =
     Just
         ( initialState
-        , if Regex.contains (Regex.regex "[Ff]ail") description then
+        , if
+            Regex.contains (Regex.regex "[Ff]ail")
+                (Debug.log "Step description"
+                    description
+                )
+          then
             Expect.fail "Failing because description contains 'fail'"
           else
             Expect.pass

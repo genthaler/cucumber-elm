@@ -230,6 +230,22 @@ featureContent =
   """
 
 
+featureWith2ScenariosWithTagsContent =
+    """Feature: Living life
+  As a person
+  In order to get through life
+  I want to be able to do stuff
+
+  @foo
+  Scenario: Try failing
+    Given fail
+
+  @bar
+  Scenario: Try passing
+    Given pass
+  """
+
+
 featureWithTags =
     Feature tagsFooBar
         "Living life"
@@ -256,8 +272,8 @@ featureWithScenarioWithTags =
         ]
 
 
-featWithExWithTags =
-    Feature tagsFooBar
+featureWithScenarioOutlineWithExamplesWithTags =
+    Feature noTags
         "Living life"
         (AsA "person")
         (InOrderTo "get through life")
@@ -266,8 +282,28 @@ featWithExWithTags =
         [ ScenarioOutline []
             "Have fun"
             [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
-            [ Examples tagBlah table2 ]
+            [ (Examples tagBlah table2) ]
         ]
+
+
+featureWithScenarioOutlineWithExamplesWithTagsContent =
+    """Feature: Living life
+  As a person
+  In order to get through life
+  I want to be able to do stuff
+  Background: Some basic info
+  Given the world is round
+  Scenario Outline: Have <Now> fun
+  Given I am trying to have fun
+  | Now | is | the | time |
+  | For | all | good | men |
+  But I am trying not to be a fool
+  And <fail>
+  @blah
+  Examples:
+    | fail |
+    | pass |
+  """
 
 
 featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTags =
@@ -287,6 +323,7 @@ featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTags
         ]
 
 
+featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTagsContent : String
 featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTagsContent =
     """@foo
   @bar

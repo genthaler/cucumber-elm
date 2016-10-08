@@ -8,6 +8,20 @@ import Test exposing (..)
 import Gherkin exposing (..)
 
 
+testFeatureWith2ScenariosWithTagsContent : Test
+testFeatureWith2ScenariosWithTagsContent =
+    describe "testing tags on Scenarios "
+        [ describe "successfully runs a Feature against a Glue function that could fail if the wrong scenarios are selected throw tags"
+            [ testFeatureText
+                [ Glue.failIfDescriptionContainsFail
+                ]
+                "initial state"
+                [ [ "bar" ] ]
+                featureWith2ScenariosWithTagsContent
+            ]
+        ]
+
+
 testFeatureWithTags : Test
 testFeatureWithTags =
     describe "testing tagsFooBar on features"
@@ -38,23 +52,6 @@ testFeatureWithScenarioWithTags =
                 featureWithScenarioWithTags
             ]
         ]
-
-
-
--- testFeatWithOutlineWithExWithTags : Test
--- testFeatWithOutlineWithExWithTags =
---     describe "testing tagsFooBar on features"
---         [ describe "successfully applies tags"
---             [ testFeature [ Glue.alwaysFail ]
---                 "initial state"
---                 [ [ "blah" ] ]
---                 featureWithScenarioWithTags
---             , testFeature [ Glue.alwaysPass ]
---                 "initial state"
---                 [ [ "foo" ] ]
---                 featureWithScenarioWithTags
---             ]
---         ]
 
 
 testTestFeatureText : Test
@@ -161,5 +158,5 @@ all =
         , testTestFeatureText
         , testFeatureWithTags
         , testFeatureWithScenarioWithTags
-          -- , testFeatWithOutlineWithExWithTags
+        , testFeatureWith2ScenariosWithTagsContent
         ]
