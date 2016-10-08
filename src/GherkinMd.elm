@@ -41,7 +41,7 @@ stepArgMd stepArg =
                 ++ "```"
                 ++ newline
 
-        DataTable dataTableContent ->
+        DataTable (Table headerRow dataTableContent) ->
             dataTableMd dataTableContent
 
         NoArg ->
@@ -70,7 +70,7 @@ dataTableMd table =
 
 
 stepMd : Step -> String
-stepMd theStep =
+stepMd (Step stepType detail stepArg) =
     let
         stepArgMd' name detail theStepArg =
             name
@@ -78,22 +78,25 @@ stepMd theStep =
                 ++ case (stepArgMd theStepArg) of
                     element ->
                         element
+
+        stepTypeDesc =
+            case stepType of
+                Given ->
+                    "Given"
+
+                When ->
+                    "When"
+
+                Then ->
+                    "Then"
+
+                And ->
+                    "And"
+
+                But ->
+                    "But"
     in
-        case theStep of
-            Given detail theStepArg ->
-                stepArgMd' "Given" detail theStepArg
-
-            When detail theStepArg ->
-                stepArgMd' "When" detail theStepArg
-
-            Then detail theStepArg ->
-                stepArgMd' "Then" detail theStepArg
-
-            And detail theStepArg ->
-                stepArgMd' "And" detail theStepArg
-
-            But detail theStepArg ->
-                stepArgMd' "But" detail theStepArg
+        stepArgMd' stepTypeDesc detail stepArg
 
 
 scenarioMd : Scenario -> String

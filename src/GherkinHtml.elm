@@ -25,28 +25,29 @@ stepArgHtml stepArg =
         DocString docStringContent ->
             Just (text docStringContent)
 
-        DataTable (Table dataTableHeader dataTableRows) ->
-            Just (dataTableHtml dataTableContent)
+        DataTable table ->
+            Just (dataTableHtml table)
 
         NoArg ->
             Nothing
 
 
-dataTableHtml : List (List String) -> Html msg
-dataTableHtml =
-    table []
-        << List.map
-            (\row ->
-                (tr []
-                    <| List.map
-                        (\col ->
-                            td []
-                                <| List.repeat 1
-                                    (text col)
-                        )
-                        row
-                )
-            )
+dataTableHtml : Table -> Html msg
+dataTableHtml (Table header body) =
+    let
+        constructRow fn row =
+            tr []
+                <| List.map
+                    (\col ->
+                        fn []
+                            <| List.repeat 1
+                                (text col)
+                    )
+                    row
+    in
+        table []
+            <| constructRow th header
+            :: List.map (constructRow td) body
 
 
 stepHtml : Step -> Html msg
@@ -88,8 +89,8 @@ scenarioHtml scenario =
                 <| (li [] [ text "Scenario: ", text detailText ])
                 :: List.map stepHtml steps
 
-        _ ->
-            text ""
+        ScenarioOutline tags detailText steps examples ->
+            text "Not yet implemented"
 
 
 backgroundHtml : Background -> Html msg
