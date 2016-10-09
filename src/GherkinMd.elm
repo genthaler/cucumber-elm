@@ -9,24 +9,37 @@ newline =
     "\n"
 
 
+tagMd : Tag -> String
+tagMd tag =
+    "@" ++ tag
+
+
+tagsMd : List Tag -> String
+tagsMd =
+    List.map tagMd >> String.join " " >> flip (++) newline
+
+
 asAMd : AsA -> String
 asAMd (AsA detailText) =
-    "As a "
+    "> As a "
         ++ detailText
+        ++ newline
         ++ newline
 
 
 inOrderToMd : InOrderTo -> String
 inOrderToMd (InOrderTo detailText) =
-    "In order to "
+    "> In order to "
         ++ detailText
+        ++ newline
         ++ newline
 
 
 iWantToMd : IWantTo -> String
 iWantToMd (IWantTo detailText) =
-    "I want to "
+    "> I want to "
         ++ detailText
+        ++ newline
         ++ newline
 
 
@@ -36,45 +49,46 @@ stepArgMd stepArg =
         DocString docStringContent ->
             "```"
                 ++ newline
+                ++ newline
                 ++ docStringContent
+                ++ newline
                 ++ newline
                 ++ "```"
                 ++ newline
+                ++ newline
 
-        DataTable (Table headerRow dataTableContent) ->
-            dataTableMd dataTableContent
+        DataTable table ->
+            tableMd table
 
         NoArg ->
             ""
 
 
-dataTableMd : List (List String) -> String
-dataTableMd table =
-    ""
+tableMd : Table -> String
+tableMd (Table header body) =
+    let
+        tag tagbase string =
+            "<" ++ tagbase ++ ">" ++ string ++ "</" ++ tagbase ++ ">"
 
-
-
--- table []
---     << List.map
---         (\row ->
---             (tr []
---                 <| List.map
---                     (\col ->
---                         td []
---                             <| List.repeat 1
---                                 (text col)
---                     )
---                     row
---             )
---         )
+        constructRow tagbase row =
+            row |> List.map (tag tagbase) |> String.join "" |> tag "tr"
+    in
+        constructRow "th" header
+            :: (List.map (constructRow "td") body)
+            |> String.join newline
+            |> tag "table"
 
 
 stepMd : Step -> String
 stepMd (Step stepType detail stepArg) =
     let
         stepArgMd' name detail theStepArg =
-            name
+            "**"
+                ++ name
+                ++ "** "
                 ++ detail
+                ++ newline
+                ++ newline
                 ++ case (stepArgMd theStepArg) of
                     element ->
                         element
@@ -97,30 +111,57 @@ stepMd (Step stepType detail stepArg) =
                     "But"
     in
         stepArgMd' stepTypeDesc detail stepArg
+            ++ newline
+            ++ newline
+
+
+examplesMd : Examples -> String
+examplesMd (Examples tags table) =
+    tagsMd tags
+        ++ "###Examples: "
+        ++ newline
+        ++ newline
+        ++ tableMd table
 
 
 scenarioMd : Scenario -> String
 scenarioMd scenario =
     case scenario of
         Scenario tags detailText steps ->
-            "Scenario "
+            tagsMd tags
+                ++ "##Scenario: "
                 ++ detailText
                 ++ newline
+                ++ newline
                 ++ (String.join newline <| List.map stepMd steps)
+                ++ newline
+                ++ newline
 
-        _ ->
-            ""
+        ScenarioOutline tags detailText steps examples ->
+            tagsMd tags
+                ++ "##Scenario: "
+                ++ detailText
+                ++ newline
+                ++ newline
+                ++ (String.join newline <| List.map stepMd steps)
+                ++ newline
+                ++ newline
+                ++ (examples |> List.map examplesMd |> String.join (newline ++ newline))
+                ++ newline
+                ++ newline
 
 
 backgroundMd : Background -> String
 backgroundMd background =
     case background of
         Background detailText steps ->
-            "Background"
-                ++ newline
+            "## Background: "
                 ++ detailText
                 ++ newline
+                ++ newline
                 ++ (String.join newline <| List.map stepMd steps)
+                ++ newline
+                ++ newline
 
         NoBackground ->
             ""
@@ -130,11 +171,15 @@ featureMd : Feature -> String
 featureMd feature =
     case feature of
         Feature tags detailText asA inOrderTo iWantTo background scenarios ->
-            "Feature: "
+            tagsMd tags
+                ++ "# Feature: "
                 ++ detailText
+                ++ newline
                 ++ newline
                 ++ asAMd asA
                 ++ inOrderToMd inOrderTo
                 ++ iWantToMd iWantTo
                 ++ backgroundMd background
-                ++ (String.join newline <| List.map scenarioMd scenarios)
+                ++ (String.join (newline ++ newline)
+                        <| List.map scenarioMd scenarios
+                   )
