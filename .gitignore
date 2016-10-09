@@ -5,5 +5,7 @@ repl-temp-*
 # ide support
 .tags*
 *.log
-
 dep-check.html
+node_modules
+
+.elm-package-path

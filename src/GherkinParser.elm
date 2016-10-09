@@ -54,10 +54,24 @@ detailText =
         <* optional "" comment
 
 
-{-| Parse a tag line.
+{-| Parse a tag.
 -}
 tag : Parser Tag
 tag =
+    string "@" *> detailText
+
+
+{-| Parse `Tag`s on a line.
+-}
+andTags : Parser Tag
+andTags =
+    string "@" *> detailText
+
+
+{-| Parse `Tag`s on separate lines.
+-}
+orTags : Parser Tag
+orTags =
     string "@" *> detailText
 
 
@@ -135,7 +149,7 @@ tableCellContent =
 
 This is saying, any text bookended by non-pipe, non-whitespace characters
 -}
-tableRow : Parser (List String)
+tableRow : Parser Row
 tableRow =
     tableCellDelimiter
         *> sepBy tableCellDelimiter tableCellContent
@@ -146,7 +160,7 @@ tableRow =
 
 This is saying, any text bookended by non-pipe, non-whitespace characters
 -}
-tableRows : Parser (List (List String))
+tableRows : Parser (List Row)
 tableRows =
     sepBy1 newline tableRow
 
@@ -157,7 +171,7 @@ This is saying, any text bookended by non-pipe, non-whitespace characters
 -}
 table : Parser Table
 table =
-    tableRows
+    Table <$> tableRow <* newline <*> tableRows
 
 
 {-| Parse an absent step argument.
@@ -171,13 +185,14 @@ noArg =
 -}
 step : Parser Step
 step =
-    choice
-        [ (Given <$ string "Given")
-        , (When <$ string "When")
-        , (Then <$ string "Then")
-        , (And <$ string "And")
-        , (But <$ string "But")
-        ]
+    Step
+        <$> choice
+                [ (Given <$ string "Given")
+                , (When <$ string "When")
+                , (Then <$ string "Then")
+                , (And <$ string "And")
+                , (But <$ string "But")
+                ]
         <* spaces
         <*> (detailText <* interspace)
         <*> (docString <|> (DataTable <$> table) <|> noArg)

@@ -116,7 +116,7 @@ all =
             <| defer
             <| Expect.equal (GherkinParser.parse GherkinParser.scenario scenarioContent)
             <| Result.Ok scenario
-        , test "parses Scenario with tags correctly"
+        , test "parses Scenario with tagsFooBar correctly"
             <| defer
             <| Expect.equal (GherkinParser.parse GherkinParser.scenario scenarioWithTagsContent)
             <| Result.Ok scenarioWithTags
@@ -124,16 +124,16 @@ all =
             <| defer
             <| Expect.equal (GherkinParser.parse GherkinParser.scenarioOutline scenarioOutlineContent)
             <| Result.Ok scenarioOutline
-        , test "parses Scenario Outline with tags correctly"
+        , test "parses Scenario Outline with tagsFooBar correctly"
             <| defer
             <| Expect.equal (GherkinParser.parse GherkinParser.scenarioOutline scenarioOutlineWithTagsContent)
             <| Result.Ok scenarioOutlineWithTags
         , test "parses Feature correctly"
             <| defer
-            <| Expect.equal (GherkinParser.parse GherkinParser.feature featureContent2)
-            <| Result.Ok feature2
-        , test "parses Feature with tags correctly"
+            <| Expect.equal (GherkinParser.parse GherkinParser.feature featureContent)
+            <| Result.Ok feature
+        , test "parses Feature with tagsFooBar correctly"
             <| defer
-            <| Expect.equal (GherkinParser.parse GherkinParser.feature featureContent3)
-            <| Result.Ok feature3
+            <| Expect.equal (GherkinParser.parse GherkinParser.feature featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTagsContent)
+            <| Result.Ok featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTags
         ]

@@ -5,8 +5,9 @@ module Main exposing (..)
 
 -- import Html.App as Html
 
+import Markdown
 import Gherkin
-import GherkinHtml
+import GherkinMd
 import GherkinParser
 import Task exposing (Task)
 import Html exposing (Html, text, div, textarea, button, ul, li)
@@ -54,6 +55,8 @@ init =
 
     Background: The world is round
         Given I have loaded the CucumberFiddle application
+        | Now | is | the | time |
+        | For | all | good | men |
 
     Scenario: Format a feature
         Given I have entered a feature in the feature editor
@@ -74,7 +77,20 @@ init =
 
     Scenario: Selecting a feature from the client
         When I select a feature file from local
-        Then I can see the feature"""
+        Then I can see the feature \"\"\" Here's a DocString \"\"\"
+
+    @foo
+    @bar
+    Scenario Outline: Have fun
+      Given I am trying to have fun
+        | Now | is | the | time |
+        | For | all | good | men |
+      But I am trying not to be a fool
+      @blah
+      Examples:
+        | Now |
+        | For |
+    """
     , feature = Nothing
     , errors = []
     }
@@ -147,7 +163,7 @@ view model =
                     text "waiting..."
 
                 Just feature ->
-                    GherkinHtml.featureHtml feature
+                    feature |> GherkinMd.featureMd |> (Markdown.toHtml [])
             ]
         , ul [] (map (li [] << repeat 1 << text) model.errors)
         , button [ onClick Format ] [ text "Format" ]

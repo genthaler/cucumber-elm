@@ -36,6 +36,18 @@ type alias Tag =
     String
 
 
+{-| This is the datatype for and-ed tags,
+-}
+type alias AndTags =
+    List String
+
+
+{-| This is the datatype for or-ed tags,
+-}
+type alias OrTags =
+    List AndTags
+
+
 {-| From [User Stories](https://en.wikipedia.org/wiki/User_story)
 -}
 type AsA
@@ -84,11 +96,17 @@ There is no functional distinction between Given, When, Then, And or But
 See the Cucumber module for examples.
 -}
 type Step
-    = Given String StepArg
-    | When String StepArg
-    | Then String StepArg
-    | And String StepArg
-    | But String StepArg
+    = Step StepType String StepArg
+
+
+{-| Given/When/Then/etc
+-}
+type StepType
+    = Given
+    | When
+    | Then
+    | And
+    | But
 
 
 {-| An argument to the Glue function, that's not extracted from the Step description.
@@ -109,5 +127,13 @@ type Examples
 
 {-| Used in Steps i.e. a kind of StepArg.
 -}
-type alias Table =
-    List (List String)
+type alias Row =
+    List String
+
+
+{-| Used in Steps i.e. a kind of StepArg, and in Examples.
+
+There must be at least one row.
+-}
+type Table
+    = Table Row (List Row)

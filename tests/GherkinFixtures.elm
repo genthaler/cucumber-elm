@@ -10,28 +10,32 @@ defer x =
     \() -> x
 
 
-tag =
+noTags =
+    []
+
+
+tagBlah =
     [ "blah" ]
 
 
-tags =
+tagsFooBar =
     [ "foo", "bar" ]
 
 
 givenTheQuickBrownFox =
-    Given "the quick brown fox" NoArg
+    Step Given "the quick brown fox" NoArg
 
 
 givenJumpsOverTheLazyDog =
-    Given "jumps over the lazy dog" NoArg
+    Step Given "jumps over the lazy dog" NoArg
 
 
 givenIAmTryingToHaveFun =
-    Given "I am trying to have fun" <| DataTable table1
+    Step Given "I am trying to have fun" <| DataTable table1
 
 
 givenTheWorldIsRound =
-    Given "the world is round" NoArg
+    Step Given "the world is round" NoArg
 
 
 nowIsTheTime =
@@ -43,9 +47,9 @@ tableRowContent =
 
 
 table1 =
-    [ [ "Now", "is", "the", "time" ]
-    , [ "For", "all", "good", "men" ]
-    ]
+    Table [ "Now", "is", "the", "time" ]
+        [ [ "For", "all", "good", "men" ]
+        ]
 
 
 tableContent1 =
@@ -54,9 +58,9 @@ tableContent1 =
 
 
 table2 =
-    [ [ "Now" ]
-    , [ "For" ]
-    ]
+    Table [ "Now" ]
+        [ [ "For" ]
+        ]
 
 
 stepContent =
@@ -70,7 +74,7 @@ stepContent2 =
 
 
 butIAmTryingNotToBeAFool =
-    But "I am trying not to be a fool" NoArg
+    Step But "I am trying not to be a fool" NoArg
 
 
 background1 =
@@ -87,7 +91,7 @@ backgroundContent2 =
   """
 
 
-scenario1 =
+simpleScenario =
     Scenario [] "with five dozen liquor jugs" [ givenTheQuickBrownFox, givenJumpsOverTheLazyDog ]
 
 
@@ -116,7 +120,7 @@ scenarioWithTagsContent =
 
 
 scenarioWithTags =
-    Scenario tags "Have fun" [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
+    Scenario tagsFooBar "Have fun" [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
 
 
 scenarioOutlineContent =
@@ -154,7 +158,7 @@ scenarioOutlineWithTagsContent =
 
 
 scenarioOutlineWithTags =
-    ScenarioOutline tags
+    ScenarioOutline tagsFooBar
         "Have fun"
         [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
         [ examplesWithTag ]
@@ -165,7 +169,7 @@ examples =
 
 
 examplesWithTag =
-    Examples tag table2
+    Examples tagBlah table2
 
 
 examplesContentWithTag =
@@ -175,22 +179,22 @@ examplesContentWithTag =
       | For | """
 
 
-feature : Feature
-feature =
+simpleFeature : Feature
+simpleFeature =
     Feature []
         "Feature Runner"
         (AsA "regular person")
         (InOrderTo "verify a feature")
         (IWantTo "supply some glue code and run it against the feature")
         background1
-        [ scenario1 ]
+        [ simpleScenario ]
 
 
-featureContent =
+simpleFeatureContent =
     """Feature: Feature Runner
 As a regular person
-In order to verify a feature
-I want to supply some glue code and run it against the feature
+In order to verify a simpleFeature
+I want to supply some glue code and run it against the simpleFeature
 Background: pack my box
 Given the quick brown fox
 Scenario: with five dozen liquor jugs
@@ -199,20 +203,17 @@ When jumps over the lazy dog
 """
 
 
-feature2 =
+feature =
     Feature []
         "Living life"
         (AsA "person")
         (InOrderTo "get through life")
         (IWantTo "be able to do stuff")
         background2
-        [ Scenario []
-            "Have fun"
-            [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
-        ]
+        [ scenario ]
 
 
-featureContent2 =
+featureContent =
     """Feature: Living life
   As a person
   In order to get through life
@@ -229,24 +230,101 @@ featureContent2 =
   """
 
 
-feature3 =
-    Feature tags
+featureWith2ScenariosWithTagsContent =
+    """Feature: Living life
+  As a person
+  In order to get through life
+  I want to be able to do stuff
+
+  @foo
+  Scenario: Try failing
+    Given fail
+
+  @bar
+  Scenario: Try passing
+    Given pass
+  """
+
+
+featureWithTags =
+    Feature tagsFooBar
         "Living life"
         (AsA "person")
         (InOrderTo "get through life")
         (IWantTo "be able to do stuff")
         (Background "Some basic info" [ givenTheWorldIsRound ])
-        [ Scenario tags
+        [ Scenario []
             "Have fun"
             [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
-        , ScenarioOutline tags
-            "Have fun"
-            [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
-            [ Examples tag table2 ]
         ]
 
 
-featureContent3 =
+featureWithScenarioWithTags =
+    Feature []
+        "Living life"
+        (AsA "person")
+        (InOrderTo "get through life")
+        (IWantTo "be able to do stuff")
+        (Background "Some basic info" [ givenTheWorldIsRound ])
+        [ Scenario tagsFooBar
+            "Have fun"
+            [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
+        ]
+
+
+featureWithScenarioOutlineWithExamplesWithTags =
+    Feature noTags
+        "Living life"
+        (AsA "person")
+        (InOrderTo "get through life")
+        (IWantTo "be able to do stuff")
+        (Background "Some basic info" [ givenTheWorldIsRound ])
+        [ ScenarioOutline []
+            "Have fun"
+            [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
+            [ (Examples tagBlah table2) ]
+        ]
+
+
+featureWithScenarioOutlineWithExamplesWithTagsContent =
+    """Feature: Living life
+  As a person
+  In order to get through life
+  I want to be able to do stuff
+  Background: Some basic info
+  Given the world is round
+  Scenario Outline: Have <Now> fun
+  Given I am trying to have fun
+  | Now | is | the | time |
+  | For | all | good | men |
+  But I am trying not to be a fool
+  And <fail>
+  @blah
+  Examples:
+    | fail |
+    | pass |
+  """
+
+
+featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTags =
+    Feature tagsFooBar
+        "Living life"
+        (AsA "person")
+        (InOrderTo "get through life")
+        (IWantTo "be able to do stuff")
+        (Background "Some basic info" [ givenTheWorldIsRound ])
+        [ Scenario tagsFooBar
+            "Have fun"
+            [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
+        , ScenarioOutline tagsFooBar
+            "Have fun"
+            [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
+            [ Examples tagBlah table2 ]
+        ]
+
+
+featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTagsContent : String
+featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTagsContent =
     """@foo
   @bar
   Feature: Living life
