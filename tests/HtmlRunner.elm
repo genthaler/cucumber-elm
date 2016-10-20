@@ -5,7 +5,7 @@ module HtmlRunner exposing (..)
 cd tests
 elm-reactor
 ```
-2. Visit http://localhost:80loc00/HtmlRunner.elm
+2. Visit http://localhost:8000/HtmlRunner.elm
 -}
 
 import Test exposing (..)
@@ -15,7 +15,7 @@ import Test.Runner.Html
 
 main : Program Never
 main =
-    [ Tests.allloc
+    [ Tests.all
     ]
         |> concat
         |> Test.Runner.Html.run
