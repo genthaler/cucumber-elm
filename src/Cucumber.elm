@@ -15,6 +15,7 @@ Regex -> String ->
 # Run by Glue functions
 @docs include
 
+
 # Glue
 These types describe a glue function
 
@@ -162,10 +163,10 @@ testFeature glueFunctions initialState filterTags (Feature featureTags featureDe
         scenarioTests =
             List.map (testScenario glueFunctions initialState background filterTags) scenarios
     in
-        describe featureDescription
-            <| if matchTags filterTags featureTags then
+        describe featureDescription <|
+            if matchTags filterTags featureTags then
                 scenarioTests
-               else
+            else
                 [ skipElement "Feature" ]
 
 
@@ -198,10 +199,10 @@ testScenario glueFunctions initialState background filterTags scenario =
                 ( _, scenarioTest ) =
                     testSteps glueFunctions backgroundState steps
             in
-                describe ("Scenario: " ++ description)
-                    <| if matchTags filterTags scenarioTags then
+                describe ("Scenario: " ++ description) <|
+                    if matchTags filterTags scenarioTags then
                         [ backgroundTest, scenarioTest ]
-                       else
+                    else
                         [ skipElement "Scenario" ]
 
         ScenarioOutline scenarioTags scenarioDescription steps examplesList ->
@@ -216,7 +217,7 @@ testScenario glueFunctions initialState background filterTags scenario =
                     matchTags filterTags examplesTags
 
                 filteredExamplesList =
-                    List.filter filterExamples filteredExamplesList
+                    List.filter filterExamples examplesList
 
                 substituteExamplesInScenario scenarioDescription steps (Examples _ (Table header rows)) =
                     List.map (substituteExampleInScenario scenarioDescription steps header)
@@ -268,10 +269,10 @@ testScenario glueFunctions initialState background filterTags scenario =
                 instantiatedScenarios =
                     List.map (substituteExamplesInScenario scenarioDescription steps) filteredExamplesList
             in
-                describe ("Scenario Outline: " ++ scenarioDescription)
-                    <| if matchTags filterTags scenarioTags then
+                describe ("Scenario Outline: " ++ scenarioDescription) <|
+                    if matchTags filterTags scenarioTags then
                         [ backgroundTest, scenarioTest ]
-                       else
+                    else
                         [ skipElement "Scenario Outline" ]
 
 

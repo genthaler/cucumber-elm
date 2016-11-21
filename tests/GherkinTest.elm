@@ -39,8 +39,8 @@ feature =
 
 featureTest : Test
 featureTest =
-    test "Features"
-        <| \() ->
+    test "Features" <|
+        \() ->
             Expect.equal (3 + 7) 10
 
 

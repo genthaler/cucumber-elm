@@ -1,7 +1,6 @@
 module GherkinParser exposing (..)
 
 import Combine exposing (..)
-import Combine.Infix exposing (..)
 import String
 import Gherkin exposing (..)
 
@@ -17,7 +16,7 @@ import Gherkin exposing (..)
 
 {-| Parse a comment; everything from a `#` symbol to the end of the line
 -}
-comment : Parser String
+comment : Parser s String
 comment =
     regex "#.*"
         <* newline
@@ -25,14 +24,14 @@ comment =
 
 {-| Parse any number of whitespace (except for newlines).
 -}
-spaces : Parser String
+spaces : Parser s String
 spaces =
     regex "[^\\r\\n\\S]+"
 
 
 {-| Parse a newline
 -}
-newline : Parser String
+newline : Parser s String
 newline =
     regex "(\\r\\n|\\r|\\n)"
 
@@ -40,7 +39,7 @@ newline =
 {-| Parse any amount of space that might separate tokens, that isn't context
 sensitive.
 -}
-interspace : Parser (List String)
+interspace : Parser s (List String)
 interspace =
     newline <|> spaces <|> comment |> many
 
@@ -48,7 +47,7 @@ interspace =
 {-| Parse detail text, typically after a Gherkin keyword until the effective
 end of line.
 -}
-detailText : Parser String
+detailText : Parser s String
 detailText =
     regex "[^#\\r\\n]+"
         <* optional "" comment
@@ -56,35 +55,35 @@ detailText =
 
 {-| Parse a tag.
 -}
-tag : Parser Tag
+tag : Parser s Tag
 tag =
     string "@" *> detailText
 
 
 {-| Parse `Tag`s on a line.
 -}
-andTags : Parser Tag
+andTags : Parser s Tag
 andTags =
     string "@" *> detailText
 
 
 {-| Parse `Tag`s on separate lines.
 -}
-orTags : Parser Tag
+orTags : Parser s Tag
 orTags =
     string "@" *> detailText
 
 
 {-| Parse a list of tag lines.
 -}
-tags : Parser (List Tag)
+tags : Parser s (List Tag)
 tags =
     sepBy interspace tag
 
 
 {-| Parse an `As a` line.
 -}
-asA : Parser AsA
+asA : Parser s AsA
 asA =
     string "As a"
         *> spaces
@@ -93,7 +92,7 @@ asA =
 
 {-| Parse an `In order to` line.
 -}
-inOrderTo : Parser InOrderTo
+inOrderTo : Parser s InOrderTo
 inOrderTo =
     string "In order to"
         *> spaces
@@ -102,7 +101,7 @@ inOrderTo =
 
 {-| Parse an `I want to` line.
 -}
-iWantTo : Parser IWantTo
+iWantTo : Parser s IWantTo
 iWantTo =
     string "I want to"
         *> spaces
@@ -111,14 +110,14 @@ iWantTo =
 
 {-| Parse a docstring quote token.
 -}
-docStringQuotes : Parser String
+docStringQuotes : Parser s String
 docStringQuotes =
     string "\"\"\""
 
 
 {-| Parse a docstring step argument.
 -}
-docString : Parser StepArg
+docString : Parser s StepArg
 docString =
     optional "" newline
         *> docStringQuotes
@@ -131,7 +130,7 @@ docString =
 This is saying, optional whitespace *> pipe character <* optional whitespace,
 where whitespace here excludes newlines
 -}
-tableCellDelimiter : Parser String
+tableCellDelimiter : Parser s String
 tableCellDelimiter =
     regex "[^\\r\\n\\S|]*\\|[^\\r\\n\\S|]*"
 
@@ -140,7 +139,7 @@ tableCellDelimiter =
 
 This is saying, any text bookended by non-pipe, non-whitespace characters
 -}
-tableCellContent : Parser String
+tableCellContent : Parser s String
 tableCellContent =
     regex "[^|\\s]([^|\\r\\n]*[^|\\s])?"
 
@@ -149,7 +148,7 @@ tableCellContent =
 
 This is saying, any text bookended by non-pipe, non-whitespace characters
 -}
-tableRow : Parser Row
+tableRow : Parser s Row
 tableRow =
     tableCellDelimiter
         *> sepBy tableCellDelimiter tableCellContent
@@ -160,7 +159,7 @@ tableRow =
 
 This is saying, any text bookended by non-pipe, non-whitespace characters
 -}
-tableRows : Parser (List Row)
+tableRows : Parser s (List Row)
 tableRows =
     sepBy1 newline tableRow
 
@@ -169,21 +168,21 @@ tableRows =
 
 This is saying, any text bookended by non-pipe, non-whitespace characters
 -}
-table : Parser Table
+table : Parser s Table
 table =
     Table <$> tableRow <* newline <*> tableRows
 
 
 {-| Parse an absent step argument.
 -}
-noArg : Parser StepArg
+noArg : Parser s StepArg
 noArg =
     NoArg <$ succeed ()
 
 
 {-| Parse a step.
 -}
-step : Parser Step
+step : Parser s Step
 step =
     Step
         <$> choice
@@ -200,7 +199,7 @@ step =
 
 {-| Parse a scenario outline example section.
 -}
-examples : Parser Examples
+examples : Parser s Examples
 examples =
     Examples
         <$> (tags <* interspace)
@@ -209,7 +208,7 @@ examples =
 
 {-| Parse a scenario.
 -}
-scenario : Parser Scenario
+scenario : Parser s Scenario
 scenario =
     Scenario
         <$> (tags <* interspace)
@@ -219,7 +218,7 @@ scenario =
 
 {-| Parse a scenario outline.
 -}
-scenarioOutline : Parser Scenario
+scenarioOutline : Parser s Scenario
 scenarioOutline =
     ScenarioOutline
         <$> (tags <* interspace)
@@ -230,7 +229,7 @@ scenarioOutline =
 
 {-| Parse a background section.
 -}
-background : Parser Background
+background : Parser s Background
 background =
     Background
         <$> (string "Background:"
@@ -243,14 +242,14 @@ background =
 
 {-| Parse an absent background section.
 -}
-noBackground : Parser Background
+noBackground : Parser s Background
 noBackground =
     NoBackground <$ succeed ()
 
 
 {-| Parse an entire.
 -}
-feature : Parser Feature
+feature : Parser s Feature
 feature =
     Feature
         <$> (tags <* interspace)
@@ -268,9 +267,12 @@ feature =
 
 {-| Nicely format a parsing error.
 -}
-formatError : String -> List String -> Context -> String
+formatError : String -> List String -> ParseContext state res -> String
 formatError input ms cx =
     let
+        ( _, inputStream, _ ) =
+            cx
+
         lines =
             String.lines input
 
@@ -279,13 +281,13 @@ formatError input ms cx =
 
         ( line, lineNumber, lineOffset, _ ) =
             List.foldl
-                (\line ( line', n, o, pos ) ->
+                (\line ( line_, n, o, pos ) ->
                     if pos < 0 then
-                        ( line', n, o, pos )
+                        ( line_, n, o, pos )
                     else
-                        ( line, n + 1, pos, pos - 1 - String.length line' )
+                        ( line, n + 1, pos, pos - 1 - String.length line_ )
                 )
-                ( "", 0, 0, cx.position )
+                ( "", 0, 0, inputStream.position )
                 lines
 
         separator =
@@ -316,11 +318,15 @@ formatError input ms cx =
 
 {-| Parse using an arbitrary parser combinator.
 -}
-parse : Parser res -> String -> Result String res
+parse : Parser () res -> String -> Result String res
 parse parser s =
     case Combine.parse parser (s ++ "\n") of
-        ( Ok es, _ ) ->
-            Ok es
+        Ok ( state, stream, result ) ->
+            Ok result
 
-        ( Err ms, cx ) ->
-            Err <| formatError s ms cx
+        Err ( state, stream, errors ) ->
+            Err <| ""
+
+
+
+--formatError errors

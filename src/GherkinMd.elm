@@ -82,7 +82,7 @@ tableMd (Table header body) =
 stepMd : Step -> String
 stepMd (Step stepType detail stepArg) =
     let
-        stepArgMd' name detail theStepArg =
+        stepArgMd_ name detail theStepArg =
             "**"
                 ++ name
                 ++ "** "
@@ -110,7 +110,7 @@ stepMd (Step stepType detail stepArg) =
                 But ->
                     "But"
     in
-        stepArgMd' stepTypeDesc detail stepArg
+        stepArgMd_ stepTypeDesc detail stepArg
             ++ newline
             ++ newline
 
@@ -180,6 +180,6 @@ featureMd feature =
                 ++ inOrderToMd inOrderTo
                 ++ iWantToMd iWantTo
                 ++ backgroundMd background
-                ++ (String.join (newline ++ newline)
-                        <| List.map scenarioMd scenarios
+                ++ (String.join (newline ++ newline) <|
+                        List.map scenarioMd scenarios
                    )

@@ -85,7 +85,7 @@ testTestBackground : Test
 testTestBackground =
     describe "testing testBackground"
         [ describe "successfully runs Background against a Glue function"
-            [ testBackground [ Glue.alwaysPass ] "initial state" background1 |> snd
+            [ testBackground [ Glue.alwaysPass ] "initial state" background1 |> Tuple.second
             ]
         ]
 
@@ -94,7 +94,7 @@ testTestSteps : Test
 testTestSteps =
     describe "testing testBackground"
         [ describe "successfully runs Steps against a Glue function"
-            [ testSteps [ Glue.alwaysPass ] "initial state" [ givenTheQuickBrownFox, givenJumpsOverTheLazyDog ] |> snd
+            [ testSteps [ Glue.alwaysPass ] "initial state" [ givenTheQuickBrownFox, givenJumpsOverTheLazyDog ] |> Tuple.second
             ]
         ]
 
@@ -104,7 +104,7 @@ testTestStep =
     describe "testing testStep"
         [ describe "successfully runs a Step against a Glue function"
             [ testStep [ Glue.alwaysPass ] "initial state" givenTheQuickBrownFox
-                |> snd
+                |> Tuple.second
               -- , testStep [ Glue.alwaysPass, Glue.alwaysPass ] "initial state" givenTheQuickBrownFox
               --     |> snd
               --     |> test "expect multiple glue functions that return a Just Expectation to fail testing"
@@ -115,34 +115,34 @@ testTestStep =
 testMatchTags : Test
 testMatchTags =
     describe "testing matchTags"
-        [ test "no element tags"
-            <| \() ->
-                Expect.true "if the element list is empty, then return True"
-                    <| matchTags [ tagsFooBar ] []
-        , test "a matching tag"
-            <| \() ->
-                Expect.true "if there's at least one match, then return True"
-                    <| matchTags [ [ "e" ] ] [ "e", "r", "t" ]
-        , test "more matching tags"
-            <| \() ->
-                Expect.true "if there's at least one match, then return True"
-                    <| matchTags [ [ "e", "r" ], [ "z" ] ] [ "e", "r", "t" ]
-        , test "more matching tags"
-            <| \() ->
-                Expect.true "if some and-ed tags don't match, but some do, then return True"
-                    <| matchTags [ [ "e", "x" ], [ "t" ] ] [ "e", "r", "t" ]
-        , test "not enough matching tags"
-            <| \() ->
-                Expect.false "if and-ed tags don't match, then return False"
-                    <| matchTags [ [ "e", "x" ], [ "z" ] ] [ "e", "r", "t" ]
-        , test "no filter tags"
-            <| \() ->
-                Expect.true "if there are filter tags, but no element tags, then return True"
-                    <| matchTags [ tagsFooBar ] []
-        , test "no matching tags"
-            <| \() ->
-                Expect.false "if there's at least one match, then return True"
-                    <| matchTags [ [ "q", "w", "e" ] ] [ "a", "s", "d" ]
+        [ test "no element tags" <|
+            \() ->
+                Expect.true "if the element list is empty, then return True" <|
+                    matchTags [ tagsFooBar ] []
+        , test "a matching tag" <|
+            \() ->
+                Expect.true "if there's at least one match, then return True" <|
+                    matchTags [ [ "e" ] ] [ "e", "r", "t" ]
+        , test "more matching tags" <|
+            \() ->
+                Expect.true "if there's at least one match, then return True" <|
+                    matchTags [ [ "e", "r" ], [ "z" ] ] [ "e", "r", "t" ]
+        , test "more matching tags" <|
+            \() ->
+                Expect.true "if some and-ed tags don't match, but some do, then return True" <|
+                    matchTags [ [ "e", "x" ], [ "t" ] ] [ "e", "r", "t" ]
+        , test "not enough matching tags" <|
+            \() ->
+                Expect.false "if and-ed tags don't match, then return False" <|
+                    matchTags [ [ "e", "x" ], [ "z" ] ] [ "e", "r", "t" ]
+        , test "no filter tags" <|
+            \() ->
+                Expect.true "if there are filter tags, but no element tags, then return True" <|
+                    matchTags [ tagsFooBar ] []
+        , test "no matching tags" <|
+            \() ->
+                Expect.false "if there's at least one match, then return True" <|
+                    matchTags [ [ "q", "w", "e" ] ] [ "a", "s", "d" ]
         ]
 
 
