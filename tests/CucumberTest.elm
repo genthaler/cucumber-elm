@@ -5,7 +5,6 @@ import CucumberTest.Glue as Glue
 import Expect exposing (..)
 import GherkinFixtures exposing (..)
 import Test exposing (..)
-import Gherkin exposing (..)
 
 
 testFeatureWith2ScenariosWithTagsContent : Test
