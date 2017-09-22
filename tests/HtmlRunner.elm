@@ -13,7 +13,7 @@ import Tests
 import Test.Runner.Html
 
 
-main : Program Never
+main : Test.Runner.Html.TestProgram
 main =
     [ Tests.all
     ]
