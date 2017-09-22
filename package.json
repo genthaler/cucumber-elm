@@ -12,7 +12,10 @@
 		"url": "https://github.com/genthaler/cucumber-elm/issues"
 	},
 	"keywords": [
-		"elm", "bdd", "cucumber", "gherkin"
+		"elm",
+		"bdd",
+		"cucumber",
+		"gherkin"
 	],
 	"private": true,
 	"build": "elm-package install --yes",
@@ -20,12 +23,15 @@
 		"test": "elm-test",
 		"watch": "npm-watch"
 	},
-  "watch": {
-    "test": {
-      "patterns": ["src", "test"],
-      "extensions": "elm",
-      "quiet": false
-    }
+	"watch": {
+		"test": {
+			"patterns": [
+				"src",
+				"test"
+			],
+			"extensions": "elm",
+			"quiet": false
+		}
 	},
 	"engine-strict": true,
 	"engines": {
@@ -35,6 +41,6 @@
 	"devDependencies": {
 		"elm": "^0.18.0",
 		"elm-test": "^0.18.0",
-		"npm-watch" :"^0.1.6"
+		"npm-watch": "^0.1.6"
 	}
 }
