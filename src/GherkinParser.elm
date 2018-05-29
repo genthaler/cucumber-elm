@@ -1,17 +1,8 @@
-module GherkinParser exposing (parse)
+module GherkinParser exposing (feature, formatError)
 
-import Combine exposing (regex, Parser, many, optional, string, sepBy, sepBy1, succeed, (<$>), (<$), (<*), (*>), (<|>), (<*>))
+import Combine exposing (..)
 import String
-import Gherkin exposing (Feature, AndTags, OrTags, AsA, InOrderTo, IWantTo, Background, Scenario, Step, Tag)
-
-
--- lookahead : Parser res -> Parser res
--- lookahead lookaheadParser =
---     let
---         primitiveArg =
---             app lookaheadParser
---     in
---         primitive primitiveArg
+import Gherkin exposing (..)
 
 
 {-| Parse a comment; everything from a `#` symbol to the end of the line
@@ -57,21 +48,7 @@ detailText =
 -}
 tag : Parser s Tag
 tag =
-    string "@" *> detailText
-
-
-{-| Parse `Tag`s on a line.
--}
-andTags : Parser s Tag
-andTags =
-    string "@" *> detailText
-
-
-{-| Parse `Tag`s on separate lines.
--}
-orTags : Parser s Tag
-orTags =
-    string "@" *> detailText
+    Tag <$> (string "@" *> detailText)
 
 
 {-| Parse a list of tag lines.
@@ -194,8 +171,8 @@ step =
                 [ Given <$ string "Given"
                 , When <$ string "When"
                 , Then <$ string "Then"
-                , (And <$ string "And")
-                , (But <$ string "But")
+                , And <$ string "And"
+                , But <$ string "But"
                 ]
         <* spaces
         <*> (detailText <* interspace)
@@ -228,7 +205,7 @@ scenarioOutline =
     ScenarioOutline
         <$> (tags <* interspace)
         <*> (string "Scenario Outline:" *> spaces *> detailText <* interspace)
-        <*> ((sepBy1 interspace step) <* interspace)
+        <*> (sepBy1 interspace step <* interspace)
         <*> sepBy1 interspace examples
 
 
@@ -239,7 +216,7 @@ background =
     Background
         <$> (string "Background:"
                 *> spaces
-                *> (optional "" detailText)
+                *> optional "" detailText
                 <* interspace
             )
         <*> sepBy1 interspace step
@@ -259,7 +236,7 @@ feature =
     Feature
         <$> (tags <* interspace)
         <*> (string "Feature:"
-                *> (optional "" spaces)
+                *> optional "" spaces
                 *> detailText
                 <* interspace
             )
@@ -281,10 +258,7 @@ formatError input ms cx =
         lines =
             String.lines input
 
-        lineCount =
-            List.length lines
-
-        ( line, lineNumber, lineOffset, _ ) =
+        ( formattedLine, lineNumber, lineOffset, _ ) =
             List.foldl
                 (\line ( line_, n, o, pos ) ->
                     if pos < 0 then
@@ -311,9 +285,9 @@ formatError input ms cx =
             lineNumberOffset + separatorOffset + lineOffset + 1
     in
         "Parse error around line:\n\n"
-            ++ (toString lineNumber)
+            ++ toString lineNumber
             ++ separator
-            ++ line
+            ++ formattedLine
             ++ "\n"
             ++ String.padLeft padding ' ' "^"
             ++ "\nI expected one of the following:\n"
@@ -321,17 +295,21 @@ formatError input ms cx =
             ++ String.join expectationSeparator ms
 
 
-{-| Parse using an arbitrary parser combinator.
--}
-parse : Parser () res -> String -> Result String res
-parse parser s =
-    case Combine.parse parser (s ++ "\n") of
-        Ok ( state, stream, result ) ->
-            Ok result
 
-        Err ( state, stream, errors ) ->
-            Err <| ""
-
-
-
---formatError errors
+-- {-| Parse using an arbitrary parser combinator.
+-- -}
+-- parse : Parser () res -> String -> Result String res
+-- parse parser s =
+--     case Combine.parse parser (s ++ "\n") of
+--         Ok ( _, _, result ) ->
+--             Ok result
+--
+--         Err ( _, _, _ ) ->
+--             Err <| ""
+-- lookahead : Parser res -> Parser res
+-- lookahead lookaheadParser =
+--     let
+--         primitiveArg =
+--             app lookaheadParser
+--     in
+--         primitive primitiveArg

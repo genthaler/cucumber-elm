@@ -13,7 +13,7 @@ newline =
 
 
 tagMd : Tag -> String
-tagMd tag =
+tagMd (Tag tag) =
     "@" ++ tag
 
 
