@@ -1,4 +1,4 @@
-module Cucumber exposing (..)
+module Cucumber exposing (testFeature)
 
 {-| This module is responsible for the actual running of a `Gherkin` feature
 against a set of functions.
@@ -6,20 +6,28 @@ against a set of functions.
 The functions need to have the type signature of
 Regex -> String ->
 
+
 # This API exposes methods to run Glue functions, and for Glue functions to run
 
+
 # Running Glue functions
+
 @docs runStep, runSteps, verify, run,
 
 @docs
+
+
 # Run by Glue functions
+
 @docs include
 
 
 # Glue
+
 These types describe a glue function
 
 @docs Glue, GlueFunction, GlueResult, GlueOutput
+
 
 # Running
 
@@ -29,19 +37,19 @@ It's the glue function's responsibility to decide whether it can handle a
 particular step, though we can certainly help with pulling out matching groups.
 
 The execution order is:
-- for each `Scenario` or `Scenario Outline`+`Example`
-  - execute each `Background` `Step`
-  - `andThen`
-  - execute each `Scenario` `Step`
+
+  - for each `Scenario` or `Scenario Outline`+`Example`
+      - execute each `Background` `Step`
+      - `andThen`
+      - execute each `Scenario` `Step`
 
 
 # Reporting
+
 -}
 
-import Test exposing (Test, describe, test)
-import Expect exposing (Expectation, pass, fail)
-import Gherkin exposing (..)
-import GherkinParser exposing (feature, parse)
+import Gherkin exposing (Feature, AndTags, OrTags, Background, Scenario, Step, Tag)
+import GherkinParser
 import List
 import Regex
 
@@ -52,6 +60,7 @@ modified state and `Expectation`.
 
 In OOP implementations of Cucumber, the state is usually the Step class itself.
 Elm is a pure functional language, so we pass the state around explicitly.
+
 -}
 type alias GlueFunction state =
     state -> String -> StepArg -> GlueFunctionResult state
@@ -74,6 +83,7 @@ want to support images, in particular screenshots from webdriver.
 Currently not supported #22.
 
 -- | GlueOutputImage Blob
+
 -}
 type GlueOutput
     = GlueOutputString String
@@ -117,10 +127,11 @@ defer x =
 check whether the tag was specified in the filterTags `List`.
 
 The interpretation of tags is documented here:
-https://github.com/cucumber/cucumber/wiki/Tags .
+<https://github.com/cucumber/cucumber/wiki/Tags> .
 
 The gist of it is that the outer layer of lists is or-ed together,
 the inner list is and-ed together.
+
 -}
 matchTags : OrTags -> List Tag -> Bool
 matchTags filterTags elementTags =
@@ -140,10 +151,12 @@ skipElement element =
 
 
 {-| This is the main entry point to the module.
-- Takes a `String` containing a `Feature` definition,
-- Parses it,
-- Runs it against against a set of glue functions,
-- Reports the results.
+
+  - Takes a `String` containing a `Feature` definition,
+  - Parses it,
+  - Runs it against against a set of glue functions,
+  - Reports the results.
+
 -}
 testFeatureText : GlueFunctions state -> state -> OrTags -> String -> Test
 testFeatureText glueFunctions initialState filterTags featureText =
@@ -213,17 +226,17 @@ testScenario glueFunctions initialState background filterTags scenario =
                 ( _, scenarioTest ) =
                     testSteps glueFunctions backgroundState steps
 
-                filterExamples (Examples examplesTags datatable) =
+                filterExamples (Examples examplesTags _) =
                     matchTags filterTags examplesTags
 
                 filteredExamplesList =
                     List.filter filterExamples examplesList
 
-                substituteExamplesInScenario scenarioDescription steps (Examples _ (Table header rows)) =
-                    List.map (substituteExampleInScenario scenarioDescription steps header)
+                substituteExamplesInScenario scenarioDescription2 steps2 (Examples _ (Table header rows)) =
+                    List.map (substituteExampleInScenario scenarioDescription2 steps2 header)
                         rows
 
-                substituteExampleInScenario scenarioDescription steps header row =
+                substituteExampleInScenario _ steps2 header row =
                     let
                         filterTokens string =
                             let
@@ -262,7 +275,7 @@ testScenario glueFunctions initialState background filterTags scenario =
                             Step stepType (filterTokens stepDescription) (filterStepArg stepArg)
 
                         filteredSteps =
-                            List.map filterStep steps
+                            List.map filterStep steps2
                     in
                         Scenario [] (filterTokens scenarioDescription) filteredSteps
 
@@ -296,8 +309,7 @@ testSteps glueFunctions initialState steps =
         ( finalState, describe "Steps" finalTests )
 
 
-{-|
-runStep will take a Step and an initial state and run them against a Glue function,
+{-| runStep will take a Step and an initial state and run them against a Glue function,
 returning an updated state (to pass to the next Glue function and/or Step) and an
 Assertion.
 -}

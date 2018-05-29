@@ -1,24 +1,32 @@
 module Gherkin exposing (..)
 
-{-| This library describes a datastructure for the [Gherkin][Gherkin] *ubiquitous language*.
+{-| This library describes a datastructure for the [Gherkin] *ubiquitous language*.
 
-It's intended eventually to be used as the output (AST) of a Gherkin parser,
+It's intended mainly to be used as the output (AST) of a Gherkin parser,
 but I've tried to make it usable as a DSL in its own right.
+Have a look at GherkinTest in the tests folder for an example of DSL usage.
 
 In proper Gherkin, it's possible to have multiple languages supported.
 The intention is that this will be supported in the plain text version,
 similarly to extant ports in other languages.
 
-  [Gherkin]: https://github.com/cucumber/cucumber/wiki/Gherkin
+[Gherkin]: https://github.com/cucumber/cucumber/wiki/Gherkin
+
 
 # Feature
+
 @docs Feature, AsA, InOrderTo, IWantTo, Background
 
+
 # Scenario
+
 @docs Scenario, Examples
 
+
 # Step
+
 @docs Step, StepArg, DataTable,
+
 -}
 
 
@@ -32,14 +40,14 @@ type Feature
 {-| This is the datatype for tags, which can be specified at Feature, Scenario &
 Scenario Example levels
 -}
-type alias Tag =
-    String
+type Tag
+    = Tag String
 
 
 {-| This is the datatype for and-ed tags,
 -}
 type alias AndTags =
-    List String
+    List Tag
 
 
 {-| This is the datatype for or-ed tags,
@@ -69,6 +77,7 @@ type IWantTo
 {-| Background describes common elements to each [Scenario](#Scenario) described.
 
 When automating, each [Step](#Step) will be executed before each [Scenario](#Scenario)'s [Step](#Step)s
+
 -}
 type Background
     = Background String (List Step)
@@ -80,6 +89,7 @@ type Background
 A Scenario Outline describes a Scenario template with multiple examples;
 the template is executed once per example, substituting tokens in the Scenario's
 Steps
+
 -}
 type Scenario
     = Scenario (List Tag) String (List Step)
@@ -94,6 +104,7 @@ the Glue function is executed with those as arguments.
 There is no functional distinction between Given, When, Then, And or But
 
 See the Cucumber module for examples.
+
 -}
 type Step
     = Step StepType String StepArg
@@ -112,6 +123,7 @@ type StepType
 {-| An argument to the Glue function, that's not extracted from the Step description.
 
 Available options are DataTables and DocStrings.
+
 -}
 type StepArg
     = NoArg
@@ -134,6 +146,9 @@ type alias Row =
 {-| Used in Steps i.e. a kind of StepArg, and in Examples.
 
 There must be at least one row.
+
+There's a non-empty list implementation, use it...
+
 -}
 type Table
     = Table Row (List Row)

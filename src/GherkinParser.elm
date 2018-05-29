@@ -1,8 +1,8 @@
-module GherkinParser exposing (..)
+module GherkinParser exposing (parse)
 
-import Combine exposing (..)
+import Combine exposing (regex, Parser, many, optional, string, sepBy, sepBy1, succeed, (<$>), (<$), (<*), (*>), (<|>), (<*>))
 import String
-import Gherkin exposing (..)
+import Gherkin exposing (Feature, AndTags, OrTags, AsA, InOrderTo, IWantTo, Background, Scenario, Step, Tag)
 
 
 -- lookahead : Parser res -> Parser res
@@ -129,6 +129,7 @@ docString =
 
 This is saying, optional whitespace *> pipe character <* optional whitespace,
 where whitespace here excludes newlines
+
 -}
 tableCellDelimiter : Parser s String
 tableCellDelimiter =
@@ -138,6 +139,7 @@ tableCellDelimiter =
 {-| Parse a step argument table cell content.
 
 This is saying, any text bookended by non-pipe, non-whitespace characters
+
 -}
 tableCellContent : Parser s String
 tableCellContent =
@@ -147,6 +149,7 @@ tableCellContent =
 {-| Parse a step argument table row.
 
 This is saying, any text bookended by non-pipe, non-whitespace characters
+
 -}
 tableRow : Parser s Row
 tableRow =
@@ -158,6 +161,7 @@ tableRow =
 {-| Parse a step argument table rows.
 
 This is saying, any text bookended by non-pipe, non-whitespace characters
+
 -}
 tableRows : Parser s (List Row)
 tableRows =
@@ -167,6 +171,7 @@ tableRows =
 {-| Parse a step argument table.
 
 This is saying, any text bookended by non-pipe, non-whitespace characters
+
 -}
 table : Parser s Table
 table =
@@ -186,9 +191,9 @@ step : Parser s Step
 step =
     Step
         <$> choice
-                [ (Given <$ string "Given")
-                , (When <$ string "When")
-                , (Then <$ string "Then")
+                [ Given <$ string "Given"
+                , When <$ string "When"
+                , Then <$ string "Then"
                 , (And <$ string "And")
                 , (But <$ string "But")
                 ]
