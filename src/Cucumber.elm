@@ -1,4 +1,4 @@
-module Cucumber exposing (testFeature)
+module Cucumber exposing (..)
 
 {-| This module is responsible for the actual running of a `Gherkin` feature
 against a set of functions.
@@ -12,9 +12,7 @@ Regex -> String ->
 
 # Running Glue functions
 
-@docs runStep, runSteps, verify, run,
-
-@docs
+@docs runStep, runSteps, verify, run, testFeature
 
 
 # Run by Glue functions
@@ -48,10 +46,12 @@ The execution order is:
 
 -}
 
-import Gherkin exposing (Feature, AndTags, OrTags, Background, Scenario, Step, Tag)
-import GherkinParser
+import Gherkin exposing (..)
+import GherkinParser exposing (..)
 import List
 import Regex
+import Expect exposing (..)
+import Test exposing (..)
 
 
 {-| A glue function transforms an initial state, a list of Strings extracted
@@ -103,18 +103,6 @@ type FeatureRun
     = FeatureRun Bool
 
 
-{-| This is the datatype for and-ed tags,
--}
-type alias AndTags =
-    List String
-
-
-{-| This is the datatype for or-ed tags,
--}
-type alias OrTags =
-    List AndTags
-
-
 {-| defer execution
 -}
 defer : a -> (() -> a)
@@ -133,13 +121,12 @@ The gist of it is that the outer layer of lists is or-ed together,
 the inner list is and-ed together.
 
 -}
-matchTags : OrTags -> List Tag -> Bool
+matchTags : List (List Tag) -> List Tag -> Bool
 matchTags filterTags elementTags =
-    if elementTags == [] then
+    if List.isEmpty elementTags then
         True
     else
-        List.any (List.all (Basics.flip List.member elementTags))
-            filterTags
+        List.any (List.all (Basics.flip List.member elementTags)) filterTags
 
 
 {-| Helper function to generate an `Expectation.pass` if an element was skipped
@@ -158,9 +145,9 @@ skipElement element =
   - Reports the results.
 
 -}
-testFeatureText : GlueFunctions state -> state -> OrTags -> String -> Test
+testFeatureText : GlueFunctions state -> state -> List (List Tag) -> String -> Test
 testFeatureText glueFunctions initialState filterTags featureText =
-    case GherkinParser.parse GherkinParser.feature featureText of
+    case parse GherkinParser.feature featureText of
         Err error ->
             test "Parsing error" <| defer <| fail error
 
@@ -170,7 +157,7 @@ testFeatureText glueFunctions initialState filterTags featureText =
 
 {-| Verify a `Feature` against a set of glue functions.
 -}
-testFeature : GlueFunctions state -> state -> OrTags -> Feature -> Test
+testFeature : GlueFunctions state -> state -> List (List Tag) -> Feature -> Test
 testFeature glueFunctions initialState filterTags (Feature featureTags featureDescription _ _ _ background scenarios) =
     let
         scenarioTests =
@@ -201,7 +188,7 @@ testBackground glueFunctions initialState background =
 
 {-| Run a `Scenario` against a set of `GlueFunctions` using an initial state
 -}
-testScenario : GlueFunctions state -> state -> Background -> OrTags -> Scenario -> Test
+testScenario : GlueFunctions state -> state -> Background -> List (List Tag) -> Scenario -> Test
 testScenario glueFunctions initialState background filterTags scenario =
     case scenario of
         Scenario scenarioTags description steps ->

@@ -1,4 +1,4 @@
-module GherkinParser exposing (feature, formatError)
+module GherkinParser exposing (feature, formatError, parse)
 
 import Combine exposing (..)
 import String
@@ -295,17 +295,19 @@ formatError input ms cx =
             ++ String.join expectationSeparator ms
 
 
+{-| Parse using an arbitrary parser combinator.
+-}
+parse : Parser () res -> String -> Result String res
+parse parser s =
+    case Combine.parse parser (s ++ "\n") of
+        Ok ( _, _, result ) ->
+            Ok result
 
--- {-| Parse using an arbitrary parser combinator.
--- -}
--- parse : Parser () res -> String -> Result String res
--- parse parser s =
---     case Combine.parse parser (s ++ "\n") of
---         Ok ( _, _, result ) ->
---             Ok result
---
---         Err ( _, _, _ ) ->
---             Err <| ""
+        Err ( _, _, _ ) ->
+            Err <| ""
+
+
+
 -- lookahead : Parser res -> Parser res
 -- lookahead lookaheadParser =
 --     let
