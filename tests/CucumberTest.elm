@@ -7,11 +7,11 @@ import GherkinFixtures exposing (..)
 import Test exposing (..)
 
 
-testFeatureWith2ScenariosWithTagsContent : Test
-testFeatureWith2ScenariosWithTagsContent =
+expectFeatureWith2ScenariosWithTagsContent : Test
+expectFeatureWith2ScenariosWithTagsContent =
     describe "testing tags on Scenarios "
         [ describe "successfully runs a Feature against a Glue function that could fail if the wrong scenarios are selected throw tags"
-            [ testFeatureText
+            [ expectFeatureText
                 [ Glue.failIfDescriptionContainsFail
                 ]
                 "initial state"
@@ -21,15 +21,15 @@ testFeatureWith2ScenariosWithTagsContent =
         ]
 
 
-testFeatureWithTags : Test
-testFeatureWithTags =
+expectFeatureWithTags : Test
+expectFeatureWithTags =
     describe "testing tagsFooBar on features"
         [ describe "successfully applies tags"
-            [ testFeature [ Glue.alwaysFail ]
+            [ expectFeature [ Glue.alwaysFail ]
                 "initial state"
                 [ [ "blah" ] ]
                 featureWithTags
-            , testFeature [ Glue.alwaysPass ]
+            , expectFeature [ Glue.alwaysPass ]
                 "initial state"
                 [ [ "foo" ] ]
                 featureWithTags
@@ -37,15 +37,15 @@ testFeatureWithTags =
         ]
 
 
-testFeatureWithScenarioWithTags : Test
-testFeatureWithScenarioWithTags =
+expectFeatureWithScenarioWithTags : Test
+expectFeatureWithScenarioWithTags =
     describe "testing tagsFooBar on features"
         [ describe "successfully applies tags"
-            [ testFeature [ Glue.alwaysFail ]
+            [ expectFeature [ Glue.alwaysFail ]
                 "initial state"
                 [ [ "blah" ] ]
                 featureWithScenarioWithTags
-            , testFeature [ Glue.alwaysPass ]
+            , expectFeature [ Glue.alwaysPass ]
                 "initial state"
                 [ [ "foo" ] ]
                 featureWithScenarioWithTags
@@ -55,45 +55,45 @@ testFeatureWithScenarioWithTags =
 
 testTestFeatureText : Test
 testTestFeatureText =
-    describe "testing testFeatureText "
+    describe "testing expectFeatureText "
         [ describe "successfully runs a Feature against a Glue function"
-            [ testFeatureText [ Glue.alwaysPass ] "initial state" [ noTags ] simpleFeatureContent
+            [ expectFeatureText [ Glue.alwaysPass ] "initial state" [ noTags ] simpleFeatureContent
             ]
         ]
 
 
 testTestFeature : Test
 testTestFeature =
-    describe "testing testFeature "
+    describe "testing expectFeature "
         [ describe "successfully runs a Feature against a Glue function"
-            [ testFeature [ Glue.alwaysPass ] "initial state" [ noTags ] simpleFeature
+            [ expectFeature [ Glue.alwaysPass ] "initial state" [ noTags ] simpleFeature
             ]
         ]
 
 
 testTestScenario : Test
 testTestScenario =
-    describe "testing testScenario"
+    describe "testing expectScenario"
         [ describe "successfully runs a Background and Scenario against a Glue function"
-            [ testScenario [ Glue.alwaysPass ] "initial state" background1 [ noTags ] simpleScenario
+            [ expectScenario [ Glue.alwaysPass ] "initial state" background1 [ noTags ] simpleScenario
             ]
         ]
 
 
 testTestBackground : Test
 testTestBackground =
-    describe "testing testBackground"
+    describe "testing expectBackground"
         [ describe "successfully runs Background against a Glue function"
-            [ testBackground [ Glue.alwaysPass ] "initial state" background1 |> Tuple.second
+            [ expectBackground [ Glue.alwaysPass ] "initial state" background1 |> Tuple.second
             ]
         ]
 
 
 testTestSteps : Test
 testTestSteps =
-    describe "testing testBackground"
+    describe "testing expectBackground"
         [ describe "successfully runs Steps against a Glue function"
-            [ testSteps [ Glue.alwaysPass ] "initial state" [ givenTheQuickBrownFox, givenJumpsOverTheLazyDog ] |> Tuple.second
+            [ expectSteps [ Glue.alwaysPass ] "initial state" [ givenTheQuickBrownFox, givenJumpsOverTheLazyDog ] |> Tuple.second
             ]
         ]
 
@@ -155,7 +155,7 @@ all =
         , testTestScenario
         , testTestFeature
         , testTestFeatureText
-        , testFeatureWithTags
-        , testFeatureWithScenarioWithTags
-        , testFeatureWith2ScenariosWithTagsContent
+        , expectFeatureWithTags
+        , expectFeatureWithScenarioWithTags
+        , expectFeatureWith2ScenariosWithTagsContent
         ]

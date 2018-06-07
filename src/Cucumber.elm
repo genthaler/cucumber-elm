@@ -1,33 +1,22 @@
-module Cucumber exposing (..)
+module Cucumber exposing (expectFeature)
 
 {-| This module is responsible for the actual running of a `Gherkin` feature
-against a set of functions.
+against a set of Glue functions.
 
 The functions need to have the type signature of
 Regex -> String ->
 
-
-# This API exposes methods to run Glue functions, and for Glue functions to run
-
-
-# Running Glue functions
-
-@docs runStep, runSteps, verify, run, testFeature
-
-
-# Run by Glue functions
-
-@docs include
 
 
 # Glue
 
 These types describe a glue function
 
-@docs Glue, GlueFunction, GlueResult, GlueOutput
+@docs GlueFunction, GlueOutput
 
 
 # Running
+@docs expectFeature
 
 These functions are for running glue functions with the step arguments as arguments.
 
@@ -43,7 +32,6 @@ The execution order is:
 
 
 # Reporting
-
 -}
 
 import Gherkin exposing (..)
@@ -51,29 +39,7 @@ import GherkinParser exposing (..)
 import List
 import Regex
 import Expect exposing (..)
-import Test exposing (..)
-
-
-{-| A glue function transforms an initial state, a list of Strings extracted
-from the matched regular expression, and any `StepArg`, into a tuple of
-modified state and `Expectation`.
-
-In OOP implementations of Cucumber, the state is usually the Step class itself.
-Elm is a pure functional language, so we pass the state around explicitly.
-
--}
-type alias GlueFunction state =
-    state -> String -> StepArg -> GlueFunctionResult state
-
-
-type alias GlueFunctions state =
-    List (GlueFunction state)
-
-
-{-| A glue function returns a tuple of modified state, list of GlueOutput and `Expectation`.
--}
-type alias GlueFunctionResult a =
-    Maybe ( a, Expectation )
+import Cucumber.Glue exposing (..)
 
 
 {-| A glue function can send some output to be displayed inline in the
@@ -132,9 +98,10 @@ matchTags filterTags elementTags =
 {-| Helper function to generate an `Expectation.pass` if an element was skipped
 due to tag mismatch
 -}
-skipElement : String -> Test
+skipElement : String -> Expectation
 skipElement element =
-    test (element ++ "skipped due to tag mismatch") <| defer pass
+    -- (element ++ " skipped due to tag mismatch")
+    pass
 
 
 {-| This is the main entry point to the module.
@@ -145,73 +112,73 @@ skipElement element =
   - Reports the results.
 
 -}
-testFeatureText : GlueFunctions state -> state -> List (List Tag) -> String -> Test
-testFeatureText glueFunctions initialState filterTags featureText =
+expectFeatureText : GlueFunctions state -> state -> List (List Tag) -> String -> Expectation
+expectFeatureText glueFunctions initialState filterTags featureText =
     case parse GherkinParser.feature featureText of
         Err error ->
-            test "Parsing error" <| defer <| fail error
+            "Parsing error" <| defer <| fail error
 
         Ok feature ->
-            testFeature glueFunctions initialState filterTags feature
+            expectFeature glueFunctions initialState filterTags feature
 
 
 {-| Verify a `Feature` against a set of glue functions.
 -}
-testFeature : GlueFunctions state -> state -> List (List Tag) -> Feature -> Test
-testFeature glueFunctions initialState filterTags (Feature featureTags featureDescription _ _ _ background scenarios) =
+expectFeature : GlueFunctions state -> state -> List (List Tag) -> Feature -> Expectation
+expectFeature glueFunctions initialState filterTags (Feature featureTags featureDescription _ _ _ background scenarios) =
     let
         scenarioTests =
-            List.map (testScenario glueFunctions initialState background filterTags) scenarios
+            List.map (expectScenario glueFunctions initialState background filterTags) scenarios
     in
-        describe featureDescription <|
-            if matchTags filterTags featureTags then
-                scenarioTests
-            else
-                [ skipElement "Feature" ]
-
+        if matchTags filterTags featureTags then
+            Expect.all scenarioTests
+        else
+            skipElement "Feature"
+ 
 
 {-| Run a `Background` against a set of `GlueFunctions` using an initial state
 -}
-testBackground : GlueFunctions state -> state -> Background -> ( state, Test )
-testBackground glueFunctions initialState background =
+expectBackground : GlueFunctions state -> state -> Background -> ( state, String, Expectation )
+expectBackground glueFunctions initialState background =
     case background of
         NoBackground ->
-            ( initialState, test "No Background" <| defer pass )
+            ( initialState, defer pass )
 
         Background backgroundDescription backgroundSteps ->
             let
                 ( finalState, finalTest ) =
-                    testSteps glueFunctions initialState backgroundSteps
+                    expectSteps glueFunctions initialState backgroundSteps
             in
-                ( finalState, describe ("Background " ++ backgroundDescription) [ finalTest ] )
+                ( finalState, ("Background " ++ backgroundDescription), finalTest )
 
 
 {-| Run a `Scenario` against a set of `GlueFunctions` using an initial state
 -}
-testScenario : GlueFunctions state -> state -> Background -> List (List Tag) -> Scenario -> Test
-testScenario glueFunctions initialState background filterTags scenario =
+expectScenario : GlueFunctions state -> state -> Background -> List (List Tag) -> Scenario -> ( String, Expectation )
+expectScenario glueFunctions initialState background filterTags scenario =
     case scenario of
         Scenario scenarioTags description steps ->
             let
                 ( backgroundState, backgroundTest ) =
-                    testBackground glueFunctions initialState background
+                    expectBackground glueFunctions initialState background
 
                 ( _, scenarioTest ) =
-                    testSteps glueFunctions backgroundState steps
+                    expectSteps glueFunctions backgroundState steps
             in
-                describe ("Scenario: " ++ description) <|
-                    if matchTags filterTags scenarioTags then
-                        [ backgroundTest, scenarioTest ]
-                    else
-                        [ skipElement "Scenario" ]
+                ( ("Scenario: " ++ description)
+                , if matchTags filterTags scenarioTags then
+                    [ backgroundTest, scenarioTest ]
+                  else
+                    [ skipElement "Scenario" ]
+                )
 
         ScenarioOutline scenarioTags scenarioDescription steps examplesList ->
             let
                 ( backgroundState, backgroundTest ) =
-                    testBackground glueFunctions initialState background
+                    expectBackground glueFunctions initialState background
 
                 ( _, scenarioTest ) =
-                    testSteps glueFunctions backgroundState steps
+                    expectSteps glueFunctions backgroundState steps
 
                 filterExamples (Examples examplesTags _) =
                     matchTags filterTags examplesTags
@@ -269,39 +236,40 @@ testScenario glueFunctions initialState background filterTags scenario =
                 instantiatedScenarios =
                     List.map (substituteExamplesInScenario scenarioDescription steps) filteredExamplesList
             in
-                describe ("Scenario Outline: " ++ scenarioDescription) <|
-                    if matchTags filterTags scenarioTags then
-                        [ backgroundTest, scenarioTest ]
-                    else
-                        [ skipElement "Scenario Outline" ]
+                ( ("Scenario Outline: " ++ scenarioDescription)
+                , if matchTags filterTags scenarioTags then
+                    [ backgroundTest, scenarioTest ]
+                  else
+                    [ skipElement "Scenario Outline" ]
+                )
 
 
 {-| Run a `List` of `Step`s against a set of `GlueFunctions` using an inital state.
 -}
-testSteps : GlueFunctions state -> state -> List Step -> ( state, Test )
-testSteps glueFunctions initialState steps =
+expectSteps : GlueFunctions state -> state -> List Step -> ( state, String, Expectation )
+expectSteps glueFunctions initialState steps =
     let
         ( finalState, finalTests ) =
             List.foldr
                 (\step ( state, tests ) ->
                     let
                         ( newState, test ) =
-                            testStep glueFunctions state step
+                            expectStep glueFunctions state step
                     in
                         ( newState, test :: tests )
                 )
                 ( initialState, [] )
                 steps
     in
-        ( finalState, describe "Steps" finalTests )
+        ( finalState, "Steps", finalTests )
 
 
 {-| runStep will take a Step and an initial state and run them against a Glue function,
 returning an updated state (to pass to the next Glue function and/or Step) and an
-Assertion.
+Expectation.
 -}
-testStep : List (GlueFunction state) -> state -> Step -> ( state, Test )
-testStep glueFunctions initialState (Step stepType stepDescription stepArg) =
+expectStep : List (GlueFunction state) -> state -> Step -> ( state, String Expectation )
+expectStep glueFunctions initialState (Step stepType stepDescription stepArg) =
     let
         apply function =
             function initialState stepDescription stepArg
@@ -313,7 +281,7 @@ testStep glueFunctions initialState (Step stepType stepDescription stepArg) =
     in
         case results of
             (Just ( newState, expectation )) :: [] ->
-                ( newState, test stepDescription <| defer <| expectation )
+                ( newState, stepDescription <| defer <| expectation )
 
             _ ->
-                ( initialState, test stepDescription <| defer <| fail "There should be exactly one GlueFunction that accepts the given Step description and returns a Just Expectation" )
+                ( initialState, stepDescription, fail "There should be exactly one GlueFunction that accepts the given Step description and returns a Just Expectation" )
