@@ -9,3 +9,4 @@ dep-check.html
 node_modules
 .elm-package-path
 elm.js
+.idea
