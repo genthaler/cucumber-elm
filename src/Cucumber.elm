@@ -3,10 +3,13 @@ module Cucumber exposing (..)
 {-| This module is responsible for the actual running of a `Gherkin` feature
 against a set of Glue functions.
 
-The functions need to have the type signature of
-Regex -> String ->
 
-
+I need to gnerate Expectations from running the glue functions. 
+To get a test tree structure, I need to generate breadcrumbs along the way,
+and generate a tree with the breaccrumbs and Expecations.
+I don't want to generate spurious tests from GlueFunctions 
+which don't match the step description, so glue functions need to 
+generate Nothing if no match.
 
 
 # Glue
@@ -36,9 +39,9 @@ The execution order is:
 -}
 
 import Gherkin exposing (..)
-import GherkinParser exposing (..)
+-- import GherkinParser exposing (..)
 import List
-import Regex
+-- import Regex
 import Expect exposing (..)
 import Cucumber.Glue exposing (..)
 import Result
@@ -157,76 +160,76 @@ expectScenario glueFunctions initialState background filterTags scenario =
                     [ skipElement "Scenario" ]
                 )
 
-        ScenarioOutline scenarioTags scenarioDescription steps examplesList ->
-            let
-                ( backgroundState, backgroundTest ) =
-                    expectBackground glueFunctions initialState background
+        -- ScenarioOutline scenarioTags scenarioDescription steps examplesList ->
+        --     let
+        --         ( backgroundState, backgroundTest ) =
+        --             expectBackground glueFunctions initialState background
 
-                ( _, scenarioTest ) =
-                    expectSteps glueFunctions backgroundState steps
+        --         ( _, scenarioTest ) =
+        --             expectSteps glueFunctions backgroundState steps
 
-                filterExamples (Examples examplesTags _) =
-                    matchTags filterTags examplesTags
+        --         filterExamples (Examples examplesTags _) =
+        --             matchTags filterTags examplesTags
 
-                filteredExamplesList =
-                    List.filter filterExamples examplesList
+        --         filteredExamplesList =
+        --             List.filter filterExamples examplesList
 
-                substituteExamplesInScenario scenarioDescription2 steps2 (Examples _ (Table header rows)) =
-                    List.map (substituteExampleInScenario scenarioDescription2 steps2 header)
-                        rows
+        --         substituteExamplesInScenario scenarioDescription2 steps2 (Examples _ (Table header rows)) =
+        --             List.map (substituteExampleInScenario scenarioDescription2 steps2 header)
+        --                 rows
 
-                substituteExampleInScenario _ steps2 header row =
-                    let
-                        filterTokens string =
-                            let
-                                zip =
-                                    List.map2 (,) header row
+        --         substituteExampleInScenario _ steps2 header row =
+        --             let
+        --                 filterTokens string =
+        --                     let
+        --                         zip =
+        --                             List.map2 (,) header row
 
-                                replace ( token, value ) oldString =
-                                    Regex.replace Regex.All
-                                        (Regex.regex (Regex.escape ("<" ++ token ++ ">")))
-                                        (always value)
-                                        oldString
-                            in
-                                List.foldl replace string zip
+        --                         replace ( token, value ) oldString =
+        --                             Regex.replace Regex.All
+        --                                 (Regex.regex (Regex.escape ("<" ++ token ++ ">")))
+        --                                 (always value)
+        --                                 oldString
+        --                     in
+        --                         List.foldl replace string zip
 
-                        filterRow =
-                            List.map filterTokens
+        --                 filterRow =
+        --                     List.map filterTokens
 
-                        filterTable =
-                            List.map filterRow
+        --                 filterTable =
+        --                     List.map filterRow
 
-                        filterStepArg stepArg =
-                            case stepArg of
-                                DocString string ->
-                                    DocString <| filterTokens string
+        --                 filterStepArg stepArg =
+        --                     case stepArg of
+        --                         DocString string ->
+        --                             DocString <| filterTokens string
 
-                                DataTable (Table dataTableHeader dataTableRows) ->
-                                    DataTable
-                                        (Table (filterRow dataTableHeader)
-                                            (filterTable dataTableRows)
-                                        )
+        --                         DataTable (Table dataTableHeader dataTableRows) ->
+        --                             DataTable
+        --                                 (Table (filterRow dataTableHeader)
+        --                                     (filterTable dataTableRows)
+        --                                 )
 
-                                NoArg ->
-                                    NoArg
+        --                         NoArg ->
+        --                             NoArg
 
-                        filterStep (Step stepType stepDescription stepArg) =
-                            Step stepType (filterTokens stepDescription) (filterStepArg stepArg)
+        --                 filterStep (Step stepType stepDescription stepArg) =
+        --                     Step stepType (filterTokens stepDescription) (filterStepArg stepArg)
 
-                        filteredSteps =
-                            List.map filterStep steps2
-                    in
-                        Scenario [] (filterTokens scenarioDescription) filteredSteps
+        --                 filteredSteps =
+        --                     List.map filterStep steps2
+        --             in
+        --                 Scenario [] (filterTokens scenarioDescription) filteredSteps
 
-                instantiatedScenarios =
-                    List.map (substituteExamplesInScenario scenarioDescription steps) filteredExamplesList
-            in
-                ( ("Scenario Outline: " ++ scenarioDescription)
-                , if matchTags filterTags scenarioTags then
-                    [ backgroundTest, scenarioTest ]
-                  else
-                    [ skipElement "Scenario Outline" ]
-                )
+        --         instantiatedScenarios =
+        --             List.map (substituteExamplesInScenario scenarioDescription steps) filteredExamplesList
+        --     in
+        --         ( ("Scenario Outline: " ++ scenarioDescription)
+        --         , if matchTags filterTags scenarioTags then
+        --             [ backgroundTest, scenarioTest ]
+        --           else
+        --             [ skipElement "Scenario Outline" ]
+        --         )
 
 
 {-| Run a `Background` against a set of `GlueFunction` using an initial state
