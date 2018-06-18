@@ -1,4 +1,4 @@
-module Cucumber.Glue exposing (GlueFunction, GlueFunctions, GlueFunctionResult, extract)
+module Cucumber.Glue exposing (GlueFunction, extract)
 
 {-| This module defines types and functions for use by Glue functions.
 
@@ -47,14 +47,4 @@ In OOP implementations of Cucumber, the state is usually the Step class itself.
 Elm is a pure functional language, so we pass the state around explicitly.
 -}
 type alias GlueFunction state =
-    state -> String -> StepArg -> GlueFunctionResult state
-
-
-type alias GlueFunctions state =
-    List (GlueFunction state)
-
-
-{-| A glue function returns a tuple of modified state, list of GlueOutput and `Expectation`.
--}
-type alias GlueFunctionResult a =
-    Maybe ( a, Expectation )
+    String -> StepArg -> state -> Result Expectation state
