@@ -10,12 +10,13 @@ I don't want to generate spurious tests from GlueFunctions
 which don't match the step description, so glue functions need to
 generate Nothing if no match.
 
-In general we expect a `Scenario` to run through to completion. 
-We hope that every glue function will return either Nothing 
+In general we expect a `Scenario` to run through to completion.
+We hope that every glue function will return either Nothing
 (no match between Step and GlueFunction), or new state + pass
 
-If a failure exists, it won't be detected until the Expectations 
-are executed, so we need to allow GlueFunctions to indicate immediate failure, 
+If a failure exists, it won't be detected until the Expectations
+are executed, and we might get into odd situations where the new state is non-sensical,
+so we need to allow GlueFunctions to indicate immediate failure
 which will generate a fail Expectation but will also stop further processing of the Scenario.
 
 # Glue
@@ -52,26 +53,9 @@ import Gherkin exposing (..)
 -- import GherkinParser exposing (..)
 
 import List
-
-
--- import Regex
-
+import Regex
 import Expect exposing (..)
 import Cucumber.Glue exposing (..)
-import Result
-
-
-{-| A glue function can send some output to be displayed inline in the
-pretty-print of the Gherkin text. Right now only support text, but eventually
-want to support images, in particular screenshots from webdriver.
-
-Currently not supported #22.
-
--- | GlueOutputImage Blob
-
--}
-type GlueOutput
-    = GlueOutputString String
 
 
 {-| Running a feature returns a tuple of `(Boolean, FeatureRun)`
@@ -86,13 +70,6 @@ of `Scenario`s and `ScenarioOutline`s, and
 -}
 type FeatureRun
     = FeatureRun Bool
-
-
-{-| defer execution
--}
-defer : a -> (() -> a)
-defer x =
-    \() -> x
 
 
 {-| a data structure to store our Expectations
@@ -119,15 +96,6 @@ matchTags filterTags elementTags =
         True
     else
         List.any (List.all (Basics.flip List.member elementTags)) filterTags
-
-
-{-| Helper function to generate an `Expectation.pass` if an element was skipped
-due to tag mismatch
--}
-skipElement : String -> Expectation
-skipElement element =
-    -- (element ++ " skipped due to tag mismatch")
-    pass
 
 
 
@@ -163,91 +131,107 @@ skipElement element =
 
 {-| Run a `Scenario` against a set of `GlueFunctions` using an initial state
 -}
-expectScenario : List (GlueFunction state) -> state -> Background -> List (List Tag) -> Scenario -> Expectation
+expectScenario : List (GlueFunction state) -> state -> Background -> List (List Tag) -> Scenario -> List ( String, ExpectationThunk )
 expectScenario glueFunctions initialState background filterTags scenario =
-    case scenario of
-        Scenario scenarioTags description steps ->
-            let
-                ( backgroundState, backgroundTest ) =
-                    expectBackground glueFunctions initialState background
+    let
+        ( backgroundState, backgroundExpectationThunks ) =
+            expectBackground glueFunctions initialState background
+    in
+        case scenario of
+            Scenario scenarioTags description steps ->
+                let
+                    ( _, scenarioExpectationThunks ) =
+                        expectSteps glueFunctions backgroundState steps
+                in
+                    -- ( ("Scenario: " ++ description),
+                    if matchTags filterTags scenarioTags then
+                        backgroundExpectationThunks ++ scenarioExpectationThunks
+                    else
+                        -- ("Scenario skipped due to tag mismatch")
+                        [ ( description, defer pass ) ]
 
-                ( _, scenarioTest ) =
-                    expectSteps glueFunctions backgroundState steps
-            in
-                ( ("Scenario: " ++ description)
-                , if matchTags filterTags scenarioTags then
-                    [ backgroundTest, scenarioTest ]
-                  else
-                    [ skipElement "Scenario" ]
-                )
+            -- )
+            ScenarioOutline scenarioTags scenarioDescription steps examplesList ->
+                let
+                    ( _, scenarioExpectationThunks ) =
+                        expectSteps glueFunctions backgroundState steps
+
+                    filterExamples (Examples examplesTags _) =
+                        matchTags filterTags examplesTags
+
+                    filteredExamplesList =
+                        List.filter filterExamples examplesList
+
+                    substituteExamplesInScenario scenarioDescription2 steps2 (Examples _ (Table header rows)) =
+                        List.map (substituteExampleInScenario scenarioDescription2 steps2 header)
+                            rows
+
+                    substituteExampleInScenario _ steps2 header row =
+                        let
+                            filterTokens string =
+                                let
+                                    zip =
+                                        List.map2 (,) header row
+
+                                    replace ( token, value ) oldString =
+                                        Regex.replace Regex.All
+                                            (Regex.regex (Regex.escape ("<" ++ token ++ ">")))
+                                            (always value)
+                                            oldString
+                                in
+                                    List.foldl replace string zip
+
+                            filterRow =
+                                List.map filterTokens
+
+                            filterTable =
+                                List.map filterRow
+
+                            filterStepArg stepArg =
+                                case stepArg of
+                                    DocString string ->
+                                        DocString <| filterTokens string
+
+                                    DataTable (Table dataTableHeader dataTableRows) ->
+                                        DataTable
+                                            (Table (filterRow dataTableHeader)
+                                                (filterTable dataTableRows)
+                                            )
+
+                                    NoArg ->
+                                        NoArg
+
+                            filterStep (Step stepType stepDescription stepArg) =
+                                Step stepType (filterTokens stepDescription) (filterStepArg stepArg)
+
+                            filteredSteps =
+                                List.map filterStep steps2
+                        in
+                            Scenario [] (filterTokens scenarioDescription) filteredSteps
+
+                    instantiatedScenarios =
+                        List.map (substituteExamplesInScenario scenarioDescription steps) filteredExamplesList
+                in
+                    -- ( ("Scenario Outline: " ++ scenarioDescription)
+                    -- ,
+                    if matchTags filterTags scenarioTags then
+                        backgroundExpectationThunks ++ scenarioExpectationThunks
+                    else
+                        -- [ skipElement "Scenario Outline" ]
+                        [ ( scenarioDescription, defer pass ) ]
 
 
 
--- ScenarioOutline scenarioTags scenarioDescription steps examplesList ->
---     let
---         ( backgroundState, backgroundTest ) =
---             expectBackground glueFunctions initialState background
---         ( _, scenarioTest ) =
---             expectSteps glueFunctions backgroundState steps
---         filterExamples (Examples examplesTags _) =
---             matchTags filterTags examplesTags
---         filteredExamplesList =
---             List.filter filterExamples examplesList
---         substituteExamplesInScenario scenarioDescription2 steps2 (Examples _ (Table header rows)) =
---             List.map (substituteExampleInScenario scenarioDescription2 steps2 header)
---                 rows
---         substituteExampleInScenario _ steps2 header row =
---             let
---                 filterTokens string =
---                     let
---                         zip =
---                             List.map2 (,) header row
---                         replace ( token, value ) oldString =
---                             Regex.replace Regex.All
---                                 (Regex.regex (Regex.escape ("<" ++ token ++ ">")))
---                                 (always value)
---                                 oldString
---                     in
---                         List.foldl replace string zip
---                 filterRow =
---                     List.map filterTokens
---                 filterTable =
---                     List.map filterRow
---                 filterStepArg stepArg =
---                     case stepArg of
---                         DocString string ->
---                             DocString <| filterTokens string
---                         DataTable (Table dataTableHeader dataTableRows) ->
---                             DataTable
---                                 (Table (filterRow dataTableHeader)
---                                     (filterTable dataTableRows)
---                                 )
---                         NoArg ->
---                             NoArg
---                 filterStep (Step stepType stepDescription stepArg) =
---                     Step stepType (filterTokens stepDescription) (filterStepArg stepArg)
---                 filteredSteps =
---                     List.map filterStep steps2
---             in
---                 Scenario [] (filterTokens scenarioDescription) filteredSteps
---         instantiatedScenarios =
---             List.map (substituteExamplesInScenario scenarioDescription steps) filteredExamplesList
---     in
---         ( ("Scenario Outline: " ++ scenarioDescription)
---         , if matchTags filterTags scenarioTags then
---             [ backgroundTest, scenarioTest ]
---           else
---             [ skipElement "Scenario Outline" ]
---         )
+-- )
 
 
 {-| Run a `Background` against a set of `GlueFunction` using an initial state
 -}
-expectBackground : List (GlueFunction state) -> state -> Background -> Result Expectation state
+expectBackground : List (GlueFunction state) -> state -> Background -> ( state, List ( String, ExpectationThunk ) )
 expectBackground glueFunctions initialState background =
     case background of
         NoBackground ->
-            Ok initialState
+            ( initialState, [] )
 
         Background backgroundDescription backgroundSteps ->
             expectSteps glueFunctions initialState backgroundSteps
@@ -261,20 +245,37 @@ an actual Assertion failed.
 
 Each `Scenario`, and each run of a `ScenarioOutline`, result in a separate Expectation.
 
+Return a new state, and a List of (String, Expectation) where the String is the Step description
 -}
-expectSteps : List (GlueFunction state) -> state -> List Step -> Result Expectation state
+expectSteps : List (GlueFunction state) -> state -> List Step -> ( state, List ( String, ExpectationThunk ) )
 expectSteps glueFunctions initialState steps =
     case steps of
         [] ->
-            Ok initialState
+            ( initialState, [] )
 
         x :: xs ->
-            case expectStep x initialState glueFunctions of
-                Ok updatedState ->
-                    expectSteps glueFunctions updatedState xs
+            let
+                (Step stepType stepDescription stepArg) =
+                    x
+            in
+                case expectStep x initialState glueFunctions of
+                    -- shouldn't happen, expectStep should catch this and return a fail as an Expectation
+                    ( Nothing, Nothing ) ->
+                        ( initialState, [ ( stepDescription, defer <| fail "impossible state..." ) ] )
 
-                Err msg ->
-                    Err msg
+                    ( Just updatedState, Nothing ) ->
+                        ( initialState, [ ( stepDescription, defer <| fail "None of the steps returned an Expectation" ) ] )
+
+                    -- Looks like there was a short-cut failure, we continue to quickly exit
+                    ( Nothing, Just expectationThunk ) ->
+                        ( initialState, [ ( stepDescription, expectationThunk ) ] )
+
+                    ( Just updatedState, Just expectation ) ->
+                        let
+                            ( nextState, nextExpectations ) =
+                                expectSteps glueFunctions updatedState xs
+                        in
+                            ( nextState, ( stepDescription, expectation ) :: nextExpectations )
 
 
 {-| runStep will take a Step and an initial state and run them against a Glue function,
@@ -284,16 +285,16 @@ Expectation.
 Maybe it makes more sense to return a `Result` of Ok state | Err Expectation. Can then use andThen?
 
 -}
-expectStep : Step -> state -> List (GlueFunction state) -> Result Expectation state
+expectStep : Step -> state -> List (GlueFunction state) -> GlueFunctionResult state
 expectStep (Step stepType stepDescription stepArg) initialState glueFunctions =
     case glueFunctions of
         [] ->
-            Ok initialState
+            ( Nothing, Just <| defer <| fail "No matching glue function found" )
 
         x :: xs ->
             case x stepDescription stepArg initialState of
-                Ok updatedState ->
-                    expectStep (Step stepType stepDescription stepArg) updatedState xs
+                ( Nothing, Nothing ) ->
+                    expectStep (Step stepType stepDescription stepArg) initialState xs
 
-                Err msg ->
-                    Err msg
+                ( maybeState, maybeExpectation ) ->
+                    ( maybeState, maybeExpectation )
