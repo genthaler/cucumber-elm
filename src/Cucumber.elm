@@ -1,4 +1,4 @@
-module Cucumber exposing (..)
+module Cucumber exposing (expectFeature, expectFeatureText)
 
 {-| This module is responsible for the actual running of a `Gherkin` feature
 against a set of Glue functions.
@@ -21,7 +21,7 @@ which will generate a fail Expectation but will also stop further processing of 
 
 # Running
 
-@docs expectFeature
+@docs expectFeature, expectFeatureText
 
 These functions are for running glue functions with the step arguments as arguments.
 
@@ -41,14 +41,12 @@ The execution order is:
 -}
 
 import Gherkin exposing (..)
-
-
-import GherkinParser 
-
+import GherkinParser
 import List
 import Regex
 import Expect exposing (..)
 import Cucumber.Glue exposing (..)
+import Test exposing (Test, test, describe)
 
 
 {-| Running a feature returns a tuple of `(Boolean, FeatureRun)`
@@ -91,7 +89,6 @@ matchTags filterTags elementTags =
         List.any (List.all (Basics.flip List.member elementTags)) filterTags
 
 
-
 {-| This is the main entry point to the module.
 
   - Takes a `String` containing a `Feature` definition,
@@ -100,53 +97,51 @@ matchTags filterTags elementTags =
   - Reports the results.
 
 -}
-expectFeatureText : List (GlueFunction state)  -> state -> List (List Tag) -> String -> Expectation
+expectFeatureText : List (GlueFunction state) -> state -> List (List Tag) -> String -> Test
 expectFeatureText glueFunctions initialState filterTags featureText =
     case GherkinParser.parse GherkinParser.feature featureText of
         Err error ->
-            "Parsing error" <| defer <| fail error
+            test "Parsing error" <| defer <| fail error
 
         Ok feature ->
             expectFeature glueFunctions initialState filterTags feature
+
+
 {-| Verify a `Feature` against a set of glue functions.
 -}
-expectFeature : List (GlueFunction state)  -> state -> List (List Tag) -> Feature -> List Expectation
+expectFeature : List (GlueFunction state) -> state -> List (List Tag) -> Feature -> Test
 expectFeature glueFunctions initialState filterTags (Feature featureTags featureDescription _ _ _ background scenarios) =
-    let
-        scenarioTests =
-            List.map (expectScenario glueFunctions initialState background filterTags) scenarios
-    in
-        if matchTags filterTags featureTags then
-            Expect.all scenarioTests
-        else 
-            [defer <| pass "Feature"]
+    if matchTags filterTags featureTags then
+        scenarios
+            |> List.map (expectScenario glueFunctions initialState background filterTags)
+            |> describe featureDescription
+    else
+        Test.test featureDescription (defer <| pass)
 
 
 {-| Run a `Scenario` against a set of `List (GlueFunction state)` using an initial state
 -}
-expectScenario : List (GlueFunction state) -> state -> Background -> List (List Tag) -> Scenario -> List ( String, ExpectationThunk )
+expectScenario : List (GlueFunction state) -> state -> Background -> List (List Tag) -> Scenario -> Test
 expectScenario glueFunctions initialState background filterTags scenario =
     let
-        ( backgroundState, backgroundExpectationThunks ) =
+        ( backgroundState, backgroundTests ) =
             expectBackground glueFunctions initialState background
     in
         case scenario of
-            Scenario scenarioTags description steps ->
+            Scenario scenarioTags scenarioDescription steps ->
                 let
-                    ( _, scenarioExpectationThunks ) =
+                    ( _, scenarioTests ) =
                         expectSteps glueFunctions backgroundState steps
                 in
                     -- ( ("Scenario: " ++ description),
                     if matchTags filterTags scenarioTags then
-                        backgroundExpectationThunks ++ scenarioExpectationThunks
+                        describe scenarioDescription (backgroundTests ++ scenarioTests)
                     else
-                        -- ("Scenario skipped due to tag mismatch")
-                        [ ( description, defer pass ) ]
+                        test ("Scenario skipped due to tag mismatch" ++ scenarioDescription) (defer pass)
 
-            -- )
             ScenarioOutline scenarioTags scenarioDescription steps examplesList ->
                 let
-                    ( _, scenarioExpectationThunks ) =
+                    ( _, scenarioTests ) =
                         expectSteps glueFunctions backgroundState steps
 
                     filterExamples (Examples examplesTags _) =
@@ -205,22 +200,15 @@ expectScenario glueFunctions initialState background filterTags scenario =
                     instantiatedScenarios =
                         List.map (substituteExamplesInScenario scenarioDescription steps) filteredExamplesList
                 in
-                    -- ( ("Scenario Outline: " ++ scenarioDescription)
-                    -- ,
                     if matchTags filterTags scenarioTags then
-                        backgroundExpectationThunks ++ scenarioExpectationThunks
+                        describe ("Scenario Outline: " ++ scenarioDescription) (backgroundTests ++ scenarioTests)
                     else
-                        -- [ skipElement "Scenario Outline" ]
-                        [ ( scenarioDescription, defer pass ) ]
-
-
-
--- )
+                        test ("Scenario Outline" ++ scenarioDescription) (defer pass)
 
 
 {-| Run a `Background` against a set of `GlueFunction` using an initial state
 -}
-expectBackground : List (GlueFunction state) -> state -> Background -> ( state, List ( String, ExpectationThunk ) )
+expectBackground : List (GlueFunction state) -> state -> Background -> ( state, List Test )
 expectBackground glueFunctions initialState background =
     case background of
         NoBackground ->
@@ -240,7 +228,7 @@ Each `Scenario`, and each run of a `ScenarioOutline`, result in a separate Expec
 
 Return a new state, and a List of (String, Expectation) where the String is the Step description
 -}
-expectSteps : List (GlueFunction state) -> state -> List Step -> ( state, List ( String, ExpectationThunk ) )
+expectSteps : List (GlueFunction state) -> state -> List Step -> ( state, List Test.Test )
 expectSteps glueFunctions initialState steps =
     case steps of
         [] ->
@@ -254,21 +242,21 @@ expectSteps glueFunctions initialState steps =
                 case expectStep x initialState glueFunctions of
                     -- shouldn't happen, expectStep should catch this and return a fail as an Expectation
                     ( Nothing, Nothing ) ->
-                        ( initialState, [ ( stepDescription, defer <| fail "impossible state..." ) ] )
+                        ( initialState, [ test stepDescription (defer <| fail "impossible state...") ] )
 
                     ( Just updatedState, Nothing ) ->
-                        ( initialState, [ ( stepDescription, defer <| fail "None of the steps returned an Expectation" ) ] )
+                        ( initialState, [ test stepDescription (defer <| fail "None of the steps returned an Expectation") ] )
 
                     -- Looks like there was a short-cut failure, we continue to quickly exit
-                    ( Nothing, Just expectationThunk ) ->
-                        ( initialState, [ ( stepDescription, expectationThunk ) ] )
+                    ( Nothing, Just stepTest ) ->
+                        ( initialState, [ stepTest ] )
 
-                    ( Just updatedState, Just expectation ) ->
+                    ( Just updatedState, Just stepTest ) ->
                         let
-                            ( nextState, nextExpectations ) =
+                            ( nextState, nextTests ) =
                                 expectSteps glueFunctions updatedState xs
                         in
-                            ( nextState, ( stepDescription, expectation ) :: nextExpectations )
+                            ( nextState, stepTest :: nextTests )
 
 
 {-| runStep will take a Step and an initial state and run them against a Glue function,
@@ -282,12 +270,12 @@ expectStep : Step -> state -> List (GlueFunction state) -> GlueFunctionResult st
 expectStep (Step stepType stepDescription stepArg) initialState glueFunctions =
     case glueFunctions of
         [] ->
-            ( Nothing, Just <| defer <| fail "No matching glue function found" )
+            ( Nothing, Just <| test stepDescription <| defer <| fail "No matching glue function found" )
 
         x :: xs ->
             case x stepDescription stepArg initialState of
                 ( Nothing, Nothing ) ->
                     expectStep (Step stepType stepDescription stepArg) initialState xs
 
-                ( maybeState, maybeExpectation ) ->
-                    ( maybeState, maybeExpectation )
+                other ->
+                    other

@@ -30,21 +30,12 @@ The execution order is:
 # Reporting
 -}
 
-import Expect exposing (Expectation)
+import Test exposing (Test)
 import Gherkin exposing (StepArg)
-
-
-extract : String -> List String
-extract _ =
-    []
 
 
 type alias Thunk a =
     () -> a
-
-
-type alias ExpectationThunk =
-    Thunk Expectation
 
 
 {-| defer execution
@@ -67,7 +58,7 @@ then execution stops. Remember that only one GlueFunction should match a given S
 
 -}
 type alias GlueFunctionResult state =
-    ( Maybe state, Maybe ExpectationThunk )
+    ( Maybe state, Maybe Test )
 
 
 type alias GlueFunction state =
