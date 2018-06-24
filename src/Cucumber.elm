@@ -6,7 +6,7 @@ against a set of Glue functions.
 I need to gnerate Expectations from running the glue functions.
 To get a test tree structure, I need to generate breadcrumbs along the way,
 and generate a tree with the breaccrumbs and Expecations.
-I don't want to generate spurious tests from GlueFunctions
+I don't want to generate spurious tests from List (GlueFunction state)
 which don't match the step description, so glue functions need to
 generate Nothing if no match.
 
@@ -16,15 +16,8 @@ We hope that every glue function will return either Nothing
 
 If a failure exists, it won't be detected until the Expectations
 are executed, and we might get into odd situations where the new state is non-sensical,
-so we need to allow GlueFunctions to indicate immediate failure
+so we need to allow List (GlueFunction state) to indicate immediate failure
 which will generate a fail Expectation but will also stop further processing of the Scenario.
-
-# Glue
-
-These types describe a glue function
-
-@docs GlueFunction, GlueOutput
-
 
 # Running
 
@@ -50,7 +43,7 @@ The execution order is:
 import Gherkin exposing (..)
 
 
--- import GherkinParser exposing (..)
+import GherkinParser 
 
 import List
 import Regex
@@ -99,37 +92,37 @@ matchTags filterTags elementTags =
 
 
 
--- {-| This is the main entry point to the module.
---
---   - Takes a `String` containing a `Feature` definition,
---   - Parses it,
---   - Runs it against against a set of glue functions,
---   - Reports the results.
---
--- -}
--- expectFeatureText : GlueFunctions state -> state -> List (List Tag) -> String -> Expectation
--- expectFeatureText glueFunctions initialState filterTags featureText =
---     case parse GherkinParser.feature featureText of
---         Err error ->
---             "Parsing error" <| defer <| fail error
---
---         Ok feature ->
---             expectFeature glueFunctions initialState filterTags feature
--- {-| Verify a `Feature` against a set of glue functions.
--- -}
--- expectFeature : GlueFunctions state -> state -> List (List Tag) -> Feature -> List Expectation
--- expectFeature glueFunctions initialState filterTags (Feature featureTags featureDescription _ _ _ background scenarios) =
---     let
---         scenarioTests =
---             List.map (expectScenario glueFunctions initialState background filterTags) scenarios
---     in
---         if matchTags filterTags featureTags then
---             Expect.all scenarioTests
---         else
---             skipElement "Feature"
+{-| This is the main entry point to the module.
+
+  - Takes a `String` containing a `Feature` definition,
+  - Parses it,
+  - Runs it against against a set of glue functions,
+  - Reports the results.
+
+-}
+expectFeatureText : List (GlueFunction state)  -> state -> List (List Tag) -> String -> Expectation
+expectFeatureText glueFunctions initialState filterTags featureText =
+    case GherkinParser.parse GherkinParser.feature featureText of
+        Err error ->
+            "Parsing error" <| defer <| fail error
+
+        Ok feature ->
+            expectFeature glueFunctions initialState filterTags feature
+{-| Verify a `Feature` against a set of glue functions.
+-}
+expectFeature : List (GlueFunction state)  -> state -> List (List Tag) -> Feature -> List Expectation
+expectFeature glueFunctions initialState filterTags (Feature featureTags featureDescription _ _ _ background scenarios) =
+    let
+        scenarioTests =
+            List.map (expectScenario glueFunctions initialState background filterTags) scenarios
+    in
+        if matchTags filterTags featureTags then
+            Expect.all scenarioTests
+        else 
+            [defer <| pass "Feature"]
 
 
-{-| Run a `Scenario` against a set of `GlueFunctions` using an initial state
+{-| Run a `Scenario` against a set of `List (GlueFunction state)` using an initial state
 -}
 expectScenario : List (GlueFunction state) -> state -> Background -> List (List Tag) -> Scenario -> List ( String, ExpectationThunk )
 expectScenario glueFunctions initialState background filterTags scenario =
@@ -237,9 +230,9 @@ expectBackground glueFunctions initialState background =
             expectSteps glueFunctions initialState backgroundSteps
 
 
-{-| Run a `List` of `Step`s against some `GlueFunctions` using an inital state.
+{-| Run a `List` of `Step`s against some `List (GlueFunction state)` using an inital state.
 
-Because we want failures to be meaningful, `GlueFunctions` need to return a pass
+Because we want failures to be meaningful, `List (GlueFunction state)` need to return a pass
 if there's no match on the step description, only fail if there's a match and
 an actual Assertion failed.
 
