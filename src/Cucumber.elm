@@ -19,6 +19,7 @@ are executed, and we might get into odd situations where the new state is non-se
 so we need to allow List (GlueFunction state) to indicate immediate failure
 which will generate a fail Expectation but will also stop further processing of the Scenario.
 
+
 # Running
 
 @docs expectFeature, expectFeatureText
@@ -46,7 +47,7 @@ import List
 import Regex
 import Expect exposing (..)
 import Cucumber.Glue exposing (..)
-import Test exposing (Test, test, describe)
+import Test exposing (Test, test, describe, skip)
 
 
 {-| Running a feature returns a tuple of `(Boolean, FeatureRun)`
@@ -116,7 +117,7 @@ expectFeature glueFunctions initialState filterTags (Feature featureTags feature
             |> List.map (expectScenario glueFunctions initialState background filterTags)
             |> describe featureDescription
     else
-        Test.test featureDescription (defer <| pass)
+        skip <| test featureDescription <| defer <| pass
 
 
 {-| Run a `Scenario` against a set of `List (GlueFunction state)` using an initial state
@@ -203,7 +204,7 @@ expectScenario glueFunctions initialState background filterTags scenario =
                     if matchTags filterTags scenarioTags then
                         describe ("Scenario Outline: " ++ scenarioDescription) (backgroundTests ++ scenarioTests)
                     else
-                        test ("Scenario Outline" ++ scenarioDescription) (defer pass)
+                        skip <| test ("Scenario Outline" ++ scenarioDescription) (defer pass)
 
 
 {-| Run a `Background` against a set of `GlueFunction` using an initial state
@@ -227,6 +228,7 @@ an actual Assertion failed.
 Each `Scenario`, and each run of a `ScenarioOutline`, result in a separate Expectation.
 
 Return a new state, and a List of (String, Expectation) where the String is the Step description
+
 -}
 expectSteps : List (GlueFunction state) -> state -> List Step -> ( state, List Test.Test )
 expectSteps glueFunctions initialState steps =

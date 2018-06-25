@@ -1,6 +1,6 @@
 module CucumberTest.Glue exposing (..)
 
-{-| Note that we don't really need to invoke any _real_ business code here.
+{-| Note that we don't really need to invoke any *real* business code here.
 -}
 
 import Expect
