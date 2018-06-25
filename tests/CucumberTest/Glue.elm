@@ -5,6 +5,7 @@ module CucumberTest.Glue exposing (..)
 
 import Expect
 import Cucumber exposing (..)
+import Cucumber.Glue exposing (..)
 import Regex
 
 
