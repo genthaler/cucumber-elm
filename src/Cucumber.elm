@@ -1,4 +1,4 @@
-module Cucumber exposing (expectFeature, expectFeatureText)
+module Cucumber exposing (expectFeature, expectFeatureText, matchTags)
 
 {-| This module is responsible for the actual running of a `Gherkin` feature
 against a set of Glue functions.
@@ -38,6 +38,9 @@ The execution order is:
 
 
 # Reporting
+
+# Temporary
+@docs matchTags
 
 -}
 
