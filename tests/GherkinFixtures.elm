@@ -197,7 +197,7 @@ In order to verify a simpleFeature\x0D\x0D
 I want to supply some glue code and run it against the simpleFeature\x0D\x0D
 Background: pack my box\x0D\x0D
 Given the quick brown fox\x0D\x0D
-Scenario: with five dozen liquor jugs\x0D\x0D
+Scenario: with six dozen liquor jugs\x0D\x0D
 Given the quick brown fox\x0D\x0D
 When jumps over the lazy dog\x0D\x0D
 """

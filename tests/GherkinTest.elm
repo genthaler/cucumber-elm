@@ -7,8 +7,9 @@ import Gherkin exposing (..)
 
 feature : Feature
 feature =
-    Feature []
-        (Tag "Having fun")
+    Feature
+        [ Tag "Having fun" ]
+        "Feature presentation"
         (AsA "person")
         (InOrderTo "have fun")
         (IWantTo "play baseball")

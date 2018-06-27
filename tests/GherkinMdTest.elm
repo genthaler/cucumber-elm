@@ -2,7 +2,6 @@ module GherkinMdTest exposing (..)
 
 import Expect
 import GherkinFixtures exposing (..)
-import GherkinMd exposing (..)
 import GherkinParser
 import Test exposing (..)
 
