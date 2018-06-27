@@ -34,12 +34,12 @@ failIfDescriptionContainsFail description stepArg initialState =
                     Regex.contains (Regex.regex "[Ff]ail")
                         (Debug.log "Step description"
                             description
-                        )
+                        )   
                 then
                     Expect.fail "Failing because description contains 'fail'"
                 else
                     Expect.pass
-        )
+        ) 
     )
 
 

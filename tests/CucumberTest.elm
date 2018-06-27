@@ -40,7 +40,7 @@ expectFeatureWithTags =
 expectFeatureWithScenarioWithTags : Test
 expectFeatureWithScenarioWithTags =
     describe "testing feature with scenario with tags"
-        [ describe "successfully applies tags"
+        [ describe "successfully applies tags to scenarios"
             [ expectFeature [ Glue.alwaysFail ]
                 "initial state"
                 [ [ Tag "blah" ] ]
@@ -70,14 +70,15 @@ testTestFeatureText =
 --             [ expectFeature [ Glue.alwaysPass ] "initial state" [ noTags ] simpleFeature
 --             ]
 --         ]
---
--- all : Test
--- all =
---     describe "Test the Cucumber API"
---         [ --testTestFeature
---           -- ,
---           testTestFeatureText
---         , expectFeatureWithTags
---         , expectFeatureWithScenarioWithTags
---         , expectFeatureWith2ScenariosWithTagsContent
---         ]
+
+
+all : Test
+all =
+    describe "Test the Cucumber API"
+        [ --testTestFeature
+          -- ,
+          testTestFeatureText
+        , expectFeatureWithTags
+        , expectFeatureWithScenarioWithTags
+        , expectFeatureWith2ScenariosWithTagsContent
+        ]

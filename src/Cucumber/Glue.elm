@@ -5,44 +5,13 @@ module Cucumber.Glue exposing (..)
 The functions need to have the type signature of
 Regex -> String ->
 
-
 These types describe a glue function
 
-@docs GlueFunction, GlueOutput
+@docs GlueFunction, GlueOutput, GlueFunctionResult
 
-
-# Running
-@docs expectFeature
-
-These functions are for running glue functions with the step arguments as arguments.
-
-It's the glue function's responsibility to decide whether it can handle a
-particular step, though we can certainly help with pulling out matching groups.
-
-The execution order is:
-
-  - for each `Scenario` or `Scenario Outline`+`Example`
-      - execute each `Background` `Step`
-      - `andThen`
-      - execute each `Scenario` `Step`
-
-
-# Reporting
 -}
 
-import Test exposing (Test)
 import Gherkin exposing (StepArg)
-
-
-type alias Thunk a =
-    () -> a
-
-
-{-| defer execution
--}
-defer : a -> Thunk a
-defer x =
-    \() -> x
 
 
 {-| A glue function transforms an initial state, a list of Strings extracted
@@ -58,9 +27,11 @@ then execution stops. Remember that only one GlueFunction should match a given S
 
 -}
 type alias GlueFunctionResult state =
-    ( Maybe state, Maybe Test )
+    Result String state
 
 
+{-| The full type signature of a `GlueFunction`
+-}
 type alias GlueFunction state =
     String -> StepArg -> state -> GlueFunctionResult state
 
