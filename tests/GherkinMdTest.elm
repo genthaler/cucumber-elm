@@ -13,6 +13,64 @@ all =
         [ test "parses Feature with tagsFooBar correctly" <|
             defer <|
                 let
+                    expected =
+                        """@foo @bar
+# Feature: Living life
+
+> As a person
+
+> In order to get through life
+
+> I want to be able to do stuff
+
+## Background: Some basic info
+
+**Given** the world is round
+
+
+
+
+
+@foo @bar
+##Scenario: Have fun
+
+**Given** I am trying to have fun
+
+<table><tr><th>Now</th><th>is</th><th>the</th><th>time</th></tr>
+<tr><td>For</td><td>all</td><td>good</td><td>men</td></tr></table>
+
+
+**But** I am trying not to be a fool
+
+
+
+
+
+
+
+@foo @bar
+##Scenario: Have fun
+
+**Given** I am trying to have fun
+
+<table><tr><th>Now</th><th>is</th><th>the</th><th>time</th></tr>
+<tr><td>For</td><td>all</td><td>good</td><td>men</td></tr></table>
+
+
+**But** I am trying not to be a fool
+
+
+
+
+
+@blah
+###Examples:
+
+<table><tr><th>Now</th></tr>
+<tr><td>For</td></tr></table>
+
+"""
+
                     res =
                         GherkinParser.parse
                             GherkinParser.feature
@@ -20,7 +78,7 @@ all =
                 in
                     case res of
                         Ok myFeature ->
-                            equal (featureMd myFeature) ""
+                            equal (featureMd myFeature) expected
 
                         Err error ->
                             fail error

@@ -121,7 +121,7 @@ stepMd (Step stepType detail stepArg) =
 examplesMd : Examples -> String
 examplesMd (Examples tags table) =
     tagsMd tags
-        ++ "###Examples: "
+        ++ "###Examples:"
         ++ newline
         ++ newline
         ++ tableMd table
