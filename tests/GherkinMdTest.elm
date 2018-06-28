@@ -1,7 +1,8 @@
 module GherkinMdTest exposing (..)
 
-import Expect
+import Expect exposing (equal, fail, pass)
 import GherkinFixtures exposing (..)
+import GherkinMd exposing (featureMd)
 import GherkinParser
 import Test exposing (..)
 
@@ -11,16 +12,16 @@ all =
     describe "pretty printing Gherkin as HTML"
         [ test "parses Feature with tagsFooBar correctly" <|
             defer <|
-                (let
-                    x =
-                        1
-                 in
-                    Expect.equal
-                        (GherkinParser.parse
+                let
+                    res =
+                        GherkinParser.parse
                             GherkinParser.feature
                             featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTagsContent
-                        )
-                    <|
-                        Result.Ok featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTags
-                )
+                in
+                    case res of
+                        Ok myFeature ->
+                            equal (featureMd myFeature) ""
+
+                        Err error ->
+                            fail error
         ]
