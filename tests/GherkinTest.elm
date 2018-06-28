@@ -38,15 +38,8 @@ feature =
         ]
 
 
-featureTest : Test
-featureTest =
-    test "Features" <|
-        \() ->
-            Expect.equal (3 + 7) 10
-
-
 all : Test
 all =
-    describe "GherkinTest"
-        [ featureTest
-        ]
+    test "Feature constructor" <|
+        \() ->
+            Expect.equal feature feature
