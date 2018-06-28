@@ -1,39 +1,34 @@
 module CucumberTest.Glue exposing (..)
 
-{-| Note that we don't really need to invoke any _real_ business code here.
+{-| Note that we don't really need to invoke any *real* business code here.
 -}
 
-import Expect
-import Cucumber exposing (..)
+import Cucumber.Glue exposing (..)
 import Regex
 
 
-alwaysPass : GlueFunction String
-alwaysPass initialState description stepArg =
-    Just ( description, Expect.pass )
+-- type alias GlueFunction state =
+--     String -> StepArg -> state -> GlueFunctionResult state
+
+
+alwaysPass : GlueFunction state
+alwaysPass description stepArg initialState =
+    Ok initialState
 
 
 alwaysFail : GlueFunction String
-alwaysFail initialState description stepArg =
-    Just ( initialState, Expect.fail "Always fail" )
+alwaysFail description stepArg initialState =
+    Err ("Always fail " ++ description)
 
 
 failIfDescriptionContainsFail : GlueFunction String
-failIfDescriptionContainsFail initialState description stepArg =
-    Just
-        ( initialState
-        , if
-            Regex.contains (Regex.regex "[Ff]ail")
-                (Debug.log "Step description"
-                    description
-                )
-          then
-            Expect.fail "Failing because description contains 'fail'"
-          else
-            Expect.pass
-        )
-
-
-neverMatch : GlueFunction String
-neverMatch initialState description stepArg =
-    Nothing
+failIfDescriptionContainsFail description stepArg initialState =
+    if
+        Regex.contains (Regex.regex "[Ff]ail")
+            (Debug.log "Step description"
+                description
+            )
+    then
+        Err ("Failing because description contains 'fail'" ++ description)
+    else
+        Ok initialState

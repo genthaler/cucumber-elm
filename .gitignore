@@ -1,11 +1,26 @@
-# elm-package generated files
-elm-stuff/
-# elm-repl generated files
-repl-temp-*
 # ide support
 .tags*
 *.log
 dep-check.html
+.elm-package-path
+.idea
+.vscode
+*.iml
+.settings/
+.project
+
+# Distribution
+build/
+elm.js
+
+# elm-package generated files
+elm-stuff
+
+# elm-repl generated files
+repl-temp-*
+
+# Dependency directories
 node_modules
 
-.elm-package-path
+# Desktop Services Store on macOS
+.DS_Store

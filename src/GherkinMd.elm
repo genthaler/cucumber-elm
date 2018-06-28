@@ -1,5 +1,8 @@
 module GherkinMd exposing (..)
 
+{-| This module prints out a Gherkin AST in Markdown format, parseable by the elm-markdown parser
+-}
+
 import Gherkin exposing (..)
 import String
 
@@ -10,7 +13,7 @@ newline =
 
 
 tagMd : Tag -> String
-tagMd tag =
+tagMd (Tag tag) =
     "@" ++ tag
 
 
@@ -89,7 +92,7 @@ stepMd (Step stepType detail stepArg) =
                 ++ detail
                 ++ newline
                 ++ newline
-                ++ case (stepArgMd theStepArg) of
+                ++ case stepArgMd theStepArg of
                     element ->
                         element
 
@@ -118,7 +121,7 @@ stepMd (Step stepType detail stepArg) =
 examplesMd : Examples -> String
 examplesMd (Examples tags table) =
     tagsMd tags
-        ++ "###Examples: "
+        ++ "###Examples:"
         ++ newline
         ++ newline
         ++ tableMd table

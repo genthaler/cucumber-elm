@@ -1,17 +1,8 @@
-module GherkinParser exposing (..)
+module GherkinParser exposing (feature, formatError, parse)
 
 import Combine exposing (..)
 import String
 import Gherkin exposing (..)
-
-
--- lookahead : Parser res -> Parser res
--- lookahead lookaheadParser =
---     let
---         primitiveArg =
---             app lookaheadParser
---     in
---         primitive primitiveArg
 
 
 {-| Parse a comment; everything from a `#` symbol to the end of the line
@@ -57,21 +48,7 @@ detailText =
 -}
 tag : Parser s Tag
 tag =
-    string "@" *> detailText
-
-
-{-| Parse `Tag`s on a line.
--}
-andTags : Parser s Tag
-andTags =
-    string "@" *> detailText
-
-
-{-| Parse `Tag`s on separate lines.
--}
-orTags : Parser s Tag
-orTags =
-    string "@" *> detailText
+    Tag <$> (string "@" *> detailText)
 
 
 {-| Parse a list of tag lines.
@@ -129,6 +106,7 @@ docString =
 
 This is saying, optional whitespace *> pipe character <* optional whitespace,
 where whitespace here excludes newlines
+
 -}
 tableCellDelimiter : Parser s String
 tableCellDelimiter =
@@ -138,6 +116,7 @@ tableCellDelimiter =
 {-| Parse a step argument table cell content.
 
 This is saying, any text bookended by non-pipe, non-whitespace characters
+
 -}
 tableCellContent : Parser s String
 tableCellContent =
@@ -147,6 +126,7 @@ tableCellContent =
 {-| Parse a step argument table row.
 
 This is saying, any text bookended by non-pipe, non-whitespace characters
+
 -}
 tableRow : Parser s Row
 tableRow =
@@ -158,6 +138,7 @@ tableRow =
 {-| Parse a step argument table rows.
 
 This is saying, any text bookended by non-pipe, non-whitespace characters
+
 -}
 tableRows : Parser s (List Row)
 tableRows =
@@ -167,6 +148,7 @@ tableRows =
 {-| Parse a step argument table.
 
 This is saying, any text bookended by non-pipe, non-whitespace characters
+
 -}
 table : Parser s Table
 table =
@@ -186,11 +168,11 @@ step : Parser s Step
 step =
     Step
         <$> choice
-                [ (Given <$ string "Given")
-                , (When <$ string "When")
-                , (Then <$ string "Then")
-                , (And <$ string "And")
-                , (But <$ string "But")
+                [ Given <$ string "Given"
+                , When <$ string "When"
+                , Then <$ string "Then"
+                , And <$ string "And"
+                , But <$ string "But"
                 ]
         <* spaces
         <*> (detailText <* interspace)
@@ -223,7 +205,7 @@ scenarioOutline =
     ScenarioOutline
         <$> (tags <* interspace)
         <*> (string "Scenario Outline:" *> spaces *> detailText <* interspace)
-        <*> ((sepBy1 interspace step) <* interspace)
+        <*> (sepBy1 interspace step <* interspace)
         <*> sepBy1 interspace examples
 
 
@@ -234,7 +216,7 @@ background =
     Background
         <$> (string "Background:"
                 *> spaces
-                *> (optional "" detailText)
+                *> optional "" detailText
                 <* interspace
             )
         <*> sepBy1 interspace step
@@ -254,7 +236,7 @@ feature =
     Feature
         <$> (tags <* interspace)
         <*> (string "Feature:"
-                *> (optional "" spaces)
+                *> optional "" spaces
                 *> detailText
                 <* interspace
             )
@@ -276,10 +258,7 @@ formatError input ms cx =
         lines =
             String.lines input
 
-        lineCount =
-            List.length lines
-
-        ( line, lineNumber, lineOffset, _ ) =
+        ( formattedLine, lineNumber, lineOffset, _ ) =
             List.foldl
                 (\line ( line_, n, o, pos ) ->
                     if pos < 0 then
@@ -306,9 +285,9 @@ formatError input ms cx =
             lineNumberOffset + separatorOffset + lineOffset + 1
     in
         "Parse error around line:\n\n"
-            ++ (toString lineNumber)
+            ++ toString lineNumber
             ++ separator
-            ++ line
+            ++ formattedLine
             ++ "\n"
             ++ String.padLeft padding ' ' "^"
             ++ "\nI expected one of the following:\n"
@@ -321,12 +300,18 @@ formatError input ms cx =
 parse : Parser () res -> String -> Result String res
 parse parser s =
     case Combine.parse parser (s ++ "\n") of
-        Ok ( state, stream, result ) ->
+        Ok ( _, _, result ) ->
             Ok result
 
-        Err ( state, stream, errors ) ->
+        Err ( _, _, _ ) ->
             Err <| ""
 
 
 
---formatError errors
+-- lookahead : Parser res -> Parser res
+-- lookahead lookaheadParser =
+--     let
+--         primitiveArg =
+--             app lookaheadParser
+--     in
+--         primitive primitiveArg

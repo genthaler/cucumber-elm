@@ -7,8 +7,9 @@ import Gherkin exposing (..)
 
 feature : Feature
 feature =
-    Feature []
-        "Having fun"
+    Feature
+        [ Tag "Having fun" ]
+        "Feature presentation"
         (AsA "person")
         (InOrderTo "have fun")
         (IWantTo "play baseball")
@@ -37,15 +38,8 @@ feature =
         ]
 
 
-featureTest : Test
-featureTest =
-    test "Features" <|
-        \() ->
-            Expect.equal (3 + 7) 10
-
-
 all : Test
 all =
-    describe "GherkinTest"
-        [ featureTest
-        ]
+    test "Feature constructor" <|
+        \() ->
+            Expect.equal feature feature
