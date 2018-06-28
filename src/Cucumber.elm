@@ -124,6 +124,46 @@ expectFeature glueFunctions initialState filterTags (Feature featureTags feature
         Err ("Skipping feature " ++ featureDescription)
 
 
+{-| Substitute an Examples row to create a new Scenario
+-}
+substituteExampleInScenario : List Tag -> String -> List Step -> List String -> List String -> Scenario
+substituteExampleInScenario scenarioTags scenarioDescription steps header row =
+    let
+        filterTokens string =
+            let
+                zip =
+                    List.map2 (,) header row
+
+                replace ( token, value ) oldString =
+                    Regex.replace Regex.All
+                        (Regex.regex (Regex.escape ("<" ++ token ++ ">")))
+                        (always value)
+                        oldString
+            in
+                List.foldl replace string zip
+
+        filterStepArg stepArg =
+            case stepArg of
+                DocString string ->
+                    DocString <| filterTokens string
+
+                DataTable (Table dataTableHeader dataTableRows) ->
+                    DataTable <|
+                        Table (List.map filterTokens dataTableHeader)
+                            (List.map (List.map filterTokens) dataTableRows)
+
+                NoArg ->
+                    NoArg
+
+        filterStep (Step stepType stepDescription stepArg) =
+            Step stepType (filterTokens stepDescription) (filterStepArg stepArg)
+
+        filteredSteps =
+            List.map filterStep steps
+    in
+        Scenario scenarioTags (filterTokens scenarioDescription) filteredSteps
+
+
 {-| Run a `Scenario` against a set of `List (GlueFunction state)` using an initial state
 -}
 expectScenario : List (GlueFunction state) -> Background -> List (List Tag) -> state -> Scenario -> Result String ()
@@ -143,53 +183,29 @@ expectScenario glueFunctions background filterTags initialState scenario =
 
         ScenarioOutline scenarioTags scenarioDescription steps examplesList ->
             if matchTags filterTags scenarioTags then
-                let
-                    substituteExampleInScenario _ steps2 header row =
-                        let
-                            filterTokens string =
-                                let
-                                    zip =
-                                        List.map2 (,) header row
-
-                                    replace ( token, value ) oldString =
-                                        Regex.replace Regex.All
-                                            (Regex.regex (Regex.escape ("<" ++ token ++ ">")))
-                                            (always value)
-                                            oldString
-                                in
-                                    List.foldl replace string zip
-
-                            filterStepArg stepArg =
-                                case stepArg of
-                                    DocString string ->
-                                        DocString <| filterTokens string
-
-                                    DataTable (Table dataTableHeader dataTableRows) ->
-                                        DataTable <|
-                                            Table (List.map filterTokens dataTableHeader)
-                                                (List.map (List.map filterTokens) dataTableRows)
-
-                                    NoArg ->
-                                        NoArg
-
-                            filterStep (Step stepType stepDescription stepArg) =
-                                Step stepType (filterTokens stepDescription) (filterStepArg stepArg)
-
-                            filteredSteps =
-                                List.map filterStep steps2
-                        in
-                            Scenario [] (filterTokens scenarioDescription) filteredSteps
-
-                    backgroundResult =
-                        expectBackground glueFunctions background initialState
-
-                    -- substituteExamplesInScenario scenarioDescription steps
-                in
-                    backgroundResult
-                        |> Result.andThen
-                            (expectSteps glueFunctions steps)
-                        |> Result.andThen
-                            (always (Ok ()))
+                examplesList
+                    |> List.concatMap
+                        (\(Examples exampleTags (Table header rows)) ->
+                            List.map
+                                (\row ->
+                                    expectScenario
+                                        glueFunctions
+                                        background
+                                        filterTags
+                                        initialState
+                                    <|
+                                        substituteExampleInScenario
+                                            (scenarioTags ++ exampleTags)
+                                            scenarioDescription
+                                            steps
+                                            header
+                                            row
+                                )
+                                rows
+                        )
+                    |> Result.Extra.combine
+                    |> Result.andThen
+                        (always (Ok ()))
             else
                 Err ("Scenario Outline skipped due to tag mismatch: " ++ scenarioDescription)
 

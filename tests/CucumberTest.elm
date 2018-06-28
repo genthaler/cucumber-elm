@@ -4,80 +4,105 @@ import Cucumber exposing (..)
 import CucumberTest.Glue as Glue
 import GherkinFixtures exposing (..)
 import Test exposing (..)
+import Expect
 import Gherkin exposing (..)
+import Result.Extra
 
 
 expectFeatureWith2ScenariosWithTagsContent : Test
 expectFeatureWith2ScenariosWithTagsContent =
     describe "testing tags on Scenarios "
-        [ describe "successfully runs a Feature against a Glue function that could fail if the wrong scenarios are selected throw tags"
-            [ expectFeatureText
-                [ Glue.failIfDescriptionContainsFail
-                ]
-                "initial state"
-                [ [ Tag "bar" ] ]
-                featureWith2ScenariosWithTagsContent
-            ]
+        [ test "successfully runs a Feature against a Glue function that could fail if the wrong scenarios are selected throw tags"
+            (\() ->
+                Expect.false "Expecting true" <|
+                    Result.Extra.isOk <|
+                        expectFeatureText
+                            [ Glue.failIfDescriptionContainsFail ]
+                            "initial state"
+                            [ [ Tag "bar" ] ]
+                            featureWith2ScenariosWithTagsContent
+            )
         ]
 
 
 expectFeatureWithTags : Test
 expectFeatureWithTags =
     describe "testing feature with tags"
-        [ describe "successfully applies tags"
-            [ expectFeature [ Glue.alwaysFail ]
-                "initial state"
-                [ [ Tag "blah" ] ]
-                featureWithTags
-            , expectFeature [ Glue.alwaysPass ]
-                "initial state"
-                [ [ Tag "foo" ] ]
-                featureWithTags
-            ]
+        [ test "successfully applies tags"
+            (\() ->
+                Expect.false "Expecting true" <|
+                    Result.Extra.isOk <|
+                        expectFeature [ Glue.alwaysFail ]
+                            "initial state"
+                            [ [ Tag "blah" ] ]
+                            featureWithTags
+            )
+        , test "other feature"
+            (\() ->
+                Expect.true "Expecting true" <|
+                    Result.Extra.isOk <|
+                        expectFeature [ Glue.alwaysPass ]
+                            "initial state"
+                            [ [ Tag "foo" ] ]
+                            featureWithTags
+            )
         ]
 
 
 expectFeatureWithScenarioWithTags : Test
 expectFeatureWithScenarioWithTags =
     describe "testing feature with scenario with tags"
-        [ describe "successfully applies tags to scenarios"
-            [ expectFeature [ Glue.alwaysFail ]
-                "initial state"
-                [ [ Tag "blah" ] ]
-                featureWithScenarioWithTags
-            , expectFeature [ Glue.alwaysPass ]
-                "initial state"
-                [ [ Tag "foo" ] ]
-                featureWithScenarioWithTags
-            ]
+        [ test "successfully applies tags to scenarios"
+            (\() ->
+                Expect.false "Expecting true" <|
+                    Result.Extra.isOk <|
+                        expectFeature
+                            [ Glue.alwaysFail ]
+                            "initial state"
+                            [ [ Tag "blah" ] ]
+                            featureWithScenarioWithTags
+            )
+        , test "otjer"
+            (\() ->
+                Expect.true "Expecting true" <|
+                    Result.Extra.isOk <|
+                        expectFeature [ Glue.alwaysPass ]
+                            "initial state"
+                            [ [ Tag "foo" ] ]
+                            featureWithScenarioWithTags
+            )
         ]
 
 
 testTestFeatureText : Test
 testTestFeatureText =
     describe "testing expectFeatureText "
-        [ describe "successfully runs a Feature against a Glue function"
-            [ expectFeatureText [ Glue.alwaysPass ] "initial state" [ noTags ] simpleFeatureContent
-            ]
+        [ test "successfully runs a Feature against a Glue function"
+            (\() ->
+                Expect.true "Expecting true" <|
+                    Result.Extra.isOk <|
+                        expectFeatureText [ Glue.alwaysPass ] "initial state" [ noTags ] simpleFeatureContent
+            )
         ]
 
 
-
--- testTestFeature : Test
--- testTestFeature =
---     describe "testing expectFeature "
---         [ describe "successfully runs a Feature against a Glue function"
---             [ expectFeature [ Glue.alwaysPass ] "initial state" [ noTags ] simpleFeature
---             ]
---         ]
+testTestFeature : Test
+testTestFeature =
+    describe "testing expectFeature "
+        [ test "successfully runs a Feature against a Glue function"
+            (\() ->
+                Expect.true "Expecting true" <|
+                    Result.Extra.isOk <|
+                        expectFeature [ Glue.alwaysPass ] "initial state" [ noTags ] simpleFeature
+            )
+        ]
 
 
 all : Test
 all =
     describe "Test the Cucumber API"
-        [ --testTestFeature
-          -- ,
-          testTestFeatureText
+        [ testTestFeature
+        , testTestFeatureText
         , expectFeatureWithTags
         , expectFeatureWithScenarioWithTags
         , expectFeatureWith2ScenariosWithTagsContent

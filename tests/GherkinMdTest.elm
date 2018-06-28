@@ -15,7 +15,12 @@ all =
                     x =
                         1
                  in
-                    Expect.equal (GherkinParser.parse GherkinParser.feature featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTagsContent) <|
+                    Expect.equal
+                        (GherkinParser.parse
+                            GherkinParser.feature
+                            featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTagsContent
+                        )
+                    <|
                         Result.Ok featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTags
                 )
         ]

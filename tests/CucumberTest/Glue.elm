@@ -3,8 +3,6 @@ module CucumberTest.Glue exposing (..)
 {-| Note that we don't really need to invoke any *real* business code here.
 -}
 
-import Expect
-import Test exposing (test)
 import Cucumber.Glue exposing (..)
 import Regex
 
@@ -13,36 +11,24 @@ import Regex
 --     String -> StepArg -> state -> GlueFunctionResult state
 
 
-alwaysPass : GlueFunction String
+alwaysPass : GlueFunction state
 alwaysPass description stepArg initialState =
-    ( Just (initialState), Just (test description <| defer <| Expect.pass) )
+    Ok initialState
 
 
 alwaysFail : GlueFunction String
 alwaysFail description stepArg initialState =
-    ( Just (initialState), Just (test description <| defer <| Expect.fail "Always fail") )
+    Err ("Always fail " ++ description)
 
 
 failIfDescriptionContainsFail : GlueFunction String
 failIfDescriptionContainsFail description stepArg initialState =
-    ( Just
-        initialState
-    , Just
-        (test description <|
-            defer <|
-                if
-                    Regex.contains (Regex.regex "[Ff]ail")
-                        (Debug.log "Step description"
-                            description
-                        )   
-                then
-                    Expect.fail "Failing because description contains 'fail'"
-                else
-                    Expect.pass
-        ) 
-    )
-
-
-neverMatch : GlueFunction String
-neverMatch description stepArg initialState =
-    ( Just initialState, Nothing )
+    if
+        Regex.contains (Regex.regex "[Ff]ail")
+            (Debug.log "Step description"
+                description
+            )
+    then
+        Err ("Failing because description contains 'fail'" ++ description)
+    else
+        Ok initialState
