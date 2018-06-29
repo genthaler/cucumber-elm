@@ -6,8 +6,8 @@ The following assumes node and npm are installed.
 
 ```
 npm install -g elm@0.18.0
-npm install -g elm-test
-elm-test
+npm install -g create-elm-app
+elm-app test
 ```
 
 
