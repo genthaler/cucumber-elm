@@ -5,9 +5,9 @@ More info: https://medium.com/@prozacchiwawa/the-im-stupid-elm-language-nugget-1
 
 To try it out:
 
-    elm make --output calc.js Calc.elm
+    elm make --yes --output calc.js Calc.elm
     node runelm.js
-    
+
 And type some numbers and operators:
 
 <pre>
