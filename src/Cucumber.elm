@@ -102,18 +102,18 @@ matchTags filterTags elementTags =
   - Reports the results.
 
 -}
-expectFeatureText : List (GlueFunction state) -> state -> List (List Tag) -> String -> Result String ()
-expectFeatureText glueFunctions initialState filterTags featureText =
+expectFeatureText : GlueArgs state -> List (List Tag) -> String -> Result String ()
+expectFeatureText glueArgs filterTags featureText =
     GherkinParser.parse GherkinParser.feature featureText
         |> Result.mapError (String.append "Parsing error")
-        |> Result.andThen (expectFeature glueFunctions initialState filterTags)
+        |> Result.andThen (expectFeature glueArgs filterTags)
         |> Result.andThen (always (Ok ()))
 
 
 {-| Verify a `Feature` against a set of glue functions.
 -}
-expectFeature : List (GlueFunction state) -> state -> List (List Tag) -> Feature -> Result String ()
-expectFeature glueFunctions initialState filterTags (Feature featureTags featureDescription _ _ _ background scenarios) =
+expectFeature : GlueArgs state -> List (List Tag) -> Feature -> Result String ()
+expectFeature ( glueFunctions, initialState ) filterTags (Feature featureTags featureDescription _ _ _ background scenarios) =
     if matchTags filterTags featureTags then
         scenarios
             |> List.map (expectScenario glueFunctions background filterTags initialState)

@@ -7,7 +7,7 @@ Regex -> String ->
 
 These types describe a glue function
 
-@docs GlueFunction, GlueOutput, GlueFunctionResult
+@docs GlueFunction, GlueOutput, GlueFunctionResult, GlueArgs
 
 -}
 
@@ -47,3 +47,9 @@ Currently not supported #22.
 -}
 type GlueOutput
     = GlueOutputString String
+
+
+{-| A tuple containing the list of `Glue` functions and an initial state function
+-}
+type alias GlueArgs state =
+    ( List (GlueFunction state), state )

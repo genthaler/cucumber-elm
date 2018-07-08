@@ -1,26 +1,10 @@
-# elm-worker-runner-example
-Minimal code for node and rhino for running an elm worker
+# Cucumber Runner
 
-More info: https://medium.com/@prozacchiwawa/the-im-stupid-elm-language-nugget-10-3a9c119ed6f9#.vj07jba42
+This module is serves as middleware between the Supervisor and the Cucumber pure-Elm library.
 
-To try it out:
+The full process is documented in the `supervisor` package
+The enclosing folder `runner` is copied to a new temporary package folder, along with Cucumber proper and all required Glue functions, is  compiled into a .js file, `require`d by the supervisor and hooked into the ports set up by the supervisor.
 
-    elm make --yes --output calc.js Calc.elm
-    node runelm.js
+The ports `runFeature` and `reportFeature` in Runner.elm correspond to the same named ports in Supervisor.elm.
 
-And type some numbers and operators:
-
-<pre>
-<b>3</b>
-3
-<b>7</b>
-7 3
-<b>10</b>
-10 7 3
-<b>+</b>
-17 3
-<b>-</b>
-14
-<b>^D</b>
-14
-</pre>
+Since this module contains ports, it can't be published as a proper Elm package, so it's here instead.
