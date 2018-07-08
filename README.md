@@ -15,8 +15,6 @@ elm-app test
 
 [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/tn79mfap9v0fg2qb/branch/master?svg=true)](https://ci.appveyor.com/project/genthaler/cucumber-elm/branch/master)
 
-[![Dependency CI Status](https://dependencyci.com/github/genthaler/cucumber-elm/badge?style=flat)](https://dependencyci.com/github/genthaler/cucumber-elm/badge?style=flat)
-
 [![](https://raw.githubusercontent.com/ZenHubIO/support/master/zenhub-badge.png)](https://zenhub.com)
 This project is bootstrapped with [Create Elm App](https://github.com/halfzebra/create-elm-app).
 
