@@ -1,6 +1,6 @@
 module GherkinParser exposing (feature, formatError, parse)
 
-import Combine exposing (..)
+import Parser exposing (..)
 import String
 import Gherkin exposing (..)
 

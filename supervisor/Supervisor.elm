@@ -1,5 +1,6 @@
 port module Runner exposing (..)
 
+import Ports exposing (..)
 import Platform exposing (programWithFlags)
 import PackageInfo
 
@@ -21,45 +22,6 @@ import PackageInfo
 -- 	1. for each file, ask Node for the text
 -- 	1. test the gherkin file, with timing information
 -- 	1. if successful, replace the stats for the gherkin file in the report
-
-
-port fileReadRequest : String -> Cmd msg
-
-
-port fileReadResponse : (String -> msg) -> Sub msg
-
-
-port fileWriteRequest : String -> Cmd msg
-
-
-port fileWriteResponse : (String -> msg) -> Sub msg
-
-
-port shellRequest : String -> Cmd msg
-
-
-port shellResponse : (String -> msg) -> Sub msg
-
-
-port fileListRequest : String -> Cmd msg
-
-
-port fileListResponse : (String -> msg) -> Sub msg
-
-
-port requireRequest : String -> Cmd msg
-
-
-port requireResponse : (String -> msg) -> Sub msg
-
-
-port cucumberRequest : String -> Cmd msg
-
-
-port cucumberResponse : (String -> msg) -> Sub msg
-
-
-port end : Int -> Cmd msg
 
 
 type Action

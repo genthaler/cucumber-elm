@@ -1,6 +1,5 @@
 module Game exposing (..)
 
-import Html exposing (Html)
 import Task
 import GameState exposing (..)
 
@@ -21,8 +20,12 @@ type Msg
 
 type alias Model =
     { game : Game
-    , previous : List Game -- Holds the list of previous states to print.
-    , count : Int -- Used to restrict how many steps this demo runs to avoid infinite looping.
+    , previous :
+        List Game
+        -- Holds the list of previous states to print.
+    , count :
+        Int
+        -- Used to restrict how many steps this demo runs to avoid infinite looping.
     }
 
 
