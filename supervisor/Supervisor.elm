@@ -3,13 +3,14 @@ port module Runner exposing (..)
 import Ports exposing (..)
 import Platform exposing (programWithFlags)
 import PackageInfo
+import Options
 
 
--- 1. get elm-package info
+-- 	1. parse options
+--  1. get elm-package info
 -- 		- node-elm-interface-to-json
 -- 		- elm-interface-to-json
 -- 		- Janiczek/package-info/1.0.0
--- 	1. validate options
 -- 	1. create new folder under elm-stuff to do compilation in
 -- 	1. construct new elm-package.json
 -- 		- glue function path

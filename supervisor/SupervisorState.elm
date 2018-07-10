@@ -18,6 +18,7 @@ import StateMachine
         , map
         , untag
         )
+import Options exposing (Option, RunOptions)
 
 
 makeState =
@@ -25,10 +26,18 @@ makeState =
 
 
 type SupervisorState
-    = Started (State { ready : Allowed } { args : List String })
-    | Ready (State { inPlay : Allowed } {})
-    | InPlay (State { gameOver : Allowed } {})
-    | GameOver (State { ready : Allowed } {})
+    = Started (State { help : Allowed, init : Allowed, version : Allowed } { args : List String })
+    | Ending (State {} { exitCode : Int })
+    | Help (State { end : Allowed } { exitCode : Int })
+    | Init (State { end : Allowed } {})
+    | GettingPackageInfo (State { gameOver : Allowed } { runOptions : RunOptions })
+    | ConstructingFolder (State { ready : Allowed } {})
+    | Compiling (State { ready : Allowed } {})
+    | ShuttingDownExistingRunner (State { ready : Allowed } {})
+    | RequiringRunner (State { ready : Allowed } {})
+    | StartingRunner (State { ready : Allowed } {})
+    | ResolvingGherkinFiles (State { ready : Allowed } {})
+    | TestingGherkinFile (State { ready : Allowed } { testedGherkinFiles : List String, remainingGherkinFiles : List String })
 
 
 
@@ -40,19 +49,19 @@ started args =
     makeState {} |> Started args
 
 
-ready : GameDefinition -> SupervisorState
-ready definition =
-    makeState { definition = definition } |> Ready
+help : Int -> SupervisorState
+help exitCode =
+    makeState { exitCode = exitCode } |> Help
 
 
-inPlay : GameDefinition -> PlayState -> SupervisorState
-inPlay definition play =
-    makeState { definition = definition, play = play } |> InPlay
+version : Int -> SupervisorState
+version exitCode =
+    makeState { exitCode = exitCode } |> Help
 
 
-gameOver : GameDefinition -> Int -> SupervisorState
-gameOver definition score =
-    makeState { definition = definition, finalScore = score } |> GameOver
+initStart : Int -> SupervisorState
+initStart exitCode =
+    makeState { exitCode = exitCode } |> Help
 
 
 
@@ -95,8 +104,8 @@ updateScore score play =
 -- to make a transition.
 
 
-toReady : State { a | ready : Allowed } { m | definition : GameDefinition } -> Game
-toReady (State model) =
+toHelp : State { a | started : Allowed } { m | definition : GameDefinition } -> Game
+toHelp (State model) =
     ready model.definition
 
 
