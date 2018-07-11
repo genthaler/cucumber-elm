@@ -1,6 +1,10 @@
 port module Runner exposing (..)
 
+import Options
+import PackageInfo
+import Platform exposing (programWithFlags)
 import Ports exposing (..)
+import SupervisorState exposing (..)
 import Platform exposing (programWithFlags)
 import PackageInfo
 import Options
@@ -32,22 +36,85 @@ type Action
 
 
 type alias Model =
-    { pendingRequests : List String }
+    SupervisorState
 
 
-init : a -> ( List b, Cmd msg )
+init : List String -> ( Model, Cmd msg )
 init flags =
-    ( [], Cmd.none )
+    ( start, Cmd.none )
 
 
-update : a -> b -> ( b, Cmd msg )
-update action model =
-    ( model, Cmd.none )
+update : Msg -> Model -> ( Mode, Cmd msg )
+update msg model =
+    case ( model, (Debug.log "update" msg) ) of
+        ( Loading loading, Loaded gameDefinition ) ->
+            ( { model | game = toReadyWithGameDefinition gameDefinition loading }
+            , message StartGame
+            )
+
+        ( Ready ready, StartGame ) ->
+            ( { model | game = toInPlayWithPlayState { score = 0, position = [] } ready }
+            , message <| Die 123
+            )
+
+        ( InPlay inPlay, Die finalScore ) ->
+            ( { model | game = toGameOver <| (updatePlayState <| updateScore finalScore) inPlay }
+            , message AnotherGo
+            )
+
+        ( GameOver gameOver, AnotherGo ) ->
+            ( { model | game = toReady gameOver }
+            , message StartGame
+            )
+
+        ( _, _ ) ->
+            ( [], Cmd.none )
 
 
 subscriptions : a -> Sub Action
 subscriptions model =
-    Sub.none
+    case model of
+        Starting _ ->
+            Sub.none
+
+        Ending _ ->
+            Sub.none
+
+        Helping _ ->
+            Sub.none
+
+        Versioning _ ->
+            Sub.none
+
+        Initialising _ ->
+            Sub.none
+
+        GettingPackageInfo _ ->
+            Sub.none
+
+        ConstructingFolder _ ->
+            Sub.none
+
+        Compiling _ ->
+            Sub.none
+
+        ShuttingDownExistingRunner _ ->
+            Sub.none
+
+        RequiringRunner _ ->
+            Sub.none
+
+        StartingRunner _ ->
+            Sub.none
+
+        ResolvingGherkinFiles _ ->
+            Sub.none
+
+        TestingGherkinFile _ ->
+            Sub.none
+
+        Watching _ ->
+            Sub.none
 
 
 

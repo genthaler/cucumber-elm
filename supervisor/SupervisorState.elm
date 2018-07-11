@@ -1,15 +1,4 @@
-module SupervisorState
-    exposing
-        ( SupervisorState(..)
-        , loading
-        , updateGameDefinition
-        , updatePlayState
-        , updateScore
-        , toReady
-        , toReadyWithGameDefinition
-        , toInPlayWithPlayState
-        , toGameOver
-        )
+module SupervisorState exposing (..)
 
 import StateMachine
     exposing
@@ -26,77 +15,89 @@ makeState =
 
 
 type SupervisorState
-    = Started (State { help : Allowed, init : Allowed, version : Allowed } { args : List String })
+    = Starting (State { help : Allowed, init : Allowed, version : Allowed } { args : List String })
     | Ending (State {} { exitCode : Int })
-    | Help (State { end : Allowed } { exitCode : Int })
-    | Init (State { end : Allowed } {})
+    | Helping (State { end : Allowed } { exitCode : Int })
+    | Versioning (State { end : Allowed } { exitCode : Int })
+    | Initialising (State { end : Allowed } { folder : String })
     | GettingPackageInfo (State { gameOver : Allowed } { runOptions : RunOptions })
-    | ConstructingFolder (State { ready : Allowed } {})
-    | Compiling (State { ready : Allowed } {})
-    | ShuttingDownExistingRunner (State { ready : Allowed } {})
-    | RequiringRunner (State { ready : Allowed } {})
-    | StartingRunner (State { ready : Allowed } {})
-    | ResolvingGherkinFiles (State { ready : Allowed } {})
-    | TestingGherkinFile (State { ready : Allowed } { testedGherkinFiles : List String, remainingGherkinFiles : List String })
+    | ConstructingFolder (State { ready : Allowed } { runOptions : RunOptions })
+    | Compiling (State { ready : Allowed } { gherkinFiles : List String })
+    | ShuttingDownExistingRunner (State { ready : Allowed } { gherkinFiles : List String })
+    | RequiringRunner (State { ready : Allowed } { gherkinFiles : List String })
+    | StartingRunner (State { ready : Allowed } { gherkinFiles : List String })
+    | ResolvingGherkinFiles (State { ready : Allowed } { gherkinFiles : List String })
+    | TestingGherkinFile (State { ready : Allowed } { remainingGherkinFiles : List String, testedGherkinFiles : List String })
+    | Watching (State { ready : Allowed } { testedGherkinFiles : List String, remainingGherkinFiles : List String })
 
 
 
 -- State constructors.
 
 
-started : List String -> SupervisorState
-started args =
-    makeState {} |> Started args
+start : List String -> SupervisorState
+start args =
+    Starting <| makeState { args = args }
 
 
 help : Int -> SupervisorState
 help exitCode =
-    makeState { exitCode = exitCode } |> Help
+    Helping <| makeState { exitCode = exitCode }
 
 
 version : Int -> SupervisorState
 version exitCode =
-    makeState { exitCode = exitCode } |> Help
+    Versioning <| makeState { exitCode = exitCode }
 
 
-initStart : Int -> SupervisorState
-initStart exitCode =
-    makeState { exitCode = exitCode } |> Help
+initialise : String -> SupervisorState
+initialise folder =
+    Initialising <| makeState { folder = folder }
 
 
-
--- Update functions that can be applied when parts of the model are present.
-
-
-mapDefinition : (a -> b) -> ({ m | definition : a } -> { m | definition : b })
-mapDefinition func =
-    \model -> { model | definition = func model.definition }
+getPackageInfo : RunOptions -> SupervisorState
+getPackageInfo runOptions =
+    GettingPackageInfo <| makeState { runOptions = runOptions }
 
 
-mapPlay : (a -> b) -> ({ m | play : a } -> { m | play : b })
-mapPlay func =
-    \model -> { model | play = func model.play }
+constructFolder : RunOptions -> SupervisorState
+constructFolder runOptions =
+    ConstructingFolder <| makeState { runOptions = runOptions }
 
 
-updateGameDefinition :
-    (GameDefinition -> GameDefinition)
-    -> State p { m | definition : GameDefinition }
-    -> State p { m | definition : GameDefinition }
-updateGameDefinition func state =
-    map (mapDefinition func) state
+compile : List String -> SupervisorState
+compile gherkinFiles =
+    Compiling <| makeState { gherkinFiles = gherkinFiles }
 
 
-updatePlayState :
-    (PlayState -> PlayState)
-    -> State p { m | play : PlayState }
-    -> State p { m | play : PlayState }
-updatePlayState func state =
-    map (mapPlay func) state
+shutDownExistingRunner : List String -> SupervisorState
+shutDownExistingRunner gherkinFiles =
+    ShuttingDownExistingRunner <| makeState { gherkinFiles = gherkinFiles }
 
 
-updateScore : Int -> PlayState -> PlayState
-updateScore score play =
-    { play | score = score }
+requireRunner : List String -> SupervisorState
+requireRunner gherkinFiles =
+    RequiringRunner <| makeState { gherkinFiles = gherkinFiles }
+
+
+startRunner : List String -> SupervisorState
+startRunner gherkinFiles =
+    StartingRunner <| makeState { gherkinFiles = gherkinFiles }
+
+
+resolveGherkinFiles : List String -> SupervisorState
+resolveGherkinFiles gherkinFiles =
+    ResolvingGherkinFiles <| makeState { gherkinFiles = gherkinFiles }
+
+
+testGherkinFile : List String -> SupervisorState
+testGherkinFile gherkinFiles =
+    TestingGherkinFile <| makeState { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
+
+
+watch : List String -> SupervisorState
+watch gherkinFiles =
+    Watching <| makeState { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
 
 
 
@@ -104,21 +105,6 @@ updateScore score play =
 -- to make a transition.
 
 
-toHelp : State { a | started : Allowed } { m | definition : GameDefinition } -> Game
-toHelp (State model) =
-    ready model.definition
-
-
-toReadyWithGameDefinition : GameDefinition -> State { a | ready : Allowed } m -> Game
-toReadyWithGameDefinition definition game =
-    ready definition
-
-
-toInPlayWithPlayState : PlayState -> State { a | inPlay : Allowed } { m | definition : GameDefinition } -> Game
-toInPlayWithPlayState play (State model) =
-    inPlay model.definition play
-
-
-toGameOver : State { a | gameOver : Allowed } { m | definition : GameDefinition, play : PlayState } -> Game
-toGameOver (State model) =
-    gameOver model.definition model.play.score
+toHelp : State { a | started : Allowed } {} -> SupervisorState
+toHelp (State { a } ({ exitCode } as model)) =
+    help exitCode
