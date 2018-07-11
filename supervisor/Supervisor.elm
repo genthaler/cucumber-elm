@@ -1,20 +1,17 @@
 port module Runner exposing (..)
 
-import Options
+import Options exposing (..)
 import PackageInfo
 import Platform exposing (programWithFlags)
 import Ports exposing (..)
-import SupervisorState exposing (..)
-import Platform exposing (programWithFlags)
-import PackageInfo
-import Options
+import SupervisorState exposing (SupervisorState(..), toStarting, toHelping)
+import Task
+import StateMachine exposing (untag, map)
+import Json.Decode
 
 
 -- 	1. parse options
 --  1. get elm-package info
--- 		- node-elm-interface-to-json
--- 		- elm-interface-to-json
--- 		- Janiczek/package-info/1.0.0
 -- 	1. create new folder under elm-stuff to do compilation in
 -- 	1. construct new elm-package.json
 -- 		- glue function path
@@ -29,74 +26,122 @@ import Options
 -- 	1. if successful, replace the stats for the gherkin file in the report
 
 
-type Action
+type Msg
     = NoOp
-    | FileRead
-    | FileWrite
+    | FileRead String
+    | FileWrite Int
+    | Shell Int
+    | Cucumber String
 
 
 type alias Model =
     SupervisorState
 
 
-init : List String -> ( Model, Cmd msg )
+message : a -> Cmd a
+message msg =
+    Task.perform identity (Task.succeed msg)
+
+
+init : List String -> ( Model, Cmd Msg )
 init flags =
-    ( start, Cmd.none )
+    ( toStarting <| parseArgs flags, message NoOp )
 
 
-update : Msg -> Model -> ( Mode, Cmd msg )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case ( model, (Debug.log "update" msg) ) of
-        ( Loading loading, Loaded gameDefinition ) ->
-            ( { model | game = toReadyWithGameDefinition gameDefinition loading }
-            , message StartGame
-            )
+    let
+        noOp =
+            ( model, Cmd.none )
+    in
+        case ( model, msg ) of
+            ( Starting state, NoOp ) ->
+                case state |> untag |> .option of
+                    Help ->
+                        ( toHelping model 0, message NoOp )
 
-        ( Ready ready, StartGame ) ->
-            ( { model | game = toInPlayWithPlayState { score = 0, position = [] } ready }
-            , message <| Die 123
-            )
+                    Version ->
+                        ( toHelping model 0, message NoOp )
 
-        ( InPlay inPlay, Die finalScore ) ->
-            ( { model | game = toGameOver <| (updatePlayState <| updateScore finalScore) inPlay }
-            , message AnotherGo
-            )
+                    Init folder ->
+                        ( help 0, message NoOp )
 
-        ( GameOver gameOver, AnotherGo ) ->
-            ( { model | game = toReady gameOver }
-            , message StartGame
-            )
+                    Run runOption ->
+                        ( model, message NoOp )
 
-        ( _, _ ) ->
-            ( [], Cmd.none )
+            ( Ending _, NoOp ) ->
+                noOp
+
+            ( Helping _, NoOp ) ->
+                noOp
+
+            ( Versioning state, msg ) ->
+                case msg of
+                    NoOp ->
+                        ( model, fileReadRequest "elm-package.json" )
+
+                    FileRead content ->
+                        case Json.Decode.decodeString PackageInfo.decoder content of
+                            Ok packageInfo ->
+                                Debug.log ("Version: " ++ (toString packageInfo.version)) ( model, message end 0 )
+
+                            Err err ->
+                                noOp
+
+                    _ ->
+                        noOp
+
+            ( Initialising _, NoOp ) ->
+                noOp
+
+            ( GettingPackageInfo _, NoOp ) ->
+                noOp
+
+            ( ConstructingFolder _, NoOp ) ->
+                noOp
+
+            ( Compiling _, NoOp ) ->
+                noOp
+
+            ( ShuttingDownExistingRunner _, NoOp ) ->
+                noOp
+
+            ( RequiringRunner _, NoOp ) ->
+                noOp
+
+            ( StartingRunner _, NoOp ) ->
+                noOp
+
+            ( ResolvingGherkinFiles _, NoOp ) ->
+                noOp
+
+            ( TestingGherkinFile _, NoOp ) ->
+                noOp
+
+            ( Watching _, NoOp ) ->
+                noOp
+
+            ( _, _ ) ->
+                Debug.crash "Invalid State Transition" noOp
 
 
-subscriptions : a -> Sub Action
+subscriptions : Model -> Sub Msg
 subscriptions model =
     case model of
-        Starting _ ->
-            Sub.none
-
-        Ending _ ->
-            Sub.none
-
-        Helping _ ->
-            Sub.none
-
         Versioning _ ->
-            Sub.none
+            fileReadResponse FileRead
 
         Initialising _ ->
-            Sub.none
+            fileReadResponse FileRead
 
         GettingPackageInfo _ ->
             Sub.none
 
         ConstructingFolder _ ->
-            Sub.none
+            fileWriteResponse
 
         Compiling _ ->
-            Sub.none
+            shellResponse Shell
 
         ShuttingDownExistingRunner _ ->
             Sub.none
@@ -111,17 +156,13 @@ subscriptions model =
             Sub.none
 
         TestingGherkinFile _ ->
+            cucumberResponse Cucumber
+
+        _ ->
             Sub.none
 
-        Watching _ ->
-            Sub.none
 
-
-
--- Sub.batch [ input <| always NoOp, close <| always NoOp ]
-
-
-main : Program Never (List a) Action
+main : Program (List String) Model Msg
 main =
     programWithFlags
         { init = init

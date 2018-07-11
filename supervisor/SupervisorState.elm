@@ -10,12 +10,13 @@ import StateMachine
 import Options exposing (Option, RunOptions)
 
 
+makeState : model -> State trans model
 makeState =
     State
 
 
 type SupervisorState
-    = Starting (State { help : Allowed, init : Allowed, version : Allowed } { args : List String })
+    = Starting (State { help : Allowed, init : Allowed, version : Allowed } { option : Option })
     | Ending (State {} { exitCode : Int })
     | Helping (State { end : Allowed } { exitCode : Int })
     | Versioning (State { end : Allowed } { exitCode : Int })
@@ -35,69 +36,9 @@ type SupervisorState
 -- State constructors.
 
 
-start : List String -> SupervisorState
-start args =
-    Starting <| makeState { args = args }
-
-
-help : Int -> SupervisorState
-help exitCode =
-    Helping <| makeState { exitCode = exitCode }
-
-
-version : Int -> SupervisorState
-version exitCode =
-    Versioning <| makeState { exitCode = exitCode }
-
-
-initialise : String -> SupervisorState
-initialise folder =
-    Initialising <| makeState { folder = folder }
-
-
-getPackageInfo : RunOptions -> SupervisorState
-getPackageInfo runOptions =
-    GettingPackageInfo <| makeState { runOptions = runOptions }
-
-
-constructFolder : RunOptions -> SupervisorState
-constructFolder runOptions =
-    ConstructingFolder <| makeState { runOptions = runOptions }
-
-
-compile : List String -> SupervisorState
-compile gherkinFiles =
-    Compiling <| makeState { gherkinFiles = gherkinFiles }
-
-
-shutDownExistingRunner : List String -> SupervisorState
-shutDownExistingRunner gherkinFiles =
-    ShuttingDownExistingRunner <| makeState { gherkinFiles = gherkinFiles }
-
-
-requireRunner : List String -> SupervisorState
-requireRunner gherkinFiles =
-    RequiringRunner <| makeState { gherkinFiles = gherkinFiles }
-
-
-startRunner : List String -> SupervisorState
-startRunner gherkinFiles =
-    StartingRunner <| makeState { gherkinFiles = gherkinFiles }
-
-
-resolveGherkinFiles : List String -> SupervisorState
-resolveGherkinFiles gherkinFiles =
-    ResolvingGherkinFiles <| makeState { gherkinFiles = gherkinFiles }
-
-
-testGherkinFile : List String -> SupervisorState
-testGherkinFile gherkinFiles =
-    TestingGherkinFile <| makeState { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
-
-
-watch : List String -> SupervisorState
-watch gherkinFiles =
-    Watching <| makeState { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
+toStarting : Option -> SupervisorState
+toStarting option =
+    Starting <| makeState { option = option }
 
 
 
@@ -105,6 +46,61 @@ watch gherkinFiles =
 -- to make a transition.
 
 
-toHelp : State { a | started : Allowed } {} -> SupervisorState
-toHelp (State { a } ({ exitCode } as model)) =
-    help exitCode
+toHelping : State { a | ending : Allowed } {} -> SupervisorState
+toHelping {} =
+    Helping <| makeState { exitCode = 0 }
+
+
+toVersioning : State { a | ending : Allowed } {} -> SupervisorState
+toVersioning model =
+    Versioning <| makeState { exitCode = 0 }
+
+
+toInitialising : String -> State { a | ending : Allowed } {} -> SupervisorState
+toInitialising folder model =
+    Initialising <| makeState { folder = folder }
+
+
+toGettingPackageInfo : RunOptions -> SupervisorState
+toGettingPackageInfo runOptions =
+    GettingPackageInfo <| makeState { runOptions = runOptions }
+
+
+toConstructingFolder : RunOptions -> SupervisorState
+toConstructingFolder runOptions =
+    ConstructingFolder <| makeState { runOptions = runOptions }
+
+
+toCompiling : List String -> SupervisorState
+toCompiling gherkinFiles =
+    Compiling <| makeState { gherkinFiles = gherkinFiles }
+
+
+toShuttingDownExistingRunner : List String -> SupervisorState
+toShuttingDownExistingRunner gherkinFiles =
+    ShuttingDownExistingRunner <| makeState { gherkinFiles = gherkinFiles }
+
+
+toRequiringRunner : List String -> SupervisorState
+toRequiringRunner gherkinFiles =
+    RequiringRunner <| makeState { gherkinFiles = gherkinFiles }
+
+
+toStartingRunner : List String -> SupervisorState
+toStartingRunner gherkinFiles =
+    StartingRunner <| makeState { gherkinFiles = gherkinFiles }
+
+
+toResolvingGherkinFiles : List String -> SupervisorState
+toResolvingGherkinFiles gherkinFiles =
+    ResolvingGherkinFiles <| makeState { gherkinFiles = gherkinFiles }
+
+
+toTestingGherkinFile : List String -> SupervisorState
+toTestingGherkinFile gherkinFiles =
+    TestingGherkinFile <| makeState { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
+
+
+toWatching : List String -> SupervisorState
+toWatching gherkinFiles =
+    Watching <| makeState { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
