@@ -16,6 +16,11 @@ help =
     ]
 
 
+helpText : String
+helpText =
+    String.join "\n" help
+
+
 exampleGlob : List String
 exampleGlob =
     -- [ "tests", "**", "*.feature" ]

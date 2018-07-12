@@ -1,13 +1,14 @@
 port module Runner exposing (..)
 
 import Options exposing (..)
-import PackageInfo
+import PackageInfo exposing (decoder)
 import Platform exposing (programWithFlags)
 import Ports exposing (..)
-import SupervisorState exposing (SupervisorState(..), toStarting, toHelping)
+import SupervisorState exposing (..)
 import Task
 import StateMachine exposing (untag, map)
 import Json.Decode
+import Help exposing (..)
 
 
 -- 	1. parse options
@@ -29,16 +30,18 @@ import Json.Decode
 type Msg
     = NoOp
     | FileRead String
-    | FileWrite Int
+    | FileWrite String
+    | FileList (List String)
     | Shell Int
     | Cucumber String
+    | Require Int
 
 
 type alias Model =
     SupervisorState
 
 
-message : a -> Cmd a
+message : msg -> Cmd msg
 message msg =
     Task.perform identity (Task.succeed msg)
 
@@ -58,22 +61,22 @@ update msg model =
             ( Starting state, NoOp ) ->
                 case state |> untag |> .option of
                     Help ->
-                        ( toHelping model 0, message NoOp )
+                        ( toHelping state, message NoOp )
 
                     Version ->
-                        ( toHelping model 0, message NoOp )
+                        ( toVersioning state, message NoOp )
 
                     Init folder ->
-                        ( help 0, message NoOp )
+                        ( toInitialising folder state, message NoOp )
 
                     Run runOption ->
                         ( model, message NoOp )
 
-            ( Ending _, NoOp ) ->
-                noOp
+            ( Ending state, NoOp ) ->
+                ( model, end (state |> untag) )
 
-            ( Helping _, NoOp ) ->
-                noOp
+            ( Helping state, NoOp ) ->
+                Debug.log helpText ( toEnding 0 state, message NoOp )
 
             ( Versioning state, msg ) ->
                 case msg of
@@ -83,10 +86,10 @@ update msg model =
                     FileRead content ->
                         case Json.Decode.decodeString PackageInfo.decoder content of
                             Ok packageInfo ->
-                                Debug.log ("Version: " ++ (toString packageInfo.version)) ( model, message end 0 )
+                                Debug.log ("Version: " ++ (toString packageInfo.version)) ( toEnding 0 state, message NoOp )
 
                             Err err ->
-                                noOp
+                                Debug.log ("Version: " ++ (err)) ( toEnding 1 state, message NoOp )
 
                     _ ->
                         noOp
@@ -103,19 +106,13 @@ update msg model =
             ( Compiling _, NoOp ) ->
                 noOp
 
-            ( ShuttingDownExistingRunner _, NoOp ) ->
-                noOp
-
-            ( RequiringRunner _, NoOp ) ->
-                noOp
-
             ( StartingRunner _, NoOp ) ->
                 noOp
 
             ( ResolvingGherkinFiles _, NoOp ) ->
                 noOp
 
-            ( TestingGherkinFile _, NoOp ) ->
+            ( TestingGherkinFiles _, NoOp ) ->
                 noOp
 
             ( Watching _, NoOp ) ->
@@ -138,16 +135,10 @@ subscriptions model =
             Sub.none
 
         ConstructingFolder _ ->
-            fileWriteResponse
+            fileWriteResponse FileWrite
 
         Compiling _ ->
             shellResponse Shell
-
-        ShuttingDownExistingRunner _ ->
-            Sub.none
-
-        RequiringRunner _ ->
-            Sub.none
 
         StartingRunner _ ->
             Sub.none
@@ -155,7 +146,7 @@ subscriptions model =
         ResolvingGherkinFiles _ ->
             Sub.none
 
-        TestingGherkinFile _ ->
+        TestingGherkinFiles _ ->
             cucumberResponse Cucumber
 
         _ ->
