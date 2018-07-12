@@ -18,7 +18,7 @@ type Msg
     | FileList (List String)
     | Shell Int
     | Require Int
-    | Cucumber (Result String ())
+    | Cucumber String
 
 
 type alias Model =

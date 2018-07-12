@@ -19,10 +19,10 @@ port shellRequest : String -> Cmd msg
 port shellResponse : (Int -> msg) -> Sub msg
 
 
-port fileListRequest : String -> Cmd msg
+port fileGlobResolveRequest : String -> Cmd msg
 
 
-port fileListResponse : (List String -> msg) -> Sub msg
+port fileGlobResolveResponse : (List String -> msg) -> Sub msg
 
 
 port requireRequest : String -> Cmd msg
