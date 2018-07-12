@@ -1,4 +1,4 @@
-port module Runner exposing (..)
+port module SupervisorWorker exposing (..)
 
 import Options exposing (..)
 import PackageInfo exposing (decoder)
@@ -11,30 +11,14 @@ import Json.Decode
 import Help exposing (..)
 
 
--- 	1. parse options
---  1. get elm-package info
--- 	1. create new folder under elm-stuff to do compilation in
--- 	1. construct new elm-package.json
--- 		- glue function path
--- 	1. compile
--- 	1. if any compilation errors, report those, otherwise:
--- 	1. shut down any existing runner
--- 	1. (re-)require the built elm.js file
--- 	1. start up the runner
--- 	1. resolve list of Gherkin files
--- 	1. for each file, ask Node for the text
--- 	1. test the gherkin file, with timing information
--- 	1. if successful, replace the stats for the gherkin file in the report
-
-
 type Msg
     = NoOp
     | FileRead String
     | FileWrite String
     | FileList (List String)
     | Shell Int
-    | Cucumber String
     | Require Int
+    | Cucumber (Result String ())
 
 
 type alias Model =
