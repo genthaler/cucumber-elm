@@ -1,5 +1,11 @@
 module Parser exposing (Parser, string, int, s, (<*>), (<$>), empty, end, oneOf, parse)
 
+{-| This module parses a list of strings.
+
+@docs Parser, string, int, s, (<*>), (<$>), empty, end, oneOf, parse
+
+-}
+
 
 type Parser source value
     = Parser (State source -> List (State value))

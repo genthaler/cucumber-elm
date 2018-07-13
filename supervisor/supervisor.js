@@ -1,3 +1,5 @@
+var shell = require('shelljs');
+
 const compose = (...fns) =>
   fns.reduce((f, g) => (...args) => f(g(...args)));
 
@@ -20,14 +22,10 @@ var elmCompile = function (folderName) {
   // 
 };
 
-var end = function (exitCode) {
-  process.exit(exitCode);
-}
-
 var supervisorWorkerElm = require('./SupervisorWorker');
 var supervisorWorker = supervisorWorkerElm.SupervisorWorker.worker(process.argv);
 
-supervisorWorker.ports.end.subscribe(end);
+supervisorWorker.ports.end.subscribe(process.exit);
 
 var runner = require('../runner/Runner');
 var runnerWorker = runner.Runner.worker();
