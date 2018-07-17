@@ -25,3 +25,4 @@ node_modules
 # Desktop Services Store on macOS
 .DS_Store
 supervisor/index.html
+supervisor/supervisorWorker.js

@@ -95,4 +95,4 @@ toWatching gherkinFiles state =
 
 toEnding : Int -> State { a | ending : Allowed } b -> SupervisorState
 toEnding exitCode state =
-    Helping <| makeState { exitCode = exitCode }
+    Ending <| makeState exitCode

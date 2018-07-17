@@ -32,7 +32,11 @@ message msg =
 
 init : List String -> ( Model, Cmd Msg )
 init flags =
-    ( toStarting <| parseArgs flags, message NoOp )
+    let
+        _ =
+            Debug.log "flags" flags
+    in
+        ( toStarting <| parseArgs flags, message NoOp )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -41,7 +45,7 @@ update msg model =
         noOp =
             ( model, Cmd.none )
     in
-        case ( model, msg ) of
+        case Debug.log "(model,msg) " ( model, msg ) of
             ( Starting state, NoOp ) ->
                 case state |> untag |> .option of
                     Help ->
@@ -60,7 +64,11 @@ update msg model =
                 ( model, end (state |> untag) )
 
             ( Helping state, NoOp ) ->
-                Debug.log helpText ( toEnding 0 state, message NoOp )
+                let
+                    _ =
+                        Debug.log "elm-cuke" helpText
+                in
+                    ( toEnding 0 state, message NoOp )
 
             ( Versioning state, msg ) ->
                 case msg of
@@ -131,7 +139,7 @@ subscriptions model =
             Sub.none
 
         TestingGherkinFiles _ ->
-            cucumberResponse Cucumber
+            cucumberTestResponse Cucumber
 
         _ ->
             Sub.none

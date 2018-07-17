@@ -2,12 +2,13 @@ port module Runner exposing (..)
 
 import Platform exposing (program)
 import Cucumber
+import Cucumber.Glue
 
 
-port runFeature : (String -> msg) -> Sub msg
+port cucumberResponse : String -> Cmd msg
 
 
-port reportFeature : Maybe () -> Cmd msg
+port cucumberRequest : (String -> msg) -> Sub msg
 
 
 type Msg
@@ -18,12 +19,17 @@ type alias Model =
     { pendingRequests : List String }
 
 
+glueFunctions : GlueArgs String
+glueFunctions =
+    ( "", [] )
+
+
 init : ( Model, Cmd a )
 init =
     ( { pendingRequests = [] }, Cmd.none )
 
 
-
+ 
 -- fromResult : Result x a -> Task x a
 -- fromResult result =
 --     case result of
@@ -40,7 +46,7 @@ update (Run feature) model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    runFeature Run
+    cucumberRequest Run
 
 
 main : Program Never Model Msg

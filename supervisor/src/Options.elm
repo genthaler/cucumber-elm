@@ -21,22 +21,35 @@ parseArgs =
 
 initParser : Parser (Option -> c) c
 initParser =
-    Init <$> (s "--init") <*> string
+    Init
+        <$> empty
+        |. (s "--init")
+        |= string
 
 
 helpParser : Parser (Option -> c) c
 helpParser =
-    Help <$> (s "--help")
+    Help
+        <$> (empty
+                |. (s "--help")
+            )
 
 
 versionParser : Parser (Option -> c) c
 versionParser =
-    Help <$> (s "--version")
+    Version
+        <$> empty
+        |. (s "--version")
 
 
 runParser : Parser (Option -> c) c
 runParser =
-    Run <$> RunOptions <$> string <*> (s "--glue-arguments-function") <*> string
+    Run
+        <$> RunOptions
+        <$> empty
+        |= string
+        |. (s "--glue-arguments-function")
+        |= string
 
 
 optionParser : Parser (Option -> c) c
@@ -47,4 +60,4 @@ optionParser =
         , versionParser
         , runParser
         ]
-        <*> end
+        |. end

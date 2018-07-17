@@ -1,8 +1,8 @@
-module Parser exposing (Parser, string, int, s, (<*>), (<$>), empty, end, oneOf, parse)
+module Parser exposing (Parser, string, int, s, (|=), (|.), (<$>), empty, end, oneOf, parse, succeed)
 
 {-| This module parses a list of strings.
 
-@docs Parser, string, int, s, (<*>), (<$>), empty, end, oneOf, parse
+@docs Parser, string, int, s, (|=), (<$>), empty, end, oneOf, parse
 
 -}
 
@@ -20,31 +20,29 @@ type alias State value =
 
 string : Parser (String -> a) a
 string =
-    custom "STRING" Ok
+    custom Just
 
 
 int : Parser (Int -> a) a
 int =
-    custom "NUMBER" String.toInt
+    custom <| Result.toMaybe << String.toInt
 
 
-s : String -> Parser a a
+matcher : a -> a -> Maybe a
+matcher a b =
+    if a == b then
+        Just a
+    else
+        Nothing
+
+
+s : String -> Parser (String -> a) a
 s str =
-    Parser <|
-        \{ visited, unvisited, value } ->
-            case unvisited of
-                [] ->
-                    []
-
-                next :: rest ->
-                    if next == str then
-                        [ State (next :: visited) rest value ]
-                    else
-                        []
+    custom <| matcher str
 
 
-custom : String -> (String -> Result String a) -> Parser (a -> b) b
-custom tipe stringToSomething =
+custom : (String -> Maybe a) -> Parser (a -> b) b
+custom stringToSomething =
     Parser <|
         \{ visited, unvisited, value } ->
             case unvisited of
@@ -53,33 +51,53 @@ custom tipe stringToSomething =
 
                 next :: rest ->
                     case stringToSomething next of
-                        Ok nextValue ->
+                        Just nextValue ->
                             [ State (next :: visited) rest (value nextValue) ]
 
-                        Err msg ->
+                        Nothing ->
                             []
 
 
-(<*>) : Parser a b -> Parser b c -> Parser a c
-(<*>) (Parser parseBefore) (Parser parseAfter) =
+(|=) : Parser a b -> Parser b c -> Parser a c
+(|=) (Parser parseBefore) (Parser parseAfter) =
     Parser <|
-        List.concatMap parseAfter
-            << parseBefore
-infixr 7 <*>
+        parseBefore
+            -- >> List.concatMap parseAfter
+            >> List.map parseAfter
+            >> List.concat
+infixl 7 |=
+
+
+(|.) : Parser a b -> Parser b c -> Parser a b
+(|.) (Parser parseBefore) (Parser parseAfter) =
+    Parser <|
+        parseBefore
+            >> List.map
+                (\({ value } as state) ->
+                    (parseAfter state)
+                        |> List.map (mapStateValue (always value))
+                )
+            >> List.concat
+infixl 7 |.
 
 
 (<$>) : a -> Parser a b -> Parser (b -> c) c
 (<$>) subValue (Parser parse) =
     Parser <|
         \({ value } as state) ->
-            List.map (mapHelp value) <|
+            List.map (mapStateValue value) <|
                 parse <|
                     { state | value = subValue }
 infixr 6 <$>
 
 
-mapHelp : (a -> b) -> State a -> State b
-mapHelp func ({ value } as state) =
+succeed : a -> Parser (a -> c) c
+succeed a =
+    a <$> empty
+
+
+mapStateValue : (a -> b) -> State a -> State b
+mapStateValue func ({ value } as state) =
     { state | value = func value }
 
 

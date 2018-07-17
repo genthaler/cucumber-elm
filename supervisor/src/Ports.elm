@@ -25,16 +25,16 @@ port fileGlobResolveRequest : String -> Cmd msg
 port fileGlobResolveResponse : (List String -> msg) -> Sub msg
 
 
-port requireRequest : String -> Cmd msg
+port cucumberBootRequest : String -> Cmd msg
 
 
-port requireResponse : (Int -> msg) -> Sub msg
+port cucumberBootResponse : (Int -> msg) -> Sub msg
 
 
-port cucumberRequest : String -> Cmd msg
+port cucumberTestRequest : String -> Cmd msg
 
 
-port cucumberResponse : (String -> msg) -> Sub msg
+port cucumberTestResponse : (String -> msg) -> Sub msg
 
 
 port end : Int -> Cmd msg

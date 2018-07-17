@@ -27,8 +27,8 @@ var supervisorWorker = supervisorWorkerElm.SupervisorWorker.worker(process.argv)
 
 supervisorWorker.ports.end.subscribe(process.exit);
 
-var runner = require('../runner/Runner');
-var runnerWorker = runner.Runner.worker();
+// var runner = require('../runner/Runner');
+// var runnerWorker = runner.Runner.worker();
 
 supervisorWorker.ports.shellRequest.subscribe(compose(supervisorWorker.ports.shellResponse.send, shell));
 supervisorWorker.ports.fileReadRequest.subscribe(compose(supervisorWorker.ports.fileReadResponse.send, fileRead));
@@ -37,5 +37,5 @@ supervisorWorker.ports.fileGlobResolveRequest.subscribe(compose(supervisorWorker
 supervisorWorker.ports.fileReadRequest.subscribe(compose(supervisorWorker.ports.fileReadResponse.send, fileRead));
 supervisorWorker.ports.fileReadRequest.subscribe(compose(supervisorWorker.ports.fileReadResponse.send, fileRead));
 
-supervisorWorker.ports.cucumberRequest.subscribe(runnerWorker.ports.cucumberRequest.send);
-supervisorWorker.ports.cucumberResponse.subscribe(runnerWorker.ports.cucumberResponse.send);
+// supervisorWorker.ports.cucumberRequest.subscribe(runnerWorker.ports.cucumberRequest.send);
+// supervisorWorker.ports.cucumberResponse.subscribe(runnerWorker.ports.cucumberResponse.send);
