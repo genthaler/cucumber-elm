@@ -1,41 +1,63 @@
-var shell = require('shelljs');
+const shell = require('shelljs')
+const fs = require('fs')
+const path = require('path')
+const glob = require("glob")
+const R = require('rambda')
+const proxyquire = require('proxyquire').noPreserveCache()
+const compile = require('node-elm-compiler').compile;
+const compileToString = require('node-elm-compiler').compileToString;
 
-const compose = (...fns) =>
-  fns.reduce((f, g) => (...args) => f(g(...args)));
+var supervisorWorker = require('./SupervisorWorker').SupervisorWorker.worker(process.argv)
 
-var fileRead = function (fileName) {
-  // 
-};
-var fileWrite = function (fileName, fileContent) {
-  // 
-};
-var fileGlobResolve = function (fileGlob) {
-  // 
-};
-var shell = function (cmd) {
-  // 
-};
-var shell = function (cmd) {
-  // 
-};
-var elmCompile = function (folderName) {
-  // 
-};
+supervisorWorker.ports.fileReadRequest.subscribe(
+  R.pipe(
+    (fileName) => shell.cat(fileName).stdout,
+    supervisorWorker.ports.fileReadResponse.send
+  )
+)
 
-var supervisorWorkerElm = require('./SupervisorWorker');
-var supervisorWorker = supervisorWorkerElm.SupervisorWorker.worker(process.argv);
+supervisorWorker.ports.echoRequest.subscribe(shell.echo)
 
-supervisorWorker.ports.end.subscribe(process.exit);
+supervisorWorker.ports.fileWriteRequest.subscribe(
+  R.pipe(
+    (fileName, fileContent) => shell.echo(fileContent).to(path.resolve(fileName)).code,
+    supervisorWorker.ports.fileWriteResponse.send
+  )
+)
 
-// var runner = require('../runner/Runner');
-// var runnerWorker = runner.Runner.worker();
+supervisorWorker.ports.fileGlobResolveRequest.subscribe(
+  (fileGlob) => glob(fileGlob, {}, (er, files) => {
+    console.log(er)
+    supervisorWorker.ports.fileGlobResolveResponse.send(files)
+  })
+)
 
-supervisorWorker.ports.shellRequest.subscribe(compose(supervisorWorker.ports.shellResponse.send, shell));
-supervisorWorker.ports.fileReadRequest.subscribe(compose(supervisorWorker.ports.fileReadResponse.send, fileRead));
-supervisorWorker.ports.fileWriteRequest.subscribe(compose(supervisorWorker.ports.fileWriteResponse.send, fileWrite));
-supervisorWorker.ports.fileGlobResolveRequest.subscribe(compose(supervisorWorker.ports.fileGlobResolveResponse.send, fileGlobResolve));
-supervisorWorker.ports.fileReadRequest.subscribe(compose(supervisorWorker.ports.fileReadResponse.send, fileRead));
-supervisorWorker.ports.fileReadRequest.subscribe(compose(supervisorWorker.ports.fileReadResponse.send, fileRead));
+supervisorWorker.ports.shellRequest.subscribe(
+  R.pipe(
+    shell.exec,
+    supervisorWorker.ports.shellResponse.send
+  )
+)
 
-// supervisorWorker.ports.cucumberRequest.subscribe(runnerWorker.ports.cucumberRequest.send);
-// supervisorWorker.ports.cucumberResponse.subscribe(runnerWorker.ports.cucumberResponse.send);
+/* - copy the runner source to a temporary directory
+ * - paste in the name of the glueFunction into Runner.elm
+ * - compile
+ * - wire up the supervisor to the Runner
+ * - let the supervisor know that the Runner is ready to accept requests to run features
+ */
+supervisorWorker.ports.cucumberBootRequest.subscribe(
+  (glueFunctionName, runnerLocation) => {
+    const resolvedRunnerSource = path.resolve('../runner')
+    const resolvedRunnerDestination = path.resolve(runnerLocation)
+    shell.cp('-rf', resolvedRunnerSource, resolvedRunnerDestination)
+    shell.pushd(resolvedRunnerDestination)
+    const runnerSource = path.resolve('src', 'Runner.elm')
+    compile('runnerSource')
+
+    const runnerWorker = proxyquire(resolvedRunnerLocation).Runner.worker()
+    supervisorWorker.ports.cucumberRunRequest.subscribe(runnerWorker.ports.cucumberRunRequest.send)
+    supervisorWorker.ports.cucumberRunResponse.subscribe(runnerWorker.ports.cucumberRunResponse.send)
+    supervisorWorker.ports.cucumberBootResponse.send(true)
+  })
+
+supervisorWorker.ports.end.subscribe(process.exit)

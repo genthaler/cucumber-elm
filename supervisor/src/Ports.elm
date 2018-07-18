@@ -13,6 +13,9 @@ port fileWriteRequest : ( String, String ) -> Cmd msg
 port fileWriteResponse : (String -> msg) -> Sub msg
 
 
+port echoRequest : String -> Cmd msg
+
+
 port shellRequest : String -> Cmd msg
 
 

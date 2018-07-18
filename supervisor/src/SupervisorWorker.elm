@@ -32,15 +32,11 @@ message msg =
 
 init : List String -> ( Model, Cmd Msg )
 init flags =
-    let
-        _ =
-            Debug.log "flags" flags
-    in
-        ( toStarting <|
-            Maybe.withDefault Help <|
-                (Debug.log "parse result" (parseArgs flags))
-        , message NoOp
-        )
+    ( toStarting <|
+        Maybe.withDefault Help <|
+            (parseArgs flags)
+    , message NoOp
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -49,7 +45,7 @@ update msg model =
         noOp =
             ( model, Cmd.none )
     in
-        case Debug.log "(model,msg) " ( model, msg ) of
+        case ( model, msg ) of
             ( Starting state, NoOp ) ->
                 case state |> untag |> .option of
                     Help ->
@@ -68,11 +64,7 @@ update msg model =
                 ( model, end (state |> untag) )
 
             ( Helping state, NoOp ) ->
-                let
-                    _ =
-                        Debug.log "elm-cuke" helpText
-                in
-                    ( toEnding 0 state, message NoOp )
+                ( toEnding 0 state, echoRequest helpText )
 
             ( Versioning state, msg ) ->
                 case msg of
@@ -82,10 +74,19 @@ update msg model =
                     FileRead content ->
                         case Json.Decode.decodeString PackageInfo.decoder content of
                             Ok packageInfo ->
-                                Debug.log ("Version: " ++ (toString packageInfo.version)) ( toEnding 0 state, message NoOp )
+                                ( toEnding 0 state
+                                , echoRequest
+                                    ("Version: "
+                                        ++ (String.join "." <|
+                                                List.map
+                                                    (toString << (\f -> f packageInfo.version))
+                                                    [ .major, .minor, .patch ]
+                                           )
+                                    )
+                                )
 
                             Err err ->
-                                Debug.log ("Version: " ++ (err)) ( toEnding 1 state, message NoOp )
+                                ( toEnding 1 state, echoRequest ("Version: " ++ (err)) )
 
                     _ ->
                         noOp

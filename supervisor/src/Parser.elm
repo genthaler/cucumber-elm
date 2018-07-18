@@ -1,8 +1,8 @@
-module Parser exposing (Parser, string, int, s, (|=), (|.), (<$>), empty, end, oneOf, parse, succeed)
+module Parser exposing (Parser, string, int, s, (|=), (|.), (<$>), start, end, oneOf, parse)
 
 {-| This module parses a list of strings.
 
-@docs Parser, string, int, s, (|=), (<$>), empty, end, oneOf, parse
+@docs Parser, string, int, s, (|=), (<$>), start, end, oneOf, parse
 
 -}
 
@@ -63,8 +63,7 @@ custom stringToSomething =
     Parser <|
         parseBefore
             -- >> List.concatMap parseAfter
-            >>
-                List.map parseAfter
+            >> List.map parseAfter
             >> List.concat
 infixl 7 |=
 
@@ -92,11 +91,6 @@ infixl 7 |.
 infixr 6 <$>
 
 
-succeed : a -> Parser (a -> c) c
-succeed a =
-    a <$> empty
-
-
 mapStateValue : (a -> b) -> State a -> State b
 mapStateValue func ({ value } as state) =
     { state | value = func value }
@@ -109,8 +103,8 @@ oneOf parsers =
             List.concatMap (\(Parser parser) -> parser state) parsers
 
 
-empty : Parser a a
-empty =
+start : Parser a a
+start =
     Parser <| List.singleton
 
 

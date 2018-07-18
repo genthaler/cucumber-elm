@@ -25,7 +25,10 @@
     "test": "elm-app test"
   },
   "dependencies": {
+    "glob": "^7.1.2",
     "node-elm-compiler": "4.5.0",
+    "proxyquire": "^2.0.1",
+    "rambda": "^1.1.5",
     "shelljs": "0.8.2"
   },
   "devDependencies": {

@@ -17,7 +17,7 @@ type Option
 initParser : Parser (Option -> c) c
 initParser =
     Init
-        <$> empty
+        <$> start
         |. string
         |. string
         |. (s "--init")
@@ -27,21 +27,16 @@ initParser =
 helpParser : Parser (Option -> c) c
 helpParser =
     always Help
-        <$> empty
+        <$> start
         |. string
         |. string
         |= s "--help"
 
 
-zzz : Parser ((b -> Option) -> c) c
-zzz =
-    always Version <$> empty
-
-
 versionParser : Parser (Option -> c) c
 versionParser =
     always Version
-        <$> empty
+        <$> start
         |. string
         |. string
         |= s "--version"
@@ -51,7 +46,7 @@ runParser : Parser (Option -> c) c
 runParser =
     Run
         <$> RunOptions
-        <$> empty
+        <$> start
         |. string
         |. string
         |= string
@@ -61,7 +56,7 @@ runParser =
 
 optionParser : Parser (Option -> c) c
 optionParser =
-    empty
+    start
         |= oneOf
             [ initParser
             , helpParser
