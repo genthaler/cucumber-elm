@@ -36,7 +36,11 @@ init flags =
         _ =
             Debug.log "flags" flags
     in
-        ( toStarting <| parseArgs flags, message NoOp )
+        ( toStarting <|
+            Maybe.withDefault Help <|
+                (Debug.log "parse result" (parseArgs flags))
+        , message NoOp
+        )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
