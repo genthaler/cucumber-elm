@@ -33,6 +33,11 @@ helpParser =
         |= s "--help"
 
 
+zzz : Parser ((b -> Option) -> c) c
+zzz =
+    always Version <$> empty
+
+
 versionParser : Parser (Option -> c) c
 versionParser =
     always Version
