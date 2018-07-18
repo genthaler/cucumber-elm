@@ -29,17 +29,15 @@ initParser =
 
 helpParser : Parser (Option -> c) c
 helpParser =
-    Help
-        <$> (empty
-                |. (s "--help")
-            )
+    always Help
+        <$> s "--help"
 
 
 versionParser : Parser (Option -> c) c
 versionParser =
-    Version
+    always Version
         <$> empty
-        |. (s "--version")
+        |= (s "--version")
 
 
 runParser : Parser (Option -> c) c

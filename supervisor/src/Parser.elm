@@ -63,7 +63,8 @@ custom stringToSomething =
     Parser <|
         parseBefore
             -- >> List.concatMap parseAfter
-            >> List.map parseAfter
+            >>
+                List.map parseAfter
             >> List.concat
 infixl 7 |=
 
@@ -87,7 +88,7 @@ infixl 7 |.
         \({ value } as state) ->
             List.map (mapStateValue value) <|
                 parse <|
-                    { state | value = subValue }
+                    (mapStateValue (always subValue) state)
 infixr 6 <$>
 
 
@@ -113,12 +114,12 @@ empty =
     Parser <| List.singleton
 
 
-end : Parser a a
+end : Parser a ()
 end =
     Parser <|
         \state ->
             if List.isEmpty state.unvisited then
-                [ state ]
+                [ mapStateValue (always ()) state ]
             else
                 []
 
