@@ -3,9 +3,10 @@ const fs = require('fs')
 const path = require('path')
 const glob = require("glob")
 const R = require('rambda')
-const proxyquire = require('proxyquire')
+// const proxyquire = require('proxyquire')
 const compiler = require('node-elm-compiler')
 const supervisor = require('cucumber-elm-supervisor');
+const requireFromString = require('require-from-string');
 
 const supervisorWorker = supervisor.SupervisorWorker.worker(process.argv)
 const compile = compiler.compile;
@@ -49,16 +50,23 @@ supervisorWorker.ports.shellRequest.subscribe(
  * - let the supervisor know that the Runner is ready to accept requests to run features
  */
 supervisorWorker.ports.cucumberBootRequest.subscribe(
-  (glueFunctionName, runnerLocation) => {
+  async (glueFunctionName, runnerLocation) => {
+    console.log('glueFunctionName: ' + glueFunctionName)
+    console.log('runnerLocation: ' + runnerLocation)
     let resolvedRunnerSource = path.resolve('../runner')
     let resolvedRunnerDestination = path.resolve(runnerLocation)
     shell.cp('-rf', resolvedRunnerSource, resolvedRunnerDestination)
     shell.pushd(resolvedRunnerDestination)
     let runnerSource = path.resolve('src', 'Runner.elm')
     shell.sed(/\( \"\", \[\] \)/, glueFunctionName, runnerSource)
-    compile(runnerSource)
-    let runnerJs = compileToString(runnerSource)
-    let runner = require(runnerJs);
+    // compile(runnerSource)
+
+    let runnerJs = await compileToString([runnerSource], {
+      yes: true
+    })
+
+    let runner = requireFromString(runnerJs)
+    // let runner = require(runnerJs);
     let runnerWorker = runner.Runner.worker()
     // proxyquire.noPreserveCache()
     // let runnerWorker = proxyquire(resolvedRunnerLocation).Runner.worker()

@@ -24,20 +24,23 @@
   ],
   "private": true,
   "scripts": {
-    "prepare": "elm-package install --yes && cd supervisor && npm i",
-    "pretest": "elm-test",
-    "test": "node supervisor/supervisor.js --version"
+    "clean": "shx rm -rf node_modules && shx rm -rf elm-stuff && pushd supervisor && npm run clean && popd",
+    "prepare": "elm-package install --yes && pushd supervisor && npm i",
+    "pretest1": "elm-test",
+    "test": "node supervisor/supervisor.js example/features/Cucumber.feature --glue-arguments-function example/glue/Glue.elm"
   },
   "dependencies": {
     "cucumber-elm-supervisor": "file:supervisor",
     "glob": "^7.1.2",
-    "node-elm-compiler": "4.5.0",
+    "node-elm-compiler": "^4.5.0",
     "proxyquire": "^2.0.1",
     "rambda": "^1.1.5",
-    "shelljs": "0.8.2"
+    "require-from-string": "^2.0.2",
+    "shelljs": "^0.8.2"
   },
   "devDependencies": {
+    "elm": "^0.18.0",
     "elm-test": "^0.18.12",
-    "elm": "^0.18.0"
+    "shx": "^0.3.2"
   }
 }

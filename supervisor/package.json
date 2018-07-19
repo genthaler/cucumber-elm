@@ -7,10 +7,13 @@
   "main": "supervisorWorker.js",
   "private": true,
   "scripts": {
+    "clean": "shx rm -rf node_modules && shx rm -rf elm-stuff",
     "prepare": "elm-make src/SupervisorWorker.elm --output=supervisorWorker.js --yes"
   },
   "dependencies": {},
   "devDependencies": {
-    "elm": "^0.18.0"
+    "elm": "^0.18.0",
+    "elm-test": "^0.18.12",
+    "shx": "^0.3.2"
   }
 }

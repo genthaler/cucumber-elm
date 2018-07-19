@@ -45,7 +45,7 @@ update msg model =
         noOp =
             ( model, Cmd.none )
     in
-        case ( model, msg ) of
+        case Debug.log "( model, msg ) = " ( model, msg ) of
             ( Starting state, NoOp ) ->
                 case state |> untag |> .option of
                     Help ->
