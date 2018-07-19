@@ -1,0 +1,16 @@
+{
+  "name": "cucumber-elm-supervisor",
+  "description": "Supervisor module for Cucumber in Elm",
+  "version": "0.0.1",
+  "license": "BSD3",
+  "author": "Gunther Enthaler <genthaler@users.noreply.github.com>",
+  "main": "supervisorWorker.js",
+  "private": true,
+  "scripts": {
+    "prepare": "elm-make src/SupervisorWorker.elm --output=supervisorWorker.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "elm": "^0.18.0"
+  }
+}

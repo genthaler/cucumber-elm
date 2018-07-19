@@ -17,8 +17,9 @@ expectFeatureWith2ScenariosWithTagsContent =
                 Expect.false "Expecting true" <|
                     Result.Extra.isOk <|
                         expectFeatureText
-                            [ Glue.failIfDescriptionContainsFail ]
-                            "initial state"
+                            ( "initial state"
+                            , [ Glue.failIfDescriptionContainsFail ]
+                            )
                             [ [ Tag "bar" ] ]
                             featureWith2ScenariosWithTagsContent
             )
@@ -32,8 +33,7 @@ expectFeatureWithTags =
             (\() ->
                 Expect.false "Expecting true" <|
                     Result.Extra.isOk <|
-                        expectFeature [ Glue.alwaysFail ]
-                            "initial state"
+                        expectFeature ( "initial state", [ Glue.alwaysFail ] )
                             [ [ Tag "blah" ] ]
                             featureWithTags
             )
@@ -41,8 +41,7 @@ expectFeatureWithTags =
             (\() ->
                 Expect.true "Expecting true" <|
                     Result.Extra.isOk <|
-                        expectFeature [ Glue.alwaysPass ]
-                            "initial state"
+                        expectFeature ( "initial state", [ Glue.alwaysPass ] )
                             [ [ Tag "foo" ] ]
                             featureWithTags
             )
@@ -57,8 +56,7 @@ expectFeatureWithScenarioWithTags =
                 Expect.false "Expecting true" <|
                     Result.Extra.isOk <|
                         expectFeature
-                            [ Glue.alwaysFail ]
-                            "initial state"
+                            ( "initial state", [ Glue.alwaysFail ] )
                             [ [ Tag "blah" ] ]
                             featureWithScenarioWithTags
             )
@@ -66,8 +64,7 @@ expectFeatureWithScenarioWithTags =
             (\() ->
                 Expect.true "Expecting true" <|
                     Result.Extra.isOk <|
-                        expectFeature [ Glue.alwaysPass ]
-                            "initial state"
+                        expectFeature ( "initial state", [ Glue.alwaysPass ] )
                             [ [ Tag "foo" ] ]
                             featureWithScenarioWithTags
             )
@@ -81,7 +78,7 @@ testTestFeatureText =
             (\() ->
                 Expect.true "Expecting true" <|
                     Result.Extra.isOk <|
-                        expectFeatureText [ Glue.alwaysPass ] "initial state" [ noTags ] simpleFeatureContent
+                        expectFeatureText ( "initial state", [ Glue.alwaysPass ] ) [ noTags ] simpleFeatureContent
             )
         ]
 
@@ -93,7 +90,7 @@ testTestFeature =
             (\() ->
                 Expect.true "Expecting true" <|
                     Result.Extra.isOk <|
-                        expectFeature [ Glue.alwaysPass ] "initial state" [ noTags ] simpleFeature
+                        expectFeature ( "initial state", [ Glue.alwaysPass ] ) [ noTags ] simpleFeature
             )
         ]
 

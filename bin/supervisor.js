@@ -3,11 +3,14 @@ const fs = require('fs')
 const path = require('path')
 const glob = require("glob")
 const R = require('rambda')
-const proxyquire = require('proxyquire').noPreserveCache()
-const compile = require('node-elm-compiler').compile;
-const compileToString = require('node-elm-compiler').compileToString;
+const proxyquire = require('proxyquire')
+const compiler = require('node-elm-compiler')
+const supervisor = require('cucumber-elm-supervisor');
 
-var supervisorWorker = require('./SupervisorWorker').SupervisorWorker.worker(process.argv)
+const supervisorWorker = supervisor.SupervisorWorker.worker(process.argv)
+const compile = compiler.compile;
+const compileToString = compiler.compileToString;
+
 
 supervisorWorker.ports.fileReadRequest.subscribe(
   R.pipe(
@@ -47,14 +50,18 @@ supervisorWorker.ports.shellRequest.subscribe(
  */
 supervisorWorker.ports.cucumberBootRequest.subscribe(
   (glueFunctionName, runnerLocation) => {
-    const resolvedRunnerSource = path.resolve('../runner')
-    const resolvedRunnerDestination = path.resolve(runnerLocation)
+    let resolvedRunnerSource = path.resolve('../runner')
+    let resolvedRunnerDestination = path.resolve(runnerLocation)
     shell.cp('-rf', resolvedRunnerSource, resolvedRunnerDestination)
     shell.pushd(resolvedRunnerDestination)
-    const runnerSource = path.resolve('src', 'Runner.elm')
-    compile('runnerSource')
-
-    const runnerWorker = proxyquire(resolvedRunnerLocation).Runner.worker()
+    let runnerSource = path.resolve('src', 'Runner.elm')
+    shell.sed(/\( \"\", \[\] \)/, glueFunctionName, runnerSource)
+    compile(runnerSource)
+    let runnerJs = compileToString(runnerSource)
+    let runner = require(runnerJs);
+    let runnerWorker = runner.Runner.worker()
+    // proxyquire.noPreserveCache()
+    // let runnerWorker = proxyquire(resolvedRunnerLocation).Runner.worker()
     supervisorWorker.ports.cucumberRunRequest.subscribe(runnerWorker.ports.cucumberRunRequest.send)
     supervisorWorker.ports.cucumberRunResponse.subscribe(runnerWorker.ports.cucumberRunResponse.send)
     supervisorWorker.ports.cucumberBootResponse.send(true)

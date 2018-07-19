@@ -113,7 +113,7 @@ expectFeatureText glueArgs filterTags featureText =
 {-| Verify a `Feature` against a set of glue functions.
 -}
 expectFeature : GlueArgs state -> List (List Tag) -> Feature -> Result String ()
-expectFeature ( glueFunctions, initialState ) filterTags (Feature featureTags featureDescription _ _ _ background scenarios) =
+expectFeature ( initialState, glueFunctions ) filterTags (Feature featureTags featureDescription _ _ _ background scenarios) =
     if matchTags filterTags featureTags then
         scenarios
             |> List.map (expectScenario glueFunctions background filterTags initialState)

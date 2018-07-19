@@ -52,4 +52,4 @@ type GlueOutput
 {-| A tuple containing the list of `Glue` functions and an initial state function
 -}
 type alias GlueArgs state =
-    ( List (GlueFunction state), state )
+    ( state, List (GlueFunction state) )

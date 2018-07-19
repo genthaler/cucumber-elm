@@ -11,6 +11,9 @@
   "bugs": {
     "url": "https://github.com/genthaler/cucumber-elm/issues"
   },
+  "bin": {
+    "elm-cuke": "bin/supervisor.js"
+  },
   "keywords": [
     "elm",
     "bdd",
@@ -20,11 +23,13 @@
     "cli"
   ],
   "private": true,
-  "build": "elm-app build",
   "scripts": {
-    "test": "elm-app test"
+    "prepare": "elm-package install --yes && cd supervisor && npm i",
+    "pretest": "elm-test",
+    "test": "node bin/supervisor.js --version"
   },
   "dependencies": {
+    "cucumber-elm-supervisor": "file:supervisor",
     "glob": "^7.1.2",
     "node-elm-compiler": "4.5.0",
     "proxyquire": "^2.0.1",
@@ -32,6 +37,7 @@
     "shelljs": "0.8.2"
   },
   "devDependencies": {
+    "elm-test": "^0.18.12",
     "elm": "^0.18.0"
   }
 }
