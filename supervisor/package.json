@@ -7,7 +7,7 @@
   "main": "supervisorWorker.js",
   "private": true,
   "scripts": {
-    "prepare": "elm-make src/SupervisorWorker.elm --output=supervisorWorker.js"
+    "prepare": "elm-make src/SupervisorWorker.elm --output=supervisorWorker.js --yes"
   },
   "dependencies": {},
   "devDependencies": {

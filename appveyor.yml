@@ -2,10 +2,8 @@ environment:
   ELM_VERSION: "0.18.0"
   matrix:
   - nodejs_version: "5.0"
-  # - nodejs_version: "0.12"
 
 platform:
-  # - x86
   - x64
 
 matrix:
@@ -15,10 +13,9 @@ install:
   - ps: Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version) $env:Platform
   - node --version
   - npm --version
-  - npm install elm@%ELM_VERSION%
-  - npm install create-elm-app
 
 test_script:
-  - npm run test
+  - npm i
+  - npm test
 
 build: off
