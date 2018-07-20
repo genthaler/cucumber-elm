@@ -11,7 +11,17 @@ makeState =
 
 
 
--- The State's first type argument enforces the States that can be transitioned to, from this State
+{-
+   The State's first type argument enforces the States that can be transitioned to, from this State
+   So taking the first one as an example, if we're in Starting state, we can only transition to the Helping state,
+   which is done in the toHelping function, where you can see the type signature matching.
+
+   The only way to transition from one state to another is through one of the state transition methods in this module.
+
+
+
+
+-}
 
 
 type SupervisorState

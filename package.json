@@ -25,8 +25,8 @@
   "private": true,
   "scripts": {
     "clean": "shx rm -rf node_modules && shx rm -rf elm-stuff && pushd supervisor && npm run clean && popd",
-    "prepare": "elm-package install --yes && pushd supervisor && npm i",
-    "pretest1": "elm-test",
+    "prepare": "elm-package install --yes && pushd supervisor && npm i && popd",
+    "pretest": "elm-test",
     "test": "node supervisor/supervisor.js example/features/Cucumber.feature --glue-arguments-function example/glue/Glue.elm"
   },
   "dependencies": {
