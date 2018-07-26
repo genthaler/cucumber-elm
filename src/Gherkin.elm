@@ -86,9 +86,9 @@ type Scenario
 
 {-| A Step describes an action or assertion.
 
-When automated, the Steps are executed against a list of Glue functions;
-the String and StepArg are passed to each Glue function; if there's a match,
-the Glue function is executed with those as arguments.
+When automated, the Steps are executed against a list of StepDef functions;
+the String and StepArg are passed to each StepDef function; if there's a match,
+the StepDef function is executed with those as arguments.
 There is no functional distinction between Given, When, Then, And or But
 
 See the Cucumber module for examples.
@@ -108,7 +108,7 @@ type StepType
     | But
 
 
-{-| An argument to the Glue function, that's not extracted from the Step description.
+{-| An argument to the StepDef function, that's not extracted from the Step description.
 
 Available options are DataTables and DocStrings.
 

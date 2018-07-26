@@ -17,10 +17,6 @@ makeState =
    which is done in the toHelping function, where you can see the type signature matching.
 
    The only way to transition from one state to another is through one of the state transition methods in this module.
-
-
-
-
 -}
 
 

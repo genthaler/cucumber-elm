@@ -25,9 +25,9 @@
   "private": true,
   "scripts": {
     "clean": "shx rm -rf node_modules && shx rm -rf elm-stuff && pushd supervisor && npm run clean && popd",
-    "prepare": "elm-package install --yes && pushd supervisor && npm i && popd",
+    "prepare": "elm-package install --yes && pushd supervisor && npm i && popd && pushd example && npm i && popd",
     "pretest": "elm-test",
-    "test": "node supervisor/supervisor.js example/features/Cucumber.feature --glue-arguments-function example/glue/Glue.elm"
+    "test": "node supervisor/supervisor.js example/features/Cucumber.feature --glue-arguments-function example/glue/StepDef.elm"
   },
   "dependencies": {
     "cucumber-elm-supervisor": "file:supervisor",
@@ -40,6 +40,7 @@
   },
   "devDependencies": {
     "elm": "^0.18.0",
+    "elm-github-install": "^1.6.1",
     "elm-test": "^0.18.12",
     "shx": "^0.3.2"
   }

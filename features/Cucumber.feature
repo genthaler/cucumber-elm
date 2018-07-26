@@ -6,7 +6,7 @@ Feature: Cucumber
 
     Scenario: Happy path
         Given I have a feature
-        And A list of Glue functions that take a state
+        And A list of StepDef functions that take a state
         When I format the feature
         Then I see the formatted feature
 
