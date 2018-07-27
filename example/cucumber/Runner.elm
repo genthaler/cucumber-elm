@@ -1,8 +1,8 @@
 port module Runner exposing (..)
 
-import Platform exposing (program)
-import Cucumber exposing (..)
-import Cucumber.StepDefs exposing (..)
+import Platform
+import Cucumber
+import Cucumber.StepDefs
 
 
 port cucumberResponse : String -> Cmd msg
@@ -19,7 +19,7 @@ type alias Model =
     { pendingRequests : List String }
 
 
-glueFunctions : StepDefArgs String
+glueFunctions : Cucumber.StepDefs.StepDefArgs String
 glueFunctions =
     ( "", [] )
 
@@ -41,7 +41,7 @@ resultToString result =
 
 update : Msg -> Model -> ( Model, Cmd msg )
 update (Feature feature) model =
-    ( model, feature |> (Cucumber.expectFeatureText glueFunctions [] ) |> resultToString |> cucumberResponse )
+    ( model, feature |> (Cucumber.expectFeatureText glueFunctions []) |> resultToString |> cucumberResponse )
 
 
 subscriptions : Model -> Sub Msg
@@ -51,7 +51,7 @@ subscriptions model =
 
 main : Program Never Model Msg
 main =
-    program
+    Platform.program
         { init = init
         , update = update
         , subscriptions = subscriptions
