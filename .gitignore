@@ -12,6 +12,9 @@ dep-check.html
 # Distribution
 build/
 elm.js
+index.html
+supervisor/index.html
+supervisor/supervisorWorker.js
 
 # elm-package generated files
 elm-stuff
@@ -24,5 +27,3 @@ node_modules
 
 # Desktop Services Store on macOS
 .DS_Store
-supervisor/index.html
-supervisor/supervisorWorker.js
