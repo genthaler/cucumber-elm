@@ -79,9 +79,9 @@ infixl 7 |=
     Parser <|
         parseBefore
             >> List.map
-                (\({ value } as state) ->
+                (\state ->
                     (parseAfter state)
-                        |> List.map (mapStateValue (always value))
+                        |> List.map (mapStateValue (always state.value))
                 )
             >> List.concat
 infixl 7 |.
@@ -90,16 +90,16 @@ infixl 7 |.
 (<$>) : a -> Parser a b -> Parser (b -> c) c
 (<$>) subValue (Parser parse) =
     Parser <|
-        \({ value } as state) ->
-            List.map (mapStateValue value) <|
+        \state ->
+            List.map (mapStateValue state.value) <|
                 parse <|
                     (mapStateValue (always subValue) state)
 infixr 6 <$>
 
 
 mapStateValue : (a -> b) -> State a -> State b
-mapStateValue func ({ value } as state) =
-    { state | value = func value }
+mapStateValue f state =
+    { state | value = f state.value }
 
 
 oneOf : List (Parser a b) -> Parser a b
@@ -109,17 +109,29 @@ oneOf parsers =
             List.concatMap (\(Parser parser) -> parser state) parsers
 
 
+many : Parser a b -> Parser a (List b)
+many (Parser parse) =
+    Parser <|
+        \state ->
+            case parse state of
+                [] ->
+                    []
+
+                { unvisited, value } :: rest ->
+                    [ { unvisited = unvisited, value = [ value ] } ]
+
+
 start : Parser a a
 start =
     Parser <| List.singleton
 
 
-end : Parser a ()
+end : Parser a a
 end =
     Parser <|
         \state ->
             if List.isEmpty state.unvisited then
-                [ mapStateValue (always ()) state ]
+                [ state ]
             else
                 []
 
