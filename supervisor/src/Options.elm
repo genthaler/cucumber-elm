@@ -1,4 +1,4 @@
-module Options exposing (Option(..), RunOptions, parseArgs)
+module Options exposing (Mode(..), RunOptions, parseArgs)
 
 import Parser exposing (..)
 
@@ -8,13 +8,23 @@ type alias RunOptions =
 
 
 type Option
+    = HelpOption
+    | VersionOption
+    | InitOption String
+    | GlueFunctionsOption
+    | TagsOption (List String)
+    | WatchOption
+    | DefaultOption String
+
+
+type Mode
     = Help
     | Version
     | Init String
     | Run RunOptions
 
 
-initParser : Parser (Option -> c) c
+initParser : Parser (Mode -> c) c
 initParser =
     Init
         <$> start
@@ -24,16 +34,15 @@ initParser =
         |= string
 
 
-helpParser : Parser (Option -> c) c
+helpParser : Parser (Mode -> c) c
 helpParser =
     always Help
+        <$> always HelpOption
         <$> start
-        |. string
-        |. string
         |= s "--help"
 
 
-versionParser : Parser (Option -> c) c
+versionParser : Parser (Mode -> c) c
 versionParser =
     always Version
         <$> start
@@ -42,21 +51,29 @@ versionParser =
         |= s "--version"
 
 
-runParser : Parser (Option -> c) c
+runParser : Parser (Mode -> c) c
 runParser =
     Run
         <$> RunOptions
-        <$> start
-        |. string
-        |. string
-        |= string
-        |. (s "--glue-arguments-function")
-        |= string
-        |. (s "--tags")
+        <$> (start
+                |. string
+                |. string
+            )
+        |= (string
+                |. (s "--glue-arguments-function")
+           )
+        |= (string
+                |. (s "--tags")
+           )
         |= string
 
 
-optionParser : Parser (Option -> c) c
+foo : Parser (String -> Int -> a) (Int -> a)
+foo =
+    (s "--tags") |. int
+
+
+optionParser : Parser (Mode -> c) c
 optionParser =
     start
         |= oneOf
@@ -67,6 +84,6 @@ optionParser =
             ]
 
 
-parseArgs : List String -> Maybe Option
+parseArgs : List String -> Maybe Mode
 parseArgs =
     parse optionParser
