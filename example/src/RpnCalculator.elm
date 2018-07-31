@@ -89,7 +89,7 @@ update msg ({ stack, numStr, message } as model) =
 view : Model -> Html Msg
 view ({ stack, numStr, message } as model) =
     div []
-        [ input [ type_ "number", placeholder "Type a number here", value numStr, onInput (Input) ] []
+        [ input [ type_ "number", placeholder "Type a number here", value numStr, onInput Input ] []
         , br [] []
         , button [ type_ "button", onClick (Press <| Push) ] [ text "Push onto stack" ]
         , br [] []

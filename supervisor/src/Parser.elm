@@ -1,4 +1,4 @@
-module Parser exposing (Parser, string, int, s, (|=), (|.), (<$>), start, end, oneOf, parse)
+module Parser exposing (Parser, string, int, s, csv, (|=), (|.), (<$>), start, end, oneOf, parse)
 
 {-| This module parses a list of strings.
 
@@ -6,14 +6,15 @@ module Parser exposing (Parser, string, int, s, (|=), (|.), (<$>), start, end, o
 
 -}
 
+import Regex
+
 
 type Parser source value
     = Parser (State source -> List (State value))
 
 
 type alias State value =
-    { visited : List String
-    , unvisited : List String
+    { unvisited : List String
     , value : value
     }
 
@@ -41,10 +42,15 @@ s str =
     custom <| matcher str
 
 
+csv : Parser (List String -> a) a
+csv =
+    custom <| Just << (Regex.split Regex.All (Regex.regex ",\\s*"))
+
+
 custom : (String -> Maybe a) -> Parser (a -> b) b
 custom stringToSomething =
     Parser <|
-        \{ visited, unvisited, value } ->
+        \{ unvisited, value } ->
             case unvisited of
                 [] ->
                     []
@@ -52,7 +58,7 @@ custom stringToSomething =
                 next :: rest ->
                     case stringToSomething next of
                         Just nextValue ->
-                            [ State (next :: visited) rest (value nextValue) ]
+                            [ State rest (value nextValue) ]
 
                         Nothing ->
                             []
@@ -122,8 +128,7 @@ parse : Parser (a -> a) a -> List String -> Maybe a
 parse (Parser parser) args =
     parseHelp <|
         parser <|
-            { visited = []
-            , unvisited = args
+            { unvisited = args
             , value = identity
             }
 

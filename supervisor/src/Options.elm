@@ -4,7 +4,7 @@ import Parser exposing (..)
 
 
 type alias RunOptions =
-    { feature : String, glueArgumentsFunction : String }
+    { feature : String, glueArgumentsFunction : String, tags : String }
 
 
 type Option
@@ -51,6 +51,8 @@ runParser =
         |. string
         |= string
         |. (s "--glue-arguments-function")
+        |= string
+        |. (s "--tags")
         |= string
 
 

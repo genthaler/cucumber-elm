@@ -8,18 +8,12 @@ import RpnCalculatorHelper exposing (..)
 
 type StepArgParsed
     = Text String
+    | TextAndTable String (List (List String))
 
 
 parseRegex : String -> StepArg -> StepArgParsed
 parseRegex str stepArg =
     Text str
-
-
-
--- type alias StepDefFunction state =
---     String -> StepArg -> state -> StepDefFunctionResult state
--- type alias StepDefFunctionResult state =
---     Result String state
 
 
 stepDef : StepDefFunction State
@@ -30,10 +24,8 @@ stepDef regex stepArg state =
 
         Text "I add {int} and {int}" ->
             state
-                |> input 1
-                |> push
-                |> input 2
-                |> push
+                |> enter 1
+                |> enter 2
                 |> press Add
                 |> Ok
 
@@ -43,16 +35,39 @@ stepDef regex stepArg state =
                 |> Ok
 
         Text "the result is {int}" ->
-            assertState 1 state
+            assertStackTop 1 state
 
-        -- Text "the previous entries:" ->
-        --     -- for (Entry entry : entries) {
-        --     --     calc.push(entry.first);
-        --     --     calc.push(entry.second);
-        --     --     calc.push(entry.operation);
-        --     -- }
-        --     Ok state
-        -- before "Runs before scenarios *not* tagged with @foo"
-        -- after "HELLLLOO"
+        TextAndTable "the previous entries:" table ->
+            let
+                doRow : List String -> State -> Result String State
+                doRow list state =
+                    case list of
+                        [ firstStr, secondStr, operationStr ] ->
+                            case ( String.toInt firstStr, String.toInt secondStr, stringToOperation operationStr ) of
+                                ( Ok firstInt, Ok secondInt, Ok operation ) ->
+                                    state
+                                        |> enter firstInt
+                                        |> enter secondInt
+                                        |> press operation
+                                        |> Ok
+
+                                _ ->
+                                    Err <| "Expecting two integers and an operation, got " ++ toString list ++ " instead."
+
+                        _ ->
+                            Err <| "Expecting a row 3 items wide, got " ++ toString list ++ " instead."
+            in
+                case List.tail table of
+                    Nothing ->
+                        Err <| "Expecting a table with at least a header row, got" ++ toString table
+
+                    Just tableContent ->
+                        List.foldl (doRow >> Result.andThen) (Ok state) tableContent
+
         state ->
-            Err <| "Unexpected input" ++ (toString state)
+            Err <| "Unexpected input, description: " ++ regex ++ ", stepArg: " ++ (toString stepArg)
+
+
+
+-- before "Runs before scenarios *not* tagged with @foo"
+-- after "HELLLLOO"
