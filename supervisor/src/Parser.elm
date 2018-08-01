@@ -69,8 +69,7 @@ custom stringToSomething =
     Parser <|
         parseBefore
             -- >> List.concatMap parseAfter
-            >>
-                List.map parseAfter
+            >> List.map parseAfter
             >> List.concat
 infixl 7 |=
 
@@ -110,21 +109,24 @@ oneOf parsers =
             List.concatMap (\(Parser parser) -> parser state) parsers
 
 
-manyOf : Parser a b -> Parser a (List b)
-manyOf (Parser parse) =
-    Parser <|
-        let
-            do : List a -> State a -> Int
-            do acc state =
-                parse state |> List.map (List.append acc)
-        in
-            \state ->
-                case parse state of
-                    [] ->
-                        []
 
-                    { unvisited, value } :: rest ->
-                        [ { unvisited = unvisited, value = [ value ] } ]
+-- manyOf : Parser a b -> Parser a (List b)
+-- manyOf (Parser parse) =
+--     Parser <|
+--         let
+--             doAcc : List b -> State b -> State (List b)
+--             doAcc =
+--                 mapStateValue << (flip (::))
+--             do : State (List a) -> List (State (List b))
+--             do  state =
+--                 case parse state of
+--                     [] ->
+--                         []
+--                     list ->
+--                         List.map (doAcc) list
+--             --|> (List.map (do acc)) |> List.concat
+--         in
+--             mapStateValue (always []) >> do >> (List.map (mapStateValue List.reverse))
 
 
 start : Parser a a
