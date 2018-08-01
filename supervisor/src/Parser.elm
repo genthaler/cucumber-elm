@@ -114,7 +114,7 @@ manyOf : Parser a b -> Parser a (List b)
 manyOf (Parser parse) =
     Parser <|
         let
-            do : Int
+            do : List a -> State a -> Int
             do acc state =
                 parse state |> List.map (List.append acc)
         in
