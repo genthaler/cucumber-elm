@@ -149,7 +149,14 @@ oneOfSuite =
         [ test "choose between two string parsers" <|
             \() ->
                 Expect.equal
-                    (parse (oneOf [ s "hello", s "there" ]) [ "there" ])
+                    (parse
+                        (oneOf
+                            [ s "hello"
+                            , s "there"
+                            ]
+                        )
+                        [ "there" ]
+                    )
                     (Just "there")
         ]
 
@@ -160,6 +167,29 @@ manySuite =
         [ test "simple int" <|
             \() ->
                 Expect.equal
-                    (parse (int) [ "100" ])
-                    (Just 100)
+                    (parse
+                        (manyOf (int))
+                        [ "1", "2", "3", "4" ]
+                    )
+                    (Just [ 1, 2, 3, 4 ])
+        ]
+
+
+mapSuite : Test
+mapSuite =
+    describe "testing map (a.k.a. <$>) tests"
+        [ test "addition" <|
+            \() ->
+                Expect.equal
+                    (parse
+                        ((+)
+                            <$> start
+                            |= int
+                            |= int
+                        )
+                        [ "100"
+                        , "3"
+                        ]
+                    )
+                    (Just 103)
         ]

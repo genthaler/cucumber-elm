@@ -1,4 +1,4 @@
-module Parser exposing (Parser, string, int, s, csv, (|=), (|.), (<$>), start, end, oneOf, parse)
+module Parser exposing (Parser, string, int, s, csv, (|=), (|.), (<$>), start, end, oneOf, manyOf, parse)
 
 {-| This module parses a list of strings.
 
@@ -69,8 +69,7 @@ custom stringToSomething =
     Parser <|
         parseBefore
             -- >> List.concatMap parseAfter
-            >>
-                List.map parseAfter
+            >> List.map parseAfter
             >> List.concat
 infixl 7 |=
 
@@ -110,36 +109,28 @@ oneOf parsers =
             List.concatMap (\(Parser parser) -> parser state) parsers
 
 
-
-{-
-   Need to repeatedly parse, so the initial state needs to be a State a, but as we go through we collect the states.
-
-   Need to be greedy; so given (manyOf int) and ["1", "2", "3"], we don't want to return [], [1], [1,2] and [1,2,3] as possible state values
-
--}
-
-
 manyOf : Parser a b -> Parser a (List b)
 manyOf (Parser parse) =
     Parser <|
-        \({ value, unvisited } as state) ->
+        \state1 ->
             let
-                doAcc : List b -> State b -> State (List b)
-                doAcc =
-                    mapStateValue << (flip (::))
-
-                do : State (List a) -> List (State (List b))
-                do state =
-                    case parse state of
+                do : ( List String, List b ) -> List ( List String, List b )
+                do ( unvisited, accumulated ) =
+                    case parse <| State unvisited state1.value of
                         [] ->
                             []
 
                         list ->
-                            List.map (doAcc) list
-
-                --|> (List.map (do acc)) |> List.concat
+                            list
+                                |> List.map (\state2 -> do ( state2.unvisited, accumulated ++ [ state2.value ] ))
+                                |> List.concat
             in
-                state |> mapStateValue (always []) >> do >> (List.map (mapStateValue List.reverse))
+                do ( state1.unvisited, [] ) |> List.map (\( unvisited, accumulated ) -> State unvisited accumulated)
+
+
+manyOfInt : Parser (Int -> a) (List a)
+manyOfInt =
+    manyOf int
 
 
 start : Parser a a
