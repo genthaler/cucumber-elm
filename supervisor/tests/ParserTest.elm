@@ -114,7 +114,17 @@ import Test exposing (Test, describe, test)
 stringSuite : Test
 stringSuite =
     describe "string tests"
-        [ test "empty sequence" <|
+        [ test "empty list" <|
+            \() ->
+                Expect.equal
+                    (parse (s "") [])
+                    (Nothing)
+        , test "empty string" <|
+            \() ->
+                Expect.equal
+                    (parse (s "") [ "" ])
+                    (Just "")
+        , test "simple string" <|
             \() ->
                 Expect.equal
                     (parse (s "a") [ "a" ])
@@ -122,14 +132,34 @@ stringSuite =
         ]
 
 
-all : Test
-all =
-    describe "parsers suite"
-        [ stringSuite
+intSuite : Test
+intSuite =
+    describe "int tests"
+        [ test "simple int" <|
+            \() ->
+                Expect.equal
+                    (parse (int) [ "100" ])
+                    (Just 100)
         ]
 
 
+oneOfSuite : Test
+oneOfSuite =
+    describe "testing oneOf tests"
+        [ test "choose between two string parsers" <|
+            \() ->
+                Expect.equal
+                    (parse (oneOf [ s "hello", s "there" ]) [ "there" ])
+                    (Just "there")
+        ]
 
--- suite : Test
--- suite =
---     todo "Implement our first test. See http://package.elm-lang.org/packages/elm-community/elm-test/latest for how to do this!"
+
+manySuite : Test
+manySuite =
+    describe "testing many tests"
+        [ test "simple int" <|
+            \() ->
+                Expect.equal
+                    (parse (int) [ "100" ])
+                    (Just 100)
+        ]
