@@ -161,18 +161,38 @@ oneOfSuite =
         ]
 
 
-manySuite : Test
-manySuite =
-    describe "testing many tests"
-        [ test "simple int" <|
-            \() ->
-                Expect.equal
-                    (parse
-                        (manyOf (int))
-                        [ "1", "2", "3", "4" ]
-                    )
-                    (Just [ 1, 2, 3, 4 ])
-        ]
+thingo : Parser (Int -> Int -> a) a
+thingo =
+    start
+        |= int
+        |= int
+
+
+manyOfInt : Parser (Int -> a) (List a)
+manyOfInt =
+    manyOf int
+
+
+
+-- manySuite : Test
+-- manySuite =
+--     describe "testing many tests"
+--         [ test "simple int" <|
+--             \() ->
+--                 let
+--                     manyOfInt2 : Parser (Int -> a) (List a)
+--                     manyOfInt2 =
+--                         manyOf (int)
+--                     parseResult : Maybe (List Int)
+--                     parseResult =
+--                         parse
+--                             manyOfInt2
+--                             [ "1", "2", "3", "4" ]
+--                 in
+--                     Expect.equal
+--                         parseResult
+--                         (Just [ 1, 2, 3, 4 ])
+--         ]
 
 
 mapSuite : Test

@@ -69,7 +69,8 @@ custom stringToSomething =
     Parser <|
         parseBefore
             -- >> List.concatMap parseAfter
-            >> List.map parseAfter
+            >>
+                List.map parseAfter
             >> List.concat
 infixl 7 |=
 
@@ -125,12 +126,7 @@ manyOf (Parser parse) =
                                 |> List.map (\state2 -> do ( state2.unvisited, accumulated ++ [ state2.value ] ))
                                 |> List.concat
             in
-                do ( state1.unvisited, [] ) |> List.map (\( unvisited, accumulated ) -> State unvisited accumulated)
-
-
-manyOfInt : Parser (Int -> a) (List a)
-manyOfInt =
-    manyOf int
+                do ( state1.unvisited, [] ) |> List.map (\( unvisitedFinal, accumulatedFinal ) -> State unvisitedFinal accumulatedFinal)
 
 
 start : Parser a a
