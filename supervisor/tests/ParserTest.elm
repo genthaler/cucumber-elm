@@ -136,7 +136,7 @@ intSuite : Test
 intSuite =
     describe "int tests"
         [ test "simple int" <|
-            \() ->
+            \() -> 
                 Expect.equal
                     (parse (int) [ "100" ])
                     (Just 100)
