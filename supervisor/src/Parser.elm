@@ -7,6 +7,7 @@ module Parser exposing (Parser, string, int, s, csv, (|=), (|.), (<$>), start, e
 -}
 
 import Regex
+import List.Extra
 
 
 type Parser source value
@@ -146,26 +147,7 @@ end =
 
 parse : Parser (a -> a) a -> List String -> Maybe a
 parse (Parser parser) args =
-    parseHelp <|
-        parser <|
-            { unvisited = args
-            , value = identity
-            }
-
-
-parseHelp : List (State a) -> Maybe a
-parseHelp states =
-    case states of
-        [] ->
-            Nothing
-
-        state :: rest ->
-            case state.unvisited of
-                [] ->
-                    Just state.value
-
-                [ "" ] ->
-                    Just state.value
-
-                _ ->
-                    parseHelp rest
+    State args identity
+        |> parser
+        |> List.Extra.find (.unvisited >> List.isEmpty)
+        |> Maybe.map .value
