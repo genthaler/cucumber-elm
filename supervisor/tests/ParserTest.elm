@@ -168,11 +168,11 @@ thingo =
         |= int
 
 
-manyOfInt : Parser (Int -> a) (List a)
-manyOfInt =
-    manyOf int
+-- manyOfInt : Parser (Int -> a) (List a)
+-- manyOfInt =
+--     manyOf int
 
-
+ 
 
 -- manySuite : Test
 -- manySuite =
