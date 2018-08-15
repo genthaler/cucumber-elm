@@ -62,31 +62,7 @@ custom stringToSomething =
                             []
 
                         Just nextValue ->
-                            [ State rest (value nextValue) ]
-
-
-customList : (String -> Maybe a) -> Parser (List a -> b) b
-customList stringToSomething =
-    Parser <|
-        \{ unvisited, value } ->
-            let
-                accum (( unvisited1, accumulated ) as arg) =
-                    case unvisited1 of
-                        [] ->
-                            arg
-
-                        next :: rest ->
-                            case stringToSomething next of
-                        Nothing ->
-                                    arg
-
-                                Just nextValue ->
-                                    accum ( rest, nextValue :: accumulated )
-
-                ( newUnvisited, found ) =
-                    accum ( unvisited, [] )
-            in
-                [ State newUnvisited (value found) ]
+                            Debug.log "states" [ State rest (value nextValue) ]
 
 
 (|=) : Parser a b -> Parser b c -> Parser a c
@@ -134,47 +110,48 @@ oneOf parsers =
             List.concatMap (\(Parser parser) -> parser state) parsers
 
 
--- manyOf : Parser (a -> b) b -> Parser (List a -> b) b
+
+{-
+   Start by parsing the top
+
+   maybe I can parse nothing and put an empty string at the top, and append onto that?
+   That would probably work well with having an empty result i.e. manyOf meaning 0 or more
+
+   A parser that parses Ints
+
+   so start with something like (always []) <$> start
+
+   then recursively apply (flip (::)) <$> ... on the resulting states while it succeeds
+
+   then apply List.reverse <$> on the resulting parser
+
+
+-}
 -- manyOf (Parser parser) =
---     Parser <|
---         \state1 ->
---             let
---                 do : ( List String, List b ) -> List ( List String, List b )
---                 do ( unvisited, accumulated ) =
---                     case parser <| State unvisited state1.value of
---                         [] ->
---                             []
-
---                         list ->
---                             list
---                                 |> List.map (\state2 -> do ( state2.unvisited, accumulated ++ [ [ state2.value ] ] ))
---                                 |> List.concat
---             in
---                 do ( state1.unvisited, [] ) |> List.concat |> List.map (\( unvisitedFinal, accumulatedFinal ) -> State unvisitedFinal (state1.value accumulatedFinal))
+--     Debug.crash ("oh well")
 
 
+manyOf : Parser (a -> b) b -> Parser (List a -> b) b
+manyOf (Parser parser) =
+    Parser <|
+        \state1 ->
+            let
+                do : ( List String, List b ) -> List ( List String, List b )
+                do ( unvisited, accumulated ) =
+                    case parser <| State unvisited state1.value of
+                        [] ->
+                            []
 
--- manyOfInt : Parser (List Int -> a) a
--- manyOfInt =
---     Parser <|
---         \state1 ->
---             let
---                 (Parser intParser) =
---                     int
---                 do : ( List String, List b ) -> List ( List String, List b )
---                 do ( unvisited, accumulated ) =
---                     case intParser <| State unvisited state1.value of
---                         [] ->
---                             []
---                         list ->
---                             list
---                                 |> List.map (\state2 -> do ( state2.unvisited, state2.value::accumulated ))
---                                 |> List.concat
---             in
---                 do ( state1.unvisited, [] ) |> List.map (\( unvisitedFinal, accumulatedFinal ) -> State unvisitedFinal (state1.value accumulatedFinal))
--- manyOfInt : Parser (List -> a) a
--- manyOfInt =
---     manyOf int
+                        list ->
+                            list
+                                |> List.map (\state2 -> do ( state2.unvisited, accumulated ++ [ state2.value ] ))
+                                |> List.concat
+            in
+                do ( state1.unvisited, [] )
+                    |> List.map
+                        (\( unvisitedFinal, accumulatedFinal ) ->
+                            State unvisitedFinal (state1.value accumulatedFinal)
+                        )
 
 
 foo : Parser (List Int -> a) a
@@ -200,6 +177,11 @@ end =
                 [ state ]
             else
                 []
+
+
+apply : Parser a b -> State a -> List (State b)
+apply (Parser parser) state =
+    parser state
 
 
 parse : Parser (a -> a) a -> List String -> Maybe a
