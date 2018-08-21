@@ -41,3 +41,12 @@ port cucumberTestResponse : (String -> msg) -> Sub msg
 
 
 port end : Int -> Cmd msg
+
+
+port print : String -> Cmd msg
+
+
+port printAndExitFailure : String -> Cmd msg
+
+
+port printAndExitSuccess : String -> Cmd msg

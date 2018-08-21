@@ -126,3 +126,28 @@ mapSuite =
                     )
                     (Just 103)
         ]
+
+
+miscSuite : Test
+miscSuite =
+    describe "misc tests"
+        [ test "empty" <|
+            \() ->
+                Expect.equal
+                    (parse
+                        ([] <$> start)
+                        []
+                    )
+                    (Just [])
+        , test "list append" <|
+            \() ->
+                Expect.equal
+                    (parse
+                        List.append
+                        <$> ((List.singleton <$> start)
+                                |= (List.singleton <$> start)
+                            )
+                                [ "1", "2" ]
+                    )
+                    (Just [ 1, 2 ])
+        ]

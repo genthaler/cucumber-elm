@@ -1,72 +1,109 @@
-module Options exposing (Mode(..), RunOption(..), parseArgs)
+module Options exposing (main)
 
-import Parser exposing (..)
-
-
-type RunOption
-    = GlueFunctionsOption
-    | TagsOption (List String)
-    | WatchOption
-    | DefaultOption String
+import Cli.Option as Option
+import Cli.OptionsParser as OptionsParser exposing (with)
+import Cli.Program as Program
+import Json.Decode exposing (..)
+import Ports
 
 
-type Mode
-    = Help
-    | Version
-    | Init String
-    | Run (List RunOption)
+type CliOptions
+    = Init
+    | RunTests RunTestsRecord
 
 
-initParser : Parser (Mode -> c) c
-initParser =
-    Init
-        <$> start
-        |. (s "--init")
-        |= string
-        |. end
+type alias RunTestsRecord =
+    { maybeFuzz : Maybe Int
+    , maybeSeed : Maybe Int
+    , maybeCompilerPath : Maybe String
+    , maybeDependencies : Maybe String
+    , watch : Bool
+    , reportFormat : ReportFormat
+    , testFiles : List String
+    }
 
 
-helpParser : Parser (Mode -> c) c
-helpParser =
-    always Help
-        <$> start
-        |= s "--help"
+type ReportFormat
+    = Json
+    | Junit
+    | Console
 
 
-versionParser : Parser (Mode -> c) c
-versionParser =
-    always Version
-        <$> s "--version"
+program : Program.Config CliOptions
+program =
+    Program.config { version = "1.2.3" }
+        |> Program.add
+            (OptionsParser.buildSubCommand "init" Init
+                |> OptionsParser.end
+            )
+        |> Program.add
+            (OptionsParser.build RunTestsRecord
+                |> with
+                    (Option.optionalKeywordArg "fuzz"
+                        |> Option.validateMapIfPresent String.toInt
+                    )
+                |> with
+                    (Option.optionalKeywordArg "seed"
+                        |> Option.validateMapIfPresent String.toInt
+                    )
+                |> with (Option.optionalKeywordArg "compiler")
+                |> with (Option.optionalKeywordArg "add-dependencies")
+                |> with (Option.flag "watch")
+                |> with
+                    (Option.optionalKeywordArg "report"
+                        |> Option.withDefault "console"
+                        |> Option.oneOf Console
+                            [ "json" => Json
+                            , "junit" => Junit
+                            , "console" => Console
+                            ]
+                    )
+                |> OptionsParser.withRestArgs (Option.restArgs "TESTFILES")
+                |> OptionsParser.map RunTests
+            )
 
 
-runParser : Parser (Mode -> c) c
-runParser =
-    Run
-        <$> RunOptions
-        <$> start
-        |= string
-        |. (s "--glue-arguments-function")
-        |= string
-        |. (s "--tags")
-        |= string
+dummy : Decoder String
+dummy =
+    -- this is a workaround for an Elm compiler bug
+    Json.Decode.string
 
 
-foo : Parser (String -> Int -> a) (Int -> a)
-foo =
-    (s "--tags") |. int
+init : Flags -> CliOptions -> Cmd Never
+init flags msg =
+    (case msg of
+        Init ->
+            "Initializing test suite..."
 
-
-optionParser : Parser (Mode -> c) c
-optionParser =
-    start
-        |= oneOf
-            [ initParser
-            , helpParser
-            , versionParser
-            , runParser
+        RunTests options ->
+            [ "Running the following test files: " ++ toString options.testFiles |> Just
+            , "watch: " ++ toString options.watch |> Just
+            , options.maybeFuzz |> Maybe.map (\fuzz -> "fuzz: " ++ toString fuzz)
+            , options.maybeSeed |> Maybe.map (\seed -> "seed: " ++ toString seed)
+            , options.reportFormat |> toString |> Just
+            , options.maybeCompilerPath |> Maybe.map (\compilerPath -> "compiler: " ++ toString compilerPath)
+            , options.maybeDependencies |> Maybe.map (\dependencies -> "dependencies: " ++ toString dependencies)
             ]
+                |> List.filterMap identity
+                |> String.join "\n"
+    )
+        |> Ports.print
 
 
-parseArgs : List String -> Maybe Mode
-parseArgs =
-    parse optionParser
+(=>) : a -> b -> ( a, b )
+(=>) =
+    (,)
+
+
+type alias Flags =
+    Program.FlagsIncludingArgv {}
+
+
+main : Program.StatelessProgram Never {}
+main =
+    Program.stateless
+        { printAndExitFailure = Ports.printAndExitFailure
+        , printAndExitSuccess = Ports.printAndExitSuccess
+        , init = init
+        , config = program
+        }
