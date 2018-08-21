@@ -39,11 +39,11 @@ program =
         |> Program.add
             (OptionsParser.build RunTestsRecord
                 |> with
-                    (Option.optionalKeywordArg "fuzz"
+                    (Option.optionalKeywordArg "glue-arguments-function"
                         |> Option.validateMapIfPresent String.toInt
                     )
                 |> with
-                    (Option.optionalKeywordArg "seed"
+                    (Option.optionalKeywordArg "tags"
                         |> Option.validateMapIfPresent String.toInt
                     )
                 |> with (Option.optionalKeywordArg "compiler")
@@ -78,8 +78,8 @@ init flags msg =
         RunTests options ->
             [ "Running the following test files: " ++ toString options.testFiles |> Just
             , "watch: " ++ toString options.watch |> Just
-            , options.maybeFuzz |> Maybe.map (\fuzz -> "fuzz: " ++ toString fuzz)
-            , options.maybeSeed |> Maybe.map (\seed -> "seed: " ++ toString seed)
+            , options.maybeFuzz |> Maybe.map (\glueArgumentsFunction -> "glue-arguments-function: " ++ toString glueArgumentsFunction)
+            , options.maybeSeed |> Maybe.map (\tags -> "tags: " ++ toString tags)
             , options.reportFormat |> toString |> Just
             , options.maybeCompilerPath |> Maybe.map (\compilerPath -> "compiler: " ++ toString compilerPath)
             , options.maybeDependencies |> Maybe.map (\dependencies -> "dependencies: " ++ toString dependencies)
