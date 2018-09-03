@@ -1,0 +1,26 @@
+{
+  "version": "4.0.0",
+  "summary": "Example Project",
+  "repository": "https://github.com/user/project.git",
+  "license": "BSD-3-Clause",
+  "source-directories": [
+    "../src",
+    "../../src",
+    ".",
+    "./stepdefs"
+  ],
+  "exposed-modules": [],
+  "dependencies": {
+    "elm-community/parser-combinators": "1.1.0 <= v < 2.0.0",
+    "elm-community/result-extra": "2.2.0 <= v < 3.0.0",
+    "elm-lang/core": "5.0.0 <= v < 6.0.0",
+    "elm-lang/html": "2.0.0 <= v < 3.0.0",
+    "elm-lang/http": "1.0.0 <= v < 2.0.0",
+    "evancz/elm-markdown": "3.0.2 <= v < 4.0.0"
+  },
+  "dependency-sources": {
+    "genthaler/cucumber-elm": "1.0.0 <= v < 1.0.1",
+    "genthaler/cucumber-elm2": "../.."
+  },
+  "elm-version": "0.18.0 <= v < 0.19.0"
+}

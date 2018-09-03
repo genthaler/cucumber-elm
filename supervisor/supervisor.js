@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const shell = require('shelljs')
 const fs = require('fs')
 const path = require('path')
@@ -8,9 +10,22 @@ const compiler = require('node-elm-compiler')
 const supervisor = require('cucumber-elm-supervisor');
 const requireFromString = require('require-from-string');
 
-const supervisorWorker = supervisor.SupervisorWorker.worker(process.argv)
+const supervisorWorker = supervisor.SupervisorWorker.worker({
+  argv: process.argv
+})
 const compile = compiler.compile;
 const compileToString = compiler.compileToString;
+const XMLHttpRequest = require('xhr2')
+
+supervisorWorker.ports.print.subscribe(message => console.log(message))
+supervisorWorker.ports.printAndExitFailure.subscribe(message => {
+  console.log(message)
+  process.exit(1)
+})
+supervisorWorker.ports.printAndExitSuccess.subscribe(message => {
+  console.log(message)
+  process.exit(0)
+})
 
 /*
  * Wire up fileReadRequest/Response

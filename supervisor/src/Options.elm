@@ -1,4 +1,4 @@
-module Options exposing (main)
+module Options exposing (..)
 
 import Cli.Option as Option
 import Cli.OptionsParser as OptionsParser exposing (with)
@@ -29,8 +29,8 @@ type ReportFormat
     | Console
 
 
-program : Program.Config CliOptions
-program =
+programConfig : Program.Config CliOptions
+programConfig =
     Program.config { version = "1.2.3" }
         |> Program.add
             (OptionsParser.buildSubCommand "init" Init
@@ -97,13 +97,3 @@ init flags msg =
 
 type alias Flags =
     Program.FlagsIncludingArgv {}
-
-
-main : Program.StatelessProgram Never {}
-main =
-    Program.stateless
-        { printAndExitFailure = Ports.printAndExitFailure
-        , printAndExitSuccess = Ports.printAndExitSuccess
-        , init = init
-        , config = program
-        }

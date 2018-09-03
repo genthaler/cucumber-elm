@@ -12,9 +12,9 @@ dep-check.html
 # Distribution
 build/
 elm.js
+runner.js
 index.html
-supervisor/index.html
-supervisor/supervisorWorker.js
+supervisorWorker.js
 
 # elm-package generated files
 elm-stuff

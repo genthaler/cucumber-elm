@@ -30,17 +30,13 @@ message msg =
     Task.perform identity (Task.succeed msg)
 
 
-init : List String -> ( Model, Cmd Msg )
-init flags =
-    ( toStarting <|
-        Maybe.withDefault Help <|
-            (parseArgs flags)
-    , message NoOp
-    )
+init : Program.FlagsIncludingArgv {} -> CliOptions -> ( Model, Cmd Msg )
+init flags cliOptions =
+    ( { matchCount = 0 }, Cmd.none )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : CliOptions -> Msg -> Model -> ( Model, Cmd Msg )
+update cliOptions msg model =
     let
         noOp =
             ( model, Cmd.none )
@@ -150,10 +146,13 @@ subscriptions model =
             Sub.none
 
 
-main : Program (List String) Model Msg
+main : Program.StatefulProgram Model Msg CliOptions {}
 main =
-    programWithFlags
-        { init = init
-        , update = update
+    Program.stateful
+        { printAndExitFailure = Ports.printAndExitFailure
+        , printAndExitSuccess = Ports.printAndExitSuccess
+        , init = init
+        , config = programConfig
         , subscriptions = subscriptions
+        , update = update
         }
