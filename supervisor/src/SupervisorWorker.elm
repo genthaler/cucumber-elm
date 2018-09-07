@@ -9,6 +9,7 @@ import Task
 import StateMachine exposing (untag, map)
 import Json.Decode
 import Help exposing (..)
+import Cli.Program
 
 
 type Msg
@@ -30,7 +31,7 @@ message msg =
     Task.perform identity (Task.succeed msg)
 
 
-init : Program.FlagsIncludingArgv {} -> CliOptions -> ( Model, Cmd Msg )
+init : Cli.Program.FlagsIncludingArgv {} -> CliOptions -> ( Model, Cmd Msg )
 init flags cliOptions =
     ( { matchCount = 0 }, Cmd.none )
 

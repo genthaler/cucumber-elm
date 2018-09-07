@@ -1,7 +1,7 @@
 module SupervisorState exposing (..)
 
 import StateMachine exposing (Allowed, State(State), map, untag)
-import Options exposing (Option, RunOptions)
+import Options exposing (CliOptions, RunTestsRecord)
 import PackageInfo exposing (PackageInfo)
 
 
@@ -21,13 +21,13 @@ makeState =
 
 
 type SupervisorState
-    = Starting (State { helping : Allowed, initialising : Allowed, versioning : Allowed } { option : Option })
+    = Starting (State { helping : Allowed, initialising : Allowed, versioning : Allowed } { option : CliOptions })
     | Ending (State { ending : Allowed } Int)
     | Helping (State { ending : Allowed } { exitCode : Int })
     | Versioning (State { ending : Allowed } { exitCode : Int })
     | Initialising (State { ending : Allowed } { folder : String })
-    | GettingPackageInfo (State { constructingFolder : Allowed } { runOptions : RunOptions })
-    | ConstructingFolder (State { compiling : Allowed } { runOptions : RunOptions, packageInfo : PackageInfo })
+    | GettingPackageInfo (State { constructingFolder : Allowed } { runOptions : RunTestsRecord })
+    | ConstructingFolder (State { compiling : Allowed } { runOptions : RunTestsRecord, packageInfo : PackageInfo })
     | Compiling (State { startingRunner : Allowed } { gherkinFiles : List String })
     | StartingRunner (State { resolvingGherkinFiles : Allowed } { gherkinFiles : List String })
     | ResolvingGherkinFiles (State { testingGherkinFile : Allowed } { gherkinFiles : List String })
@@ -39,7 +39,7 @@ type SupervisorState
 -- Initial state constructor.
 
 
-toStarting : Option -> SupervisorState
+toStarting : CliOptions -> SupervisorState
 toStarting option =
     Starting <| makeState { option = option }
 
@@ -64,12 +64,12 @@ toInitialising folder state =
     Initialising <| makeState { folder = folder }
 
 
-toGettingPackageInfo : RunOptions -> State { a | gettingPackageInfo : Allowed } b -> SupervisorState
+toGettingPackageInfo : RunTestsRecord -> State { a | gettingPackageInfo : Allowed } b -> SupervisorState
 toGettingPackageInfo runOptions state =
     GettingPackageInfo <| makeState { runOptions = runOptions }
 
 
-toConstructingFolder : PackageInfo -> State { a | constructingFolder : Allowed } { runOptions : RunOptions } -> SupervisorState
+toConstructingFolder : PackageInfo -> State { a | constructingFolder : Allowed } { runOptions : RunTestsRecord } -> SupervisorState
 toConstructingFolder packageInfo state =
     ConstructingFolder <| makeState <| { runOptions = state |> untag |> .runOptions, packageInfo = packageInfo }
 
