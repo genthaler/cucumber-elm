@@ -10,23 +10,6 @@ In proper Gherkin, it's possible to have multiple languages supported.
 The intention is that this will be supported in the plain text version,
 similarly to extant ports in other languages.
 
-[Gherkin]: https://github.com/cucumber/cucumber/wiki/Gherkin
-
-
-# Feature
-
-@docs Feature, AsA, InOrderTo, IWantTo, Background
-
-
-# Scenario
-
-@docs Scenario, Examples
-
-
-# Step
-
-@docs Step, StepArg, DataTable,
-
 -}
 
 

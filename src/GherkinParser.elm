@@ -1,6 +1,6 @@
 module GherkinParser exposing (feature, formatError, parse)
 
-import Combine exposing (..)
+import Parser exposing (Parser, (|.), (|=), succeed, map)
 import String
 import Gherkin exposing (..)
 
@@ -48,7 +48,7 @@ detailText =
 -}
 tag : Parser s Tag
 tag =
-    Tag <$> (string "@" *> detailText)
+    map Tag (string "@" *> detailText)
 
 
 {-| Parse a list of tag lines.
@@ -62,9 +62,10 @@ tags =
 -}
 asA : Parser s AsA
 asA =
-    string "As a"
-        *> spaces
-        *> (AsA <$> detailText)
+    succeed Asa
+        |. string "As a"
+        |. spaces
+        |= detailText
 
 
 {-| Parse an `In order to` line.
