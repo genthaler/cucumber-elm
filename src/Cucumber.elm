@@ -55,6 +55,7 @@ import GherkinParser
 import List
 import Regex
 import Result.Extra
+import Tuple
 
 
 {-| Running a feature returns a tuple of `(Boolean, FeatureRun)`
@@ -75,7 +76,7 @@ type FeatureRun
 -}
 type Tree a
     = Leaf a
-    | Branch List Tree a
+    | Branch (List (Tree a))
 
 
 {-| If there are any tags associated with the
@@ -137,13 +138,10 @@ substituteExampleInScenario scenarioTags scenarioDescription steps header row =
         filterTokens string =
             let
                 zip =
-                    List.map2 (,) header row
+                    List.map2 Tuple.pair header row
 
-                replace ( token, value ) oldString =
-                    Regex.replace Regex.All
-                        (Regex.regex (Regex.escape ("<" ++ token ++ ">")))
-                        (always value)
-                        oldString
+                replace ( token, value ) =
+                    String.replace ("<" ++ token ++ ">") value
             in
             List.foldl replace string zip
 
@@ -269,3 +267,8 @@ expectStep step glueFunctions initialState =
                     step
             in
             x stepDescription stepArg initialState |> Result.andThen (expectStep step xs)
+
+
+flip : (a -> b -> c) -> b -> a -> c
+flip f b a =
+    f a b

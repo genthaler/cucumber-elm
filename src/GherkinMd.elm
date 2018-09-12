@@ -7,7 +7,7 @@ import Gherkin exposing (..)
 import String
 
 
-newline : String
+newline : String 
 newline =
     "\n"
 
@@ -85,11 +85,11 @@ tableMd (Table header body) =
 stepMd : Step -> String
 stepMd (Step stepType detail stepArg) =
     let
-        stepArgMd_ name detail theStepArg =
+        stepArgMd_ name detail2 theStepArg =
             "**"
                 ++ name
                 ++ "** "
-                ++ detail
+                ++ detail2
                 ++ newline
                 ++ newline
                 ++ (case stepArgMd theStepArg of
@@ -187,3 +187,6 @@ featureMd feature =
                 ++ (String.join (newline ++ newline) <|
                         List.map scenarioMd scenarios
                    )
+flip : (a -> b -> c) -> b -> a -> c
+flip f b a =
+    f a b

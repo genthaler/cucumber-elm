@@ -1,13 +1,14 @@
-module GherkinParser exposing (feature, formatError, parse)
- 
+module GherkinParser exposing (feature, parse)
+
 import Gherkin exposing (..)
-import Parser exposing ((|.), (|=), Parser, chompUntilEndOr, lineComment, succeed, symbol, chompWhile, token, oneOf, getChompedString, variable,keyword, sequence, map, Trailing(..))
-import String
+import Parser exposing ((|.), (|=), Parser, Trailing(..), chompUntilEndOr, chompWhile, deadEndsToString, getChompedString, keyword, lineComment, loop, map, oneOf, run, sequence, succeed, symbol, token, variable)
 import Set
+import String
+
 
 {-| Parse a comment; everything from a `#` symbol to the end of the line
 -}
-comment : Parser String
+comment : Parser ()
 comment =
     lineComment "#"
 
@@ -15,28 +16,30 @@ comment =
 {-| Parse any number of whitespace (except for newlines).
 -}
 spaces : Parser ()
-spaces = 
-    chompWhile (\c -> c == ' ' || c == '\t' || c == '\n' || c == '\r')
+spaces =
+    chompWhile (\c -> c == ' ' || c == '\t' || c == '\n' || c == '\u{000D}')
 
 
 {-| Parse a newline
 -}
-newline : Parser String
-newline = oneOf([token "\r\n", token "\r", token "\r"])
+newline : Parser ()
+newline =
+    oneOf [ token "\u{000D}\n", token "\u{000D}", token "\u{000D}" ]
+
 
 {-| Parse a newline
 -}
-effectiveEndOfLine : Parser String
-effectiveEndOfLine = oneOf([comment, newline])
-
+effectiveEndOfLine : Parser ()
+effectiveEndOfLine =
+    oneOf [ comment, newline ]
 
 
 {-| Parse any amount of space that might separate tokens, that isn't context
 sensitive.
 -}
-interspace : Parser (List String)
+interspace : Parser ()
 interspace =
-    oneOf([newline, spaces, comment ])
+    oneOf [ newline, spaces, comment ]
 
 
 {-| Parse detail text, typically after a Gherkin keyword until the effective
@@ -44,22 +47,22 @@ end of line.
 -}
 detailText : Parser String
 detailText =
-  getChompedString <|
-    succeed ()
-      |. chompWhile (\c -> c /= '#' || c /= '\n' || c /= '\r')
+    getChompedString <|
+        succeed ()
+            |. chompWhile (\c -> c /= '#' || c /= '\n' || c /= '\u{000D}')
 
 
 {-| Parse a tag.
 -}
-tag : Parser  Tag
+tag : Parser Tag
 tag =
     succeed Tag
-    |. symbol "@"
-    |=  variable
-        { start = Char.isAlphaNum
-        , inner = Char.isAlphaNum
-        , reserved = Set.empty
-        }
+        |. symbol "@"
+        |= variable
+            { start = Char.isAlphaNum
+            , inner = Char.isAlphaNum
+            , reserved = Set.empty
+            }
 
 
 {-| Parse a list of tag lines.
@@ -67,18 +70,18 @@ tag =
 tags : Parser (List Tag)
 tags =
     Parser.sequence
-    { start = ""
-    , separator = ""
-    , end = ""
-    , spaces = spaces
-    , item = tag
-    , trailing = Optional -- demand a trailing semi-colon
-    }
- 
+        { start = ""
+        , separator = ""
+        , end = ""
+        , spaces = spaces
+        , item = tag
+        , trailing = Optional -- demand a trailing semi-colon
+        }
+
 
 {-| Parse an `As a` line.
 -}
-asA : Parser  AsA
+asA : Parser AsA
 asA =
     succeed AsA
         |. keyword "As a"
@@ -88,7 +91,7 @@ asA =
 
 {-| Parse an `In order to` line.
 -}
-inOrderTo : Parser  InOrderTo
+inOrderTo : Parser InOrderTo
 inOrderTo =
     succeed InOrderTo
         |. keyword "In order to"
@@ -98,7 +101,7 @@ inOrderTo =
 
 {-| Parse an `I want to` line.
 -}
-iWantTo : Parser  IWantTo
+iWantTo : Parser IWantTo
 iWantTo =
     succeed IWantTo
         |. keyword "I want to"
@@ -106,32 +109,24 @@ iWantTo =
         |= detailText
 
 
-{-| Parse a docstring quote token.
--}
-docStringQuotes : Parser  String
-docStringQuotes =
-    token "\"\"\""
-
-
 {-| Parse a docstring step argument.
 -}
-docString : Parser  StepArg
+docString : Parser StepArg
 docString =
     succeed DocString
         |. spaces
-        |. docStringQuotes
-        |= chompUntilEndOr docStringQuotes
-
+        |. token "\"\"\""
+        |= (getChompedString <| chompUntilEndOr "\"\"\"")
 
 
 {-| Parse a step argument table cell content.
- 
+
 This is saying, any text bookended by non-pipe, non-whitespace characters
 
 -}
-tableCellContent : Parser  String
+tableCellContent : Parser String
 tableCellContent =
-    chompWhile (\c -> c /= '|' )
+    getChompedString <| chompWhile (\c -> c /= '|')
 
 
 {-| Parse a step argument table row.
@@ -139,7 +134,7 @@ tableCellContent =
 This is saying, any text bookended by non-pipe, non-whitespace characters
 
 -}
-tableRow : Parser  Row
+tableRow : Parser Row
 tableRow =
     Parser.sequence
         { start = "|"
@@ -158,14 +153,7 @@ This is saying, any text bookended by non-pipe, non-whitespace characters
 -}
 tableRows : Parser (List Row)
 tableRows =
-    Parser.sequence
-    { start = ""
-    , separator = newline
-    , end = ""
-    , spaces = spaces
-    , item = tableRow
-    , trailing = Optional
-    }
+    loops tableRow newline
 
 
 {-| Parse a step argument table.
@@ -190,7 +178,7 @@ noArg =
 
 {-| Parse a step.
 -}
-step : Parser  Step
+step : Parser Step
 step =
     succeed Step
         |= oneOf
@@ -203,7 +191,7 @@ step =
         |. spaces
         |= detailText
         |. interspace
-        |= oneOf [docString, map DataTable table, noArg]
+        |= oneOf [ docString, map DataTable table, noArg ]
 
 
 {-| Parse a scenario outline example section.
@@ -229,14 +217,7 @@ scenario =
         |. spaces
         |= detailText
         |. interspace
-        |=   sequence
-            { start = ""
-            , separator = newline
-            , end = ""
-            , spaces = spaces
-            , item = step
-            , trailing = Optional -- demand a trailing semi-colon
-            }
+        |= loops step newline
 
 
 {-| Parse a scenario outline.
@@ -250,42 +231,21 @@ scenarioOutline =
         |. spaces
         |= detailText
         |. interspace
-        |=  sequence
-            { start = ""
-            , separator = newline
-            , end = ""
-            , spaces = interspace
-            , item = step
-            , trailing = Optional -- demand a trailing semi-colon
-            }
+        |= loops step newline
         |. interspace
-        |=  sequence
-            { start = ""
-            , separator = newline
-            , end = ""
-            , spaces = interspace
-            , item = examples
-            , trailing = Optional -- demand a trailing semi-colon
-            }
+        |= loops examples newline
 
 
 {-| Parse a background section.
 -}
-background : Parser  Background
+background : Parser Background
 background =
     succeed Background
         |. keyword "Background:"
         |. spaces
         |= detailText
         |. interspace
-        |=  sequence
-            { start = ""
-            , separator = newline
-            , end = ""
-            , spaces = interspace
-            , item = step
-            , trailing = Optional -- demand a trailing semi-colon
-            }
+        |= loops step newline
 
 
 {-| Parse an absent background section.
@@ -297,7 +257,7 @@ noBackground =
 
 {-| Parse an entire.
 -}
-feature : Parser  Feature
+feature : Parser Feature
 feature =
     succeed Feature
         |= tags
@@ -312,84 +272,36 @@ feature =
         |. interspace
         |= iWantTo
         |. interspace
-        |= oneOf [background, noBackground]
+        |= oneOf [ background, noBackground ]
         |. interspace
-        |=  sequence
-            { start = ""
-            , separator = newline
-            , end = ""
-            , spaces = interspace
-            , item = oneOf [scenario , scenarioOutline]
-            , trailing = Optional -- demand a trailing semi-colon
-            }
+        |= loops (oneOf [ scenario, scenarioOutline ]) newline
 
 
--- {-| Nicely format a parsing error.
--- -}
--- formatError : String -> List String -> ParseContext state res -> String
--- formatError input ms cx =
---     let
---         ( _, inputStream, _ ) =
---             cx
+{-| Parse using an arbitrary parser combinator.
+-}
+parse : Parser res -> String -> Result String res
+parse parser s =
+    case run parser s of
+        Ok result ->
+            Ok result
 
---         lines =
---             String.lines input
-
---         ( formattedLine, lineNumber, lineOffset, _ ) =
---             List.foldl
---                 (\line ( line_, n, o, pos ) ->
---                     if pos < 0 then
---                         ( line_, n, o, pos )
-
---                     else
---                         ( line, n + 1, pos, pos - 1 - String.length line_ )
---                 )
---                 ( "", 0, 0, inputStream.position )
---                 lines
-
---         separator =
---             "|> "
-
---         expectationSeparator =
---             "\n  * "
-
---         lineNumberOffset =
---             floor (logBase 10 lineNumber) + 1
-
---         separatorOffset =
---             String.length separator
-
---         padding =
---             lineNumberOffset + separatorOffset + lineOffset + 1
---     in
---     "Parse error around line:\n\n"
---         ++ toString lineNumber
---         ++ separator
---         ++ formattedLine
---         ++ "\n"
---         ++ String.padLeft padding ' ' "^"
---         ++ "\nI expected one of the following:\n"
---         ++ expectationSeparator
---         ++ String.join expectationSeparator ms
+        Err deadEnds ->
+            Err <| deadEndsToString deadEnds
 
 
--- {-| Parse using an arbitrary parser combinator.
--- -}
--- parse : Parser  res -> String -> Result String res
--- parse parser s =
---     case Combine.parse parser (s ++ "\n") of
---         Ok ( _, _, result ) ->
---             Ok result
-
---         Err ( _, _, _ ) ->
---             Err <| ""
+loops : Parser a -> Parser () -> Parser (List a)
+loops statementParser separatorParser =
+    loop [] (loopsHelp statementParser separatorParser)
 
 
-
--- lookahead : Parser res -> Parser res
--- lookahead lookaheadParser =
---     let
---         primitiveArg =
---             app lookaheadParser
---     in
---         primitive primitiveArg
+loopsHelp : Parser a -> Parser () -> List a -> Parser (Parser.Step (List a) (List a))
+loopsHelp statementParser separatorParser statements =
+    oneOf
+        [ succeed (\statement -> Parser.Loop (statement :: statements))
+            |= statementParser
+            |. spaces
+            |. separatorParser
+            |. spaces
+        , succeed ()
+            |> map (\_ -> Parser.Done (List.reverse statements))
+        ]
