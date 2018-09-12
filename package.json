@@ -24,7 +24,7 @@
   ],
   "private": true,
   "scripts": {
-    "prepare": "elm-package install --yes && pushd supervisor && npm i && popd && pushd example && npm i && popd",
+    "prepare": "elm make && pushd supervisor && npm i && popd && pushd example && npm i && popd",
     "pretest": "elm-test",
     "test": "node supervisor/supervisor.js example/features/Cucumber.feature --glue-arguments-function example/glue/StepDef.elm"
   },

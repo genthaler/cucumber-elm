@@ -1,4 +1,7 @@
-module Cucumber exposing (expectFeature, expectFeatureText, matchTags)
+module Cucumber exposing
+    ( expectFeature, expectFeatureText
+    , matchTags
+    )
 
 {-| This module is responsible for the actual running of a `Gherkin` feature
 against a set of StepDef functions.
@@ -46,11 +49,11 @@ The execution order is:
 
 -}
 
+import Cucumber.StepDefs exposing (..)
 import Gherkin exposing (..)
 import GherkinParser
 import List
 import Regex
-import Cucumber.StepDefs exposing (..)
 import Result.Extra
 
 
@@ -90,6 +93,7 @@ matchTags : List (List Tag) -> List Tag -> Bool
 matchTags filterTags elementTags =
     if List.isEmpty elementTags then
         True
+
     else
         List.any (List.all (flip List.member elementTags)) filterTags
 
@@ -120,6 +124,7 @@ expectFeature ( initialState, glueFunctions ) filterTags (Feature featureTags fe
             |> Result.Extra.combine
             |> Result.andThen
                 (always (Ok ()))
+
     else
         Err ("Skipping feature " ++ featureDescription)
 
@@ -140,7 +145,7 @@ substituteExampleInScenario scenarioTags scenarioDescription steps header row =
                         (always value)
                         oldString
             in
-                List.foldl replace string zip
+            List.foldl replace string zip
 
         filterStepArg stepArg =
             case stepArg of
@@ -161,7 +166,7 @@ substituteExampleInScenario scenarioTags scenarioDescription steps header row =
         filteredSteps =
             List.map filterStep steps
     in
-        Scenario scenarioTags (filterTokens scenarioDescription) filteredSteps
+    Scenario scenarioTags (filterTokens scenarioDescription) filteredSteps
 
 
 {-| Run a `Scenario` against a set of `List (StepDefFunction state)` using an initial state
@@ -178,6 +183,7 @@ expectScenario glueFunctions background filterTags initialState scenario =
                         (expectSteps glueFunctions steps)
                     |> Result.andThen
                         (always (Ok ()))
+
             else
                 Err ("Scenario skipped due to tag mismatch: " ++ scenarioDescription)
 
@@ -206,6 +212,7 @@ expectScenario glueFunctions background filterTags initialState scenario =
                     |> Result.Extra.combine
                     |> Result.andThen
                         (always (Ok ()))
+
             else
                 Err ("Scenario Outline skipped due to tag mismatch: " ++ scenarioDescription)
 
@@ -261,4 +268,4 @@ expectStep step glueFunctions initialState =
                 (Step stepType stepDescription stepArg) =
                     step
             in
-                (x stepDescription stepArg initialState) |> Result.andThen (expectStep step xs)
+            x stepDescription stepArg initialState |> Result.andThen (expectStep step xs)

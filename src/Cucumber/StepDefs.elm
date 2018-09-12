@@ -1,4 +1,4 @@
-module Cucumber.StepDefs exposing (..)
+module Cucumber.StepDefs exposing (StepDefFunction, StepDefOutput(..), StepDefFunctionResult, StepDefArgs)
 
 {-| This module defines types and functions for use by StepDef functions.
 

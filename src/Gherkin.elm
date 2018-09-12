@@ -1,6 +1,6 @@
-module Gherkin exposing (..)
+module Gherkin exposing (AsA(..), Background(..), Examples(..), Feature(..), IWantTo(..), InOrderTo(..), Row, Scenario(..), Step(..), StepArg(..), StepType(..), Table(..), Tag(..))
 
-{-| This library describes a datastructure for the [Gherkin] *ubiquitous language*.
+{-| This library describes a datastructure for the [Gherkin] _ubiquitous language_.
 
 It's intended mainly to be used as the output (AST) of a Gherkin parser,
 but I've tried to make it usable as a DSL in its own right.

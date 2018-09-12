@@ -1,127 +1,137 @@
 module GherkinParser exposing (feature, formatError, parse)
-
-import Parser exposing (Parser, (|.), (|=), succeed, map)
-import String
+ 
 import Gherkin exposing (..)
-
+import Parser exposing ((|.), (|=), Parser, chompUntilEndOr, lineComment, succeed, symbol, chompWhile, token, oneOf, getChompedString, variable,keyword, sequence, map, Trailing(..))
+import String
+import Set
 
 {-| Parse a comment; everything from a `#` symbol to the end of the line
 -}
-comment : Parser s String
+comment : Parser String
 comment =
-    regex "#.*"
-        <* newline
+    lineComment "#"
 
 
 {-| Parse any number of whitespace (except for newlines).
 -}
-spaces : Parser s String
-spaces =
-    regex "[^\\r\\n\\S]+"
+spaces : Parser ()
+spaces = 
+    chompWhile (\c -> c == ' ' || c == '\t' || c == '\n' || c == '\r')
 
 
 {-| Parse a newline
 -}
-newline : Parser s String
-newline =
-    regex "(\\r\\n|\\r|\\n)"
+newline : Parser String
+newline = oneOf([token "\r\n", token "\r", token "\r"])
+
+{-| Parse a newline
+-}
+effectiveEndOfLine : Parser String
+effectiveEndOfLine = oneOf([comment, newline])
+
 
 
 {-| Parse any amount of space that might separate tokens, that isn't context
 sensitive.
 -}
-interspace : Parser s (List String)
+interspace : Parser (List String)
 interspace =
-    newline <|> spaces <|> comment |> many
+    oneOf([newline, spaces, comment ])
 
 
 {-| Parse detail text, typically after a Gherkin keyword until the effective
 end of line.
 -}
-detailText : Parser s String
+detailText : Parser String
 detailText =
-    regex "[^#\\r\\n]+"
-        <* optional "" comment
+  getChompedString <|
+    succeed ()
+      |. chompWhile (\c -> c /= '#' || c /= '\n' || c /= '\r')
 
 
 {-| Parse a tag.
 -}
-tag : Parser s Tag
+tag : Parser  Tag
 tag =
-    map Tag (string "@" *> detailText)
+    succeed Tag
+    |. symbol "@"
+    |=  variable
+        { start = Char.isAlphaNum
+        , inner = Char.isAlphaNum
+        , reserved = Set.empty
+        }
 
 
 {-| Parse a list of tag lines.
 -}
-tags : Parser s (List Tag)
+tags : Parser (List Tag)
 tags =
-    sepBy interspace tag
-
+    Parser.sequence
+    { start = ""
+    , separator = ""
+    , end = ""
+    , spaces = spaces
+    , item = tag
+    , trailing = Optional -- demand a trailing semi-colon
+    }
+ 
 
 {-| Parse an `As a` line.
 -}
-asA : Parser s AsA
+asA : Parser  AsA
 asA =
-    succeed Asa
-        |. string "As a"
+    succeed AsA
+        |. keyword "As a"
         |. spaces
         |= detailText
 
 
 {-| Parse an `In order to` line.
 -}
-inOrderTo : Parser s InOrderTo
+inOrderTo : Parser  InOrderTo
 inOrderTo =
-    string "In order to"
-        *> spaces
-        *> (InOrderTo <$> detailText)
+    succeed InOrderTo
+        |. keyword "In order to"
+        |. spaces
+        |= detailText
 
 
 {-| Parse an `I want to` line.
 -}
-iWantTo : Parser s IWantTo
+iWantTo : Parser  IWantTo
 iWantTo =
-    string "I want to"
-        *> spaces
-        *> (IWantTo <$> detailText)
+    succeed IWantTo
+        |. keyword "I want to"
+        |. spaces
+        |= detailText
 
 
 {-| Parse a docstring quote token.
 -}
-docStringQuotes : Parser s String
+docStringQuotes : Parser  String
 docStringQuotes =
-    string "\"\"\""
+    token "\"\"\""
 
 
 {-| Parse a docstring step argument.
 -}
-docString : Parser s StepArg
+docString : Parser  StepArg
 docString =
-    optional "" newline
-        *> docStringQuotes
-        *> (DocString <$> regex "(([^\"]|\"(?!\"\")))*")
-        <* docStringQuotes
+    succeed DocString
+        |. spaces
+        |. docStringQuotes
+        |= chompUntilEndOr docStringQuotes
 
-
-{-| Parse a step argument table cell delimiter.
-
-This is saying, optional whitespace *> pipe character <* optional whitespace,
-where whitespace here excludes newlines
-
--}
-tableCellDelimiter : Parser s String
-tableCellDelimiter =
-    regex "[^\\r\\n\\S|]*\\|[^\\r\\n\\S|]*"
 
 
 {-| Parse a step argument table cell content.
-
+ 
 This is saying, any text bookended by non-pipe, non-whitespace characters
 
 -}
-tableCellContent : Parser s String
+tableCellContent : Parser  String
 tableCellContent =
-    regex "[^|\\s]([^|\\r\\n]*[^|\\s])?"
+    chompWhile (\c -> c /= '|' )
 
 
 {-| Parse a step argument table row.
@@ -129,11 +139,16 @@ tableCellContent =
 This is saying, any text bookended by non-pipe, non-whitespace characters
 
 -}
-tableRow : Parser s Row
+tableRow : Parser  Row
 tableRow =
-    tableCellDelimiter
-        *> sepBy tableCellDelimiter tableCellContent
-        <* tableCellDelimiter
+    Parser.sequence
+        { start = "|"
+        , separator = "|"
+        , end = "|"
+        , spaces = spaces
+        , item = tableCellContent
+        , trailing = Forbidden
+        }
 
 
 {-| Parse a step argument table rows.
@@ -141,9 +156,16 @@ tableRow =
 This is saying, any text bookended by non-pipe, non-whitespace characters
 
 -}
-tableRows : Parser s (List Row)
+tableRows : Parser (List Row)
 tableRows =
-    sepBy1 newline tableRow
+    Parser.sequence
+    { start = ""
+    , separator = newline
+    , end = ""
+    , spaces = spaces
+    , item = tableRow
+    , trailing = Optional
+    }
 
 
 {-| Parse a step argument table.
@@ -151,161 +173,216 @@ tableRows =
 This is saying, any text bookended by non-pipe, non-whitespace characters
 
 -}
-table : Parser s Table
+table : Parser Table
 table =
-    Table <$> tableRow <* newline <*> tableRows
+    succeed Table
+        |= tableRow
+        |. newline
+        |= tableRows
 
 
 {-| Parse an absent step argument.
 -}
-noArg : Parser s StepArg
+noArg : Parser StepArg
 noArg =
-    NoArg <$ succeed ()
+    succeed NoArg
 
 
 {-| Parse a step.
 -}
-step : Parser s Step
+step : Parser  Step
 step =
-    Step
-        <$> choice
-                [ Given <$ string "Given"
-                , When <$ string "When"
-                , Then <$ string "Then"
-                , And <$ string "And"
-                , But <$ string "But"
-                ]
-        <* spaces
-        <*> (detailText <* interspace)
-        <*> (docString <|> (DataTable <$> table) <|> noArg)
+    succeed Step
+        |= oneOf
+            [ succeed Given |. keyword "Given"
+            , succeed When |. keyword "When"
+            , succeed Then |. keyword "Then"
+            , succeed And |. keyword "And"
+            , succeed But |. keyword "But"
+            ]
+        |. spaces
+        |= detailText
+        |. interspace
+        |= oneOf [docString, map DataTable table, noArg]
 
 
 {-| Parse a scenario outline example section.
 -}
-examples : Parser s Examples
+examples : Parser Examples
 examples =
-    Examples
-        <$> (tags <* interspace)
-        <*> (string "Examples:" *> interspace *> table)
+    succeed Examples
+        |= tags
+        |. interspace
+        |. keyword "Examples:"
+        |. interspace
+        |= table
 
 
 {-| Parse a scenario.
 -}
-scenario : Parser s Scenario
+scenario : Parser Scenario
 scenario =
-    Scenario
-        <$> (tags <* interspace)
-        <*> (string "Scenario:" *> spaces *> detailText <* interspace)
-        <*> sepBy1 interspace step
+    succeed Scenario
+        |= tags
+        |. interspace
+        |. keyword "Scenario:"
+        |. spaces
+        |= detailText
+        |. interspace
+        |=   sequence
+            { start = ""
+            , separator = newline
+            , end = ""
+            , spaces = spaces
+            , item = step
+            , trailing = Optional -- demand a trailing semi-colon
+            }
 
 
 {-| Parse a scenario outline.
 -}
-scenarioOutline : Parser s Scenario
+scenarioOutline : Parser Scenario
 scenarioOutline =
-    ScenarioOutline
-        <$> (tags <* interspace)
-        <*> (string "Scenario Outline:" *> spaces *> detailText <* interspace)
-        <*> (sepBy1 interspace step <* interspace)
-        <*> sepBy1 interspace examples
+    succeed ScenarioOutline
+        |= tags
+        |. interspace
+        |. keyword "Scenario Outline:"
+        |. spaces
+        |= detailText
+        |. interspace
+        |=  sequence
+            { start = ""
+            , separator = newline
+            , end = ""
+            , spaces = interspace
+            , item = step
+            , trailing = Optional -- demand a trailing semi-colon
+            }
+        |. interspace
+        |=  sequence
+            { start = ""
+            , separator = newline
+            , end = ""
+            , spaces = interspace
+            , item = examples
+            , trailing = Optional -- demand a trailing semi-colon
+            }
 
 
 {-| Parse a background section.
 -}
-background : Parser s Background
+background : Parser  Background
 background =
-    Background
-        <$> (string "Background:"
-                *> spaces
-                *> optional "" detailText
-                <* interspace
-            )
-        <*> sepBy1 interspace step
+    succeed Background
+        |. keyword "Background:"
+        |. spaces
+        |= detailText
+        |. interspace
+        |=  sequence
+            { start = ""
+            , separator = newline
+            , end = ""
+            , spaces = interspace
+            , item = step
+            , trailing = Optional -- demand a trailing semi-colon
+            }
 
 
 {-| Parse an absent background section.
 -}
-noBackground : Parser s Background
+noBackground : Parser Background
 noBackground =
-    NoBackground <$ succeed ()
+    succeed NoBackground
 
 
 {-| Parse an entire.
 -}
-feature : Parser s Feature
+feature : Parser  Feature
 feature =
-    Feature
-        <$> (tags <* interspace)
-        <*> (string "Feature:"
-                *> optional "" spaces
-                *> detailText
-                <* interspace
-            )
-        <*> (asA <* interspace)
-        <*> (inOrderTo <* interspace)
-        <*> (iWantTo <* interspace)
-        <*> (background <|> noBackground <* interspace)
-        <*> sepBy1 interspace (scenario <|> scenarioOutline)
+    succeed Feature
+        |= tags
+        |. interspace
+        |. token "Feature:"
+        |. spaces
+        |= detailText
+        |. interspace
+        |= asA
+        |. interspace
+        |= inOrderTo
+        |. interspace
+        |= iWantTo
+        |. interspace
+        |= oneOf [background, noBackground]
+        |. interspace
+        |=  sequence
+            { start = ""
+            , separator = newline
+            , end = ""
+            , spaces = interspace
+            , item = oneOf [scenario , scenarioOutline]
+            , trailing = Optional -- demand a trailing semi-colon
+            }
 
 
-{-| Nicely format a parsing error.
--}
-formatError : String -> List String -> ParseContext state res -> String
-formatError input ms cx =
-    let
-        ( _, inputStream, _ ) =
-            cx
+-- {-| Nicely format a parsing error.
+-- -}
+-- formatError : String -> List String -> ParseContext state res -> String
+-- formatError input ms cx =
+--     let
+--         ( _, inputStream, _ ) =
+--             cx
 
-        lines =
-            String.lines input
+--         lines =
+--             String.lines input
 
-        ( formattedLine, lineNumber, lineOffset, _ ) =
-            List.foldl
-                (\line ( line_, n, o, pos ) ->
-                    if pos < 0 then
-                        ( line_, n, o, pos )
-                    else
-                        ( line, n + 1, pos, pos - 1 - String.length line_ )
-                )
-                ( "", 0, 0, inputStream.position )
-                lines
+--         ( formattedLine, lineNumber, lineOffset, _ ) =
+--             List.foldl
+--                 (\line ( line_, n, o, pos ) ->
+--                     if pos < 0 then
+--                         ( line_, n, o, pos )
 
-        separator =
-            "|> "
+--                     else
+--                         ( line, n + 1, pos, pos - 1 - String.length line_ )
+--                 )
+--                 ( "", 0, 0, inputStream.position )
+--                 lines
 
-        expectationSeparator =
-            "\n  * "
+--         separator =
+--             "|> "
 
-        lineNumberOffset =
-            floor (logBase 10 lineNumber) + 1
+--         expectationSeparator =
+--             "\n  * "
 
-        separatorOffset =
-            String.length separator
+--         lineNumberOffset =
+--             floor (logBase 10 lineNumber) + 1
 
-        padding =
-            lineNumberOffset + separatorOffset + lineOffset + 1
-    in
-        "Parse error around line:\n\n"
-            ++ toString lineNumber
-            ++ separator
-            ++ formattedLine
-            ++ "\n"
-            ++ String.padLeft padding ' ' "^"
-            ++ "\nI expected one of the following:\n"
-            ++ expectationSeparator
-            ++ String.join expectationSeparator ms
+--         separatorOffset =
+--             String.length separator
+
+--         padding =
+--             lineNumberOffset + separatorOffset + lineOffset + 1
+--     in
+--     "Parse error around line:\n\n"
+--         ++ toString lineNumber
+--         ++ separator
+--         ++ formattedLine
+--         ++ "\n"
+--         ++ String.padLeft padding ' ' "^"
+--         ++ "\nI expected one of the following:\n"
+--         ++ expectationSeparator
+--         ++ String.join expectationSeparator ms
 
 
-{-| Parse using an arbitrary parser combinator.
--}
-parse : Parser () res -> String -> Result String res
-parse parser s =
-    case Combine.parse parser (s ++ "\n") of
-        Ok ( _, _, result ) ->
-            Ok result
+-- {-| Parse using an arbitrary parser combinator.
+-- -}
+-- parse : Parser  res -> String -> Result String res
+-- parse parser s =
+--     case Combine.parse parser (s ++ "\n") of
+--         Ok ( _, _, result ) ->
+--             Ok result
 
-        Err ( _, _, _ ) ->
-            Err <| ""
+--         Err ( _, _, _ ) ->
+--             Err <| ""
 
 
 
