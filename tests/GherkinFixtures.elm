@@ -1,4 +1,4 @@
-module GherkinFixtures exposing (..)
+module GherkinFixtures exposing (background1, background2, backgroundContent2, butIAmTryingNotToBeAFool, defer, examples, examplesContentWithTag, examplesWithTag, feature, featureContent, featureWith2ScenariosWithTagsContent, featureWithScenarioOutlineWithExamplesWithTags, featureWithScenarioOutlineWithExamplesWithTagsContent, featureWithScenarioWithTags, featureWithTags, featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTags, featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTagsContent, givenIAmTryingToHaveFun, givenJumpsOverTheLazyDog, givenTheQuickBrownFox, givenTheWorldIsRound, noTags, nowIsTheTime, scenario, scenarioContent, scenarioOutline, scenarioOutlineContent, scenarioOutlineWithTags, scenarioOutlineWithTagsContent, scenarioWithTags, scenarioWithTagsContent, simpleFeature, simpleFeatureContent, simpleScenario, stepContent, stepContent2, table1, table2, tableContent1, tableRowContent, tagBlah, tagsFooBar)
 
 import Gherkin exposing (..)
 
@@ -232,7 +232,7 @@ Scenario: with six dozen liquor jugs
 Given the quick brown fox
 When jumps over the lazy dog
 """
-
+ 
 
 feature : Feature
 feature =
@@ -319,7 +319,7 @@ featureWithScenarioOutlineWithExamplesWithTags =
         [ ScenarioOutline []
             "Have fun"
             [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
-            [ (Examples tagBlah table2) ]
+            [ Examples tagBlah table2 ]
         ]
 
 

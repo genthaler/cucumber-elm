@@ -7,7 +7,7 @@ import Gherkin exposing (..)
 import String
 
 
-newline : String 
+newline : String
 newline =
     "\n"
 
@@ -187,6 +187,8 @@ featureMd feature =
                 ++ (String.join (newline ++ newline) <|
                         List.map scenarioMd scenarios
                    )
+
+
 flip : (a -> b -> c) -> b -> a -> c
 flip f b a =
     f a b

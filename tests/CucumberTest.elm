@@ -1,13 +1,13 @@
-module CucumberTest exposing (..)
+module CucumberTest exposing (all, expectFeatureWith2ScenariosWithTagsContent, expectFeatureWithScenarioWithTags, expectFeatureWithTags, testTestFeature, testTestFeatureText)
 
 import Cucumber exposing (..)
-import CucumberTest.StepDef as StepDef
-import GherkinFixtures exposing (..)
-import Test exposing (..)
+import CucumberTest.StepDefs as StepDefs
 import Expect
 import Gherkin exposing (..)
+import GherkinFixtures exposing (..)
 import Result.Extra
-
+import Test exposing (..)
+ 
 
 expectFeatureWith2ScenariosWithTagsContent : Test
 expectFeatureWith2ScenariosWithTagsContent =
@@ -18,7 +18,7 @@ expectFeatureWith2ScenariosWithTagsContent =
                     Result.Extra.isOk <|
                         expectFeatureText
                             ( "initial state"
-                            , [ StepDef.failIfDescriptionContainsFail ]
+                            , [ StepDefs.failIfDescriptionContainsFail ]
                             )
                             [ [ Tag "bar" ] ]
                             featureWith2ScenariosWithTagsContent
@@ -33,7 +33,7 @@ expectFeatureWithTags =
             (\() ->
                 Expect.false "Expecting true" <|
                     Result.Extra.isOk <|
-                        expectFeature ( "initial state", [ StepDef.alwaysFail ] )
+                        expectFeature ( "initial state", [ StepDefs.alwaysFail ] )
                             [ [ Tag "blah" ] ]
                             featureWithTags
             )
@@ -41,7 +41,7 @@ expectFeatureWithTags =
             (\() ->
                 Expect.true "Expecting true" <|
                     Result.Extra.isOk <|
-                        expectFeature ( "initial state", [ StepDef.alwaysPass ] )
+                        expectFeature ( "initial state", [ StepDefs.alwaysPass ] )
                             [ [ Tag "foo" ] ]
                             featureWithTags
             )
@@ -56,7 +56,7 @@ expectFeatureWithScenarioWithTags =
                 Expect.false "Expecting true" <|
                     Result.Extra.isOk <|
                         expectFeature
-                            ( "initial state", [ StepDef.alwaysFail ] )
+                            ( "initial state", [ StepDefs.alwaysFail ] )
                             [ [ Tag "blah" ] ]
                             featureWithScenarioWithTags
             )
@@ -64,7 +64,7 @@ expectFeatureWithScenarioWithTags =
             (\() ->
                 Expect.true "Expecting true" <|
                     Result.Extra.isOk <|
-                        expectFeature ( "initial state", [ StepDef.alwaysPass ] )
+                        expectFeature ( "initial state", [ StepDefs.alwaysPass ] )
                             [ [ Tag "foo" ] ]
                             featureWithScenarioWithTags
             )
@@ -74,11 +74,11 @@ expectFeatureWithScenarioWithTags =
 testTestFeatureText : Test
 testTestFeatureText =
     describe "testing expectFeatureText "
-        [ test "successfully runs a Feature against a StepDef function"
+        [ test "successfully runs a Feature against a StepDefs function"
             (\() ->
                 Expect.true "Expecting true" <|
                     Result.Extra.isOk <|
-                        expectFeatureText ( "initial state", [ StepDef.alwaysPass ] ) [ noTags ] simpleFeatureContent
+                        expectFeatureText ( "initial state", [ StepDefs.alwaysPass ] ) [ noTags ] simpleFeatureContent
             )
         ]
 
@@ -86,11 +86,11 @@ testTestFeatureText =
 testTestFeature : Test
 testTestFeature =
     describe "testing expectFeature "
-        [ test "successfully runs a Feature against a StepDef function"
+        [ test "successfully runs a Feature against a StepDefs function"
             (\() ->
                 Expect.true "Expecting true" <|
                     Result.Extra.isOk <|
-                        expectFeature ( "initial state", [ StepDef.alwaysPass ] ) [ noTags ] simpleFeature
+                        expectFeature ( "initial state", [ StepDefs.alwaysPass ] ) [ noTags ] simpleFeature
             )
         ]
 

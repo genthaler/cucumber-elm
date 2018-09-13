@@ -1,7 +1,7 @@
-module GherkinParser exposing (feature, parse)
+module GherkinParser exposing (..)
 
 import Gherkin exposing (..)
-import Parser exposing ((|.), (|=), Parser, Trailing(..), chompUntilEndOr, chompWhile, deadEndsToString, getChompedString, keyword, lineComment, loop, map, oneOf, run, sequence, succeed, symbol, token, variable)
+import Parser exposing ((|.), (|=), Parser, Trailing(..), chompUntilEndOr, chompWhile, deadEndsToString, getChompedString, keyword, lineComment, loop, map, oneOf, run, sequence, succeed, symbol, token, variable, end)
 import Set
 import String
 
@@ -17,14 +17,14 @@ comment =
 -}
 spaces : Parser ()
 spaces =
-    chompWhile (\c -> c == ' ' || c == '\t' || c == '\n' || c == '\u{000D}')
+    chompWhile (\c -> c == ' ' || c == '\t')
 
 
 {-| Parse a newline
 -}
 newline : Parser ()
 newline =
-    oneOf [ token "\u{000D}\n", token "\u{000D}", token "\u{000D}" ]
+    oneOf [ token "\r\n", token "\r", token "\r" ]
 
 
 {-| Parse a newline
@@ -39,7 +39,7 @@ sensitive.
 -}
 interspace : Parser ()
 interspace =
-    oneOf [ newline, spaces, comment ]
+    oneOf [ spaces, effectiveEndOfLine ]
 
 
 {-| Parse detail text, typically after a Gherkin keyword until the effective
@@ -49,7 +49,7 @@ detailText : Parser String
 detailText =
     getChompedString <|
         succeed ()
-            |. chompWhile (\c -> c /= '#' || c /= '\n' || c /= '\u{000D}')
+            |. chompWhile (\c -> c /= '#' && c /= '\n' && c /= '\r')
 
 
 {-| Parse a tag.
@@ -275,6 +275,8 @@ feature =
         |= oneOf [ background, noBackground ]
         |. interspace
         |= loops (oneOf [ scenario, scenarioOutline ]) newline
+        |. interspace
+        |. end
 
 
 {-| Parse using an arbitrary parser combinator.
@@ -286,7 +288,7 @@ parse parser s =
             Ok result
 
         Err deadEnds ->
-            Err <| deadEndsToString deadEnds
+            Err <| Debug.toString deadEnds
 
 
 loops : Parser a -> Parser () -> Parser (List a)

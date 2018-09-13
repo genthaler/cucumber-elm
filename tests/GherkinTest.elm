@@ -1,8 +1,8 @@
-module GherkinTest exposing (..)
+module GherkinTest exposing (all, feature)
 
-import Test exposing (..)
 import Expect
 import Gherkin exposing (..)
+import Test exposing (..)
 
 
 feature : Feature
@@ -22,13 +22,12 @@ feature =
             , Step And "something with <param_2>" (DataTable (Table [] [ [] ]))
             , Step Then "check <param_3> is the output" NoArg
             ]
-            ([ Examples []
+            [ Examples []
                 (Table []
                     [ [ "" ]
                     ]
                 )
-             ]
-            )
+            ]
         , Scenario []
             "guys are sailing"
             [ Step Given "a precondition is valid" NoArg

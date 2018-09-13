@@ -1,4 +1,4 @@
-module GherkinMdTest exposing (..)
+module GherkinMdTest exposing (all)
 
 import Expect exposing (equal, fail, pass)
 import GherkinFixtures exposing (..)
@@ -76,10 +76,10 @@ all =
                             GherkinParser.feature
                             featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTagsContent
                 in
-                    case res of
-                        Ok myFeature ->
-                            equal (featureMd myFeature) expected
+                case res of
+                    Ok myFeature ->
+                        equal (featureMd myFeature) expected
 
-                        Err error ->
-                            fail error
+                    Err error ->
+                        fail error
         ]
