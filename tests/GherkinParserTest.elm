@@ -1,12 +1,13 @@
-module GherkinParserTest exposing (..)
+module GherkinParserTest exposing (all)
 
-import Gherkin exposing (..)
-import GherkinParser
-import GherkinFixtures exposing (..)
-import Test exposing (..)
 import Expect
- 
- 
+import Gherkin exposing (..)
+import GherkinFixtures exposing (..)
+import GherkinParser
+import Parser exposing ((|.), (|=), Parser, Trailing(..), chompUntilEndOr, chompWhile, deadEndsToString, end, getChompedString, keyword, lineComment, loop, map, oneOf, run, sequence, succeed, symbol, token, variable)
+import Test exposing (..)
+
+
 all : Test
 all =
     describe "parsing Gherkin"
@@ -16,8 +17,8 @@ all =
                     comment =
                         "# some comment"
                 in
-                    Expect.equal (GherkinParser.parse GherkinParser.comment comment)
-                        (Result.Ok ())
+                Expect.equal (GherkinParser.parse GherkinParser.comment comment)
+                    (Result.Ok ())
         , test "parses AsA correctly" <|
             defer <|
                 let
@@ -27,8 +28,8 @@ all =
                     asADesc =
                         "As a" ++ " " ++ asA ++ "\n"
                 in
-                    Expect.equal (GherkinParser.parse GherkinParser.asA asADesc)
-                        (Result.Ok (AsA asA))
+                Expect.equal (GherkinParser.parse GherkinParser.asA asADesc)
+                    (Result.Ok (AsA asA))
         , test "parses InOrderTo correctly" <|
             defer <|
                 let
@@ -38,8 +39,8 @@ all =
                     inOrderToDesc =
                         "In order to" ++ " " ++ inOrderTo ++ "\n"
                 in
-                    Expect.equal (GherkinParser.parse GherkinParser.inOrderTo inOrderToDesc)
-                        (Result.Ok (InOrderTo inOrderTo))
+                Expect.equal (GherkinParser.parse GherkinParser.inOrderTo inOrderToDesc)
+                    (Result.Ok (InOrderTo inOrderTo))
         , test "parses IWantTo correctly" <|
             defer <|
                 let
@@ -49,8 +50,8 @@ all =
                     iWantToDesc =
                         "I want to" ++ " " ++ iWantTo ++ "\n"
                 in
-                    Expect.equal (GherkinParser.parse GherkinParser.iWantTo iWantToDesc) <|
-                        Result.Ok (IWantTo iWantTo)
+                Expect.equal (GherkinParser.parse GherkinParser.iWantTo iWantToDesc) <|
+                    Result.Ok (IWantTo iWantTo)
         , test "parses Background correctly" <|
             defer <|
                 Expect.equal (GherkinParser.parse GherkinParser.background backgroundContent2) <|
@@ -65,17 +66,18 @@ all =
                     docString =
                         docStringQuotes ++ nowIsTheTime ++ docStringQuotes
                 in
-                    Expect.equal (GherkinParser.parse GherkinParser.docString docString) <|
-                        Result.Ok <|
-                            DocString nowIsTheTime
+                Expect.equal (GherkinParser.parse GherkinParser.docString docString) <|
+                    Result.Ok <|
+                        DocString nowIsTheTime
         , test "parses tableCellContent correctly" <|
             defer <|
                 Expect.equal (GherkinParser.parse GherkinParser.tableCellContent "asdf | ") <|
                     Result.Ok "asdf"
-        , test "parses DataTable row correctly" <|
-            defer <|
-                Expect.equal (GherkinParser.parse GherkinParser.tableRow tableRowContent) <|
-                    Result.Ok [ "Now", "is", "the", "time" ]
+        , only <|
+            test "parses DataTable row correctly" <|
+                defer <|
+                    Expect.equal (GherkinParser.parse GherkinParser.tableRow tableRowContent) <|
+                        Result.Ok [ "Now", "is", "the", "time" ]
         , test "parses DataTable correctly" <|
             defer <|
                 Expect.equal (GherkinParser.parse GherkinParser.table tableContent1) <|

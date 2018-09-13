@@ -52,7 +52,7 @@ nowIsTheTime =
 
 tableRowContent : String
 tableRowContent =
-    "| Now | is | the | time | "
+    "| Now | is | the | time |"
 
 
 table1 : Table

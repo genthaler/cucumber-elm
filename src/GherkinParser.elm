@@ -1,7 +1,9 @@
-module GherkinParser exposing (..)
+module GherkinParser exposing (asA, background, comment, detailText, docString, effectiveEndOfLine, examples, feature, iWantTo, inOrderTo, interspace, loops, loopsHelp, newline, noArg, noBackground, parse, scenario, scenarioOutline, spaces, step, table, tableCellContent, tableRow, tableRows, tag, tags)
+
+-- (asA, background, comment, detailText, docString, effectiveEndOfLine, examples, feature, iWantTo, inOrderTo, interspace, loops, loopsHelp, newline, noArg, noBackground, parse, scenario, scenarioOutline, spaces, step, table, tableCellContent, tableRow, tableRows, tag, tags)
 
 import Gherkin exposing (..)
-import Parser exposing ((|.), (|=), Parser, Trailing(..), chompUntilEndOr, chompWhile, deadEndsToString, getChompedString, keyword, lineComment, loop, map, oneOf, run, sequence, succeed, symbol, token, variable, end)
+import Parser exposing ((|.), (|=), Parser, Trailing(..), chompUntilEndOr, chompWhile, deadEndsToString, end, getChompedString, keyword, lazy, lineComment, loop, map, oneOf, run, sequence, succeed, symbol, token, variable)
 import Set
 import String
 
@@ -24,7 +26,7 @@ spaces =
 -}
 newline : Parser ()
 newline =
-    oneOf [ token "\r\n", token "\r", token "\r" ]
+    oneOf [ end, token "\u{000D}\n", token "\u{000D}", token "\n" ]
 
 
 {-| Parse a newline
@@ -49,7 +51,7 @@ detailText : Parser String
 detailText =
     getChompedString <|
         succeed ()
-            |. chompWhile (\c -> c /= '#' && c /= '\n' && c /= '\r')
+            |. chompWhile (\c -> c /= '#' && c /= '\n' && c /= '\u{000D}')
 
 
 {-| Parse a tag.
@@ -126,7 +128,7 @@ This is saying, any text bookended by non-pipe, non-whitespace characters
 -}
 tableCellContent : Parser String
 tableCellContent =
-    getChompedString <| chompWhile (\c -> c /= '|')
+    map String.trim <| getChompedString <| chompWhile (\c -> c /= '|')
 
 
 {-| Parse a step argument table row.
@@ -136,14 +138,17 @@ This is saying, any text bookended by non-pipe, non-whitespace characters
 -}
 tableRow : Parser Row
 tableRow =
-    Parser.sequence
-        { start = "|"
-        , separator = "|"
-        , end = "|"
-        , spaces = spaces
-        , item = tableCellContent
-        , trailing = Forbidden
-        }
+    succeed identity
+        |. spaces
+        |. symbol "|"
+        |. spaces
+        |= oneOf
+            [ succeed []
+                |. newline
+            , succeed (::)
+                |= tableCellContent
+                |= lazy (\_ -> tableRow)
+            ]
 
 
 {-| Parse a step argument table rows.
