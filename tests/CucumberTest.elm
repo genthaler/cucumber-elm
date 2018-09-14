@@ -7,7 +7,7 @@ import Gherkin exposing (..)
 import GherkinFixtures exposing (..)
 import Result.Extra
 import Test exposing (..)
- 
+
 
 expectFeatureWith2ScenariosWithTagsContent : Test
 expectFeatureWith2ScenariosWithTagsContent =

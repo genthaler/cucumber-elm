@@ -121,6 +121,8 @@ docString =
         |= (getChompedString <| chompUntilEndOr "\"\"\"")
 
 
+
+
 {-| Parse a step argument table cell content.
 
 This is saying, any text bookended by non-pipe, non-whitespace characters
@@ -144,7 +146,7 @@ tableRow =
         |. spaces
         |= oneOf
             [ succeed []
-                |. newline
+                |. effectiveEndOfLine
             , succeed (::)
                 |= tableCellContent
                 |= lazy (\_ -> tableRow)

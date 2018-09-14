@@ -232,7 +232,7 @@ Scenario: with six dozen liquor jugs
 Given the quick brown fox
 When jumps over the lazy dog
 """
- 
+
 
 feature : Feature
 feature =

@@ -73,11 +73,10 @@ all =
             defer <|
                 Expect.equal (GherkinParser.parse GherkinParser.tableCellContent "asdf | ") <|
                     Result.Ok "asdf"
-        , only <|
-            test "parses DataTable row correctly" <|
-                defer <|
-                    Expect.equal (GherkinParser.parse GherkinParser.tableRow tableRowContent) <|
-                        Result.Ok [ "Now", "is", "the", "time" ]
+        , test "parses DataTable row correctly" <|
+            defer <|
+                Expect.equal (GherkinParser.parse GherkinParser.tableRow tableRowContent) <|
+                    Result.Ok [ "Now", "is", "the", "time" ]
         , test "parses DataTable correctly" <|
             defer <|
                 Expect.equal (GherkinParser.parse GherkinParser.table tableContent1) <|
@@ -118,4 +117,7 @@ all =
             defer <|
                 Expect.equal (GherkinParser.parse GherkinParser.feature featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTagsContent) <|
                     Result.Ok featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTags
-        ]
+            ]
+
+
+
