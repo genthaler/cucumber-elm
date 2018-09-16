@@ -89,7 +89,7 @@ all =
             defer <|
                 Expect.equal (GherkinParser.parse GherkinParser.step stepContent2) <|
                     Result.Ok butIAmTryingNotToBeAFool
-        , test "parses Examples correctly" <|
+        , only <| test "parses Examples correctly" <|
             defer <|
                 Expect.equal (GherkinParser.parse GherkinParser.examples examplesContentWithTag) <|
                     Result.Ok examplesWithTag
@@ -117,7 +117,4 @@ all =
             defer <|
                 Expect.equal (GherkinParser.parse GherkinParser.feature featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTagsContent) <|
                     Result.Ok featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTags
-            ]
-
-
-
+        ]

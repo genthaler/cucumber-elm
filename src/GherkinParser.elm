@@ -1,9 +1,12 @@
 module GherkinParser exposing (asA, background, comment, detailText, docString, effectiveEndOfLine, examples, feature, iWantTo, inOrderTo, interspace, loops, loopsHelp, newline, noArg, noBackground, parse, scenario, scenarioOutline, spaces, step, table, tableCellContent, tableRow, tableRows, tag, tags)
 
+{-| As a rule, all these parsers start with what they need i.e. commit to a path immediately, and consume all whitespace at the end.
+-}
+
 -- (asA, background, comment, detailText, docString, effectiveEndOfLine, examples, feature, iWantTo, inOrderTo, interspace, loops, loopsHelp, newline, noArg, noBackground, parse, scenario, scenarioOutline, spaces, step, table, tableCellContent, tableRow, tableRows, tag, tags)
 
 import Gherkin exposing (..)
-import Parser exposing ((|.), (|=), Parser, Trailing(..), chompUntilEndOr, chompWhile, deadEndsToString, end, getChompedString, keyword, lazy, lineComment, loop, map, oneOf, run, sequence, succeed, symbol, token, variable)
+import Parser exposing ((|.), (|=), Parser, Trailing(..), backtrackable, chompUntilEndOr, chompWhile, commit, deadEndsToString, end, getChompedString, keyword, lazy, lineComment, loop, map, oneOf, run, sequence, succeed, symbol, token, variable)
 import Set
 import String
 
@@ -41,7 +44,8 @@ sensitive.
 -}
 interspace : Parser ()
 interspace =
-    oneOf [ spaces, effectiveEndOfLine ]
+    succeed () 
+    |. zeroOrMore (oneOf [ spaces, effectiveEndOfLine ])
 
 
 {-| Parse detail text, typically after a Gherkin keyword until the effective
@@ -49,9 +53,11 @@ end of line.
 -}
 detailText : Parser String
 detailText =
-    getChompedString <|
+    (getChompedString <|
         succeed ()
             |. chompWhile (\c -> c /= '#' && c /= '\n' && c /= '\u{000D}')
+    )
+        |. effectiveEndOfLine
 
 
 {-| Parse a tag.
@@ -65,20 +71,14 @@ tag =
             , inner = Char.isAlphaNum
             , reserved = Set.empty
             }
+        |. interspace
 
 
 {-| Parse a list of tag lines.
 -}
 tags : Parser (List Tag)
 tags =
-    Parser.sequence
-        { start = ""
-        , separator = ""
-        , end = ""
-        , spaces = spaces
-        , item = tag
-        , trailing = Optional -- demand a trailing semi-colon
-        }
+    zeroOrMore tag
 
 
 {-| Parse an `As a` line.
@@ -115,12 +115,14 @@ iWantTo =
 -}
 docString : Parser StepArg
 docString =
+    let
+        tripleQuote =
+            "\"\"\""
+    in
     succeed DocString
-        |. spaces
-        |. token "\"\"\""
-        |= (getChompedString <| chompUntilEndOr "\"\"\"")
-
-
+        |. token tripleQuote
+        |= (getChompedString <| chompUntilEndOr tripleQuote)
+        |. token tripleQuote
 
 
 {-| Parse a step argument table cell content.
@@ -141,7 +143,6 @@ This is saying, any text bookended by non-pipe, non-whitespace characters
 tableRow : Parser Row
 tableRow =
     succeed identity
-        |. spaces
         |. symbol "|"
         |. spaces
         |= oneOf
@@ -151,6 +152,7 @@ tableRow =
                 |= tableCellContent
                 |= lazy (\_ -> tableRow)
             ]
+        |. interspace
 
 
 {-| Parse a step argument table rows.
@@ -160,7 +162,19 @@ This is saying, any text bookended by non-pipe, non-whitespace characters
 -}
 tableRows : Parser (List Row)
 tableRows =
-    loops tableRow newline
+    zeroOrMore tableRow
+
+
+{-| Apply a parser zero or more times
+-}
+zeroOrMore : Parser a -> Parser (List a)
+zeroOrMore p =
+    oneOf
+        [ succeed (::)
+            |= p
+            |= lazy (\_ -> zeroOrMore p)
+        , succeed []
+        ]
 
 
 {-| Parse a step argument table.
@@ -172,7 +186,6 @@ table : Parser Table
 table =
     succeed Table
         |= tableRow
-        |. newline
         |= tableRows
 
 
@@ -198,7 +211,12 @@ step =
         |. spaces
         |= detailText
         |. interspace
-        |= oneOf [ docString, map DataTable table, noArg ]
+        |= oneOf
+            [ docString
+            , map DataTable table
+            , noArg
+            ]
+        |. interspace
 
 
 {-| Parse a scenario outline example section.
@@ -211,6 +229,7 @@ examples =
         |. keyword "Examples:"
         |. interspace
         |= table
+        |. interspace
 
 
 {-| Parse a scenario.
@@ -225,6 +244,7 @@ scenario =
         |= detailText
         |. interspace
         |= loops step newline
+        |. interspace
 
 
 {-| Parse a scenario outline.
@@ -241,6 +261,7 @@ scenarioOutline =
         |= loops step newline
         |. interspace
         |= loops examples newline
+        |. interspace
 
 
 {-| Parse a background section.
@@ -253,6 +274,7 @@ background =
         |= detailText
         |. interspace
         |= loops step newline
+        |. interspace
 
 
 {-| Parse an absent background section.

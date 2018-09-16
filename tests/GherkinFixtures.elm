@@ -64,7 +64,7 @@ table1 =
 
 tableContent1 : String
 tableContent1 =
-    """ | Now | is | the | time |
+    """| Now | is | the | time |
           | For | all | good | men | """
 
 
