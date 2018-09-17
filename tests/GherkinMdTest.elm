@@ -11,7 +11,7 @@ all : Test
 all =
     describe "pretty printing Gherkin as HTML"
         [ test "parses Feature with tagsFooBar correctly" <|
-            defer <|
+            \_ ->
                 let
                     expected =
                         """@foo @bar
@@ -20,7 +20,7 @@ all =
 > As a person
 
 > In order to get through life
-
+ 
 > I want to be able to do stuff
 
 ## Background: Some basic info

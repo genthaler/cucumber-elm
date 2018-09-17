@@ -4,23 +4,27 @@ import Expect
 import Gherkin exposing (..)
 import GherkinFixtures exposing (..)
 import GherkinParser
-import Parser exposing ((|.), (|=), Parser, Trailing(..), chompUntilEndOr, chompWhile, deadEndsToString, end, getChompedString, keyword, lineComment, loop, map, oneOf, run, sequence, succeed, symbol, token, variable)
 import Test exposing (..)
-
+import Parser exposing ((|.))
 
 all : Test
 all =
     describe "parsing Gherkin"
         [ test "parses comments correctly" <|
-            defer <|
+            \_ ->
                 let
                     comment =
                         "# some comment"
                 in
                 Expect.equal (GherkinParser.parse GherkinParser.comment comment)
                     (Result.Ok ())
+        , only <|
+            test "parse whitespace correctly" <|
+                \_ ->
+                    Expect.equal (GherkinParser.parse (Parser.succeed () |. GherkinParser.zeroOrMore (Parser.oneOf [GherkinParser.space, GherkinParser.tab]) |. Parser.end) "  ")
+                        (Result.Ok ())
         , test "parses AsA correctly" <|
-            defer <|
+            \_ ->
                 let
                     asA =
                         "super dev"
@@ -31,7 +35,7 @@ all =
                 Expect.equal (GherkinParser.parse GherkinParser.asA asADesc)
                     (Result.Ok (AsA asA))
         , test "parses InOrderTo correctly" <|
-            defer <|
+            \_ ->
                 let
                     inOrderTo =
                         "write super apps"
@@ -42,7 +46,7 @@ all =
                 Expect.equal (GherkinParser.parse GherkinParser.inOrderTo inOrderToDesc)
                     (Result.Ok (InOrderTo inOrderTo))
         , test "parses IWantTo correctly" <|
-            defer <|
+            \_ ->
                 let
                     iWantTo =
                         "use Elm"
@@ -53,12 +57,12 @@ all =
                 Expect.equal (GherkinParser.parse GherkinParser.iWantTo iWantToDesc) <|
                     Result.Ok (IWantTo iWantTo)
         , test "parses Background correctly" <|
-            defer <|
+            \_ ->
                 Expect.equal (GherkinParser.parse GherkinParser.background backgroundContent2) <|
                     Result.Ok <|
                         background2
         , test "parses DocString correctly" <|
-            defer <|
+            \_ ->
                 let
                     docStringQuotes =
                         "\"\"\""
@@ -70,51 +74,51 @@ all =
                     Result.Ok <|
                         DocString nowIsTheTime
         , test "parses tableCellContent correctly" <|
-            defer <|
+            \_ ->
                 Expect.equal (GherkinParser.parse GherkinParser.tableCellContent "asdf | ") <|
                     Result.Ok "asdf"
         , test "parses DataTable row correctly" <|
-            defer <|
+            \_ ->
                 Expect.equal (GherkinParser.parse GherkinParser.tableRow tableRowContent) <|
                     Result.Ok [ "Now", "is", "the", "time" ]
         , test "parses DataTable correctly" <|
-            defer <|
+            \_ ->
                 Expect.equal (GherkinParser.parse GherkinParser.table tableContent1) <|
                     Result.Ok table1
         , test "parses Given Step with DataTable correctly" <|
-            defer <|
+            \_ ->
                 Expect.equal (GherkinParser.parse GherkinParser.step stepContent) <|
                     Result.Ok givenIAmTryingToHaveFun
         , test "parses But Step with NoArg correctly" <|
-            defer <|
+            \_ ->
                 Expect.equal (GherkinParser.parse GherkinParser.step stepContent2) <|
                     Result.Ok butIAmTryingNotToBeAFool
-        , only <| test "parses Examples correctly" <|
-            defer <|
+        , test "parses Examples correctly" <|
+            \_ ->
                 Expect.equal (GherkinParser.parse GherkinParser.examples examplesContentWithTag) <|
                     Result.Ok examplesWithTag
         , test "parses Scenario correctly" <|
-            defer <|
+            \_ ->
                 Expect.equal (GherkinParser.parse GherkinParser.scenario scenarioContent) <|
                     Result.Ok scenario
         , test "parses Scenario with tagsFooBar correctly" <|
-            defer <|
+            \_ ->
                 Expect.equal (GherkinParser.parse GherkinParser.scenario scenarioWithTagsContent) <|
                     Result.Ok scenarioWithTags
         , test "parses Scenario Outline correctly" <|
-            defer <|
+            \_ ->
                 Expect.equal (GherkinParser.parse GherkinParser.scenarioOutline scenarioOutlineContent) <|
                     Result.Ok scenarioOutline
         , test "parses Scenario Outline with tagsFooBar correctly" <|
-            defer <|
+            \_ ->
                 Expect.equal (GherkinParser.parse GherkinParser.scenarioOutline scenarioOutlineWithTagsContent) <|
                     Result.Ok scenarioOutlineWithTags
         , test "parses Feature correctly" <|
-            defer <|
+            \_ ->
                 Expect.equal (GherkinParser.parse GherkinParser.feature featureContent) <|
                     Result.Ok feature
         , test "parses Feature with tagsFooBar correctly" <|
-            defer <|
+            \_ ->
                 Expect.equal (GherkinParser.parse GherkinParser.feature featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTagsContent) <|
                     Result.Ok featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTags
         ]
