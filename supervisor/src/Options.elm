@@ -53,9 +53,9 @@ programConfig =
                     (Option.optionalKeywordArg "report"
                         |> Option.withDefault "console"
                         |> Option.oneOf Console
-                            [ "json" => Json
-                            , "junit" => Junit
-                            , "console" => Console
+                            [ ("json" , Json)
+                            , ("junit" ,Junit)
+                            , ("console" ,Console)
                             ]
                     )
                 |> OptionsParser.withRestArgs (Option.restArgs "TESTFILES")
@@ -90,10 +90,7 @@ init flags msg =
         |> Ports.print
 
 
-(=>) : a -> b -> ( a, b )
-(=>) =
-    (,)
-
+ 
 
 type alias Flags =
     Program.FlagsIncludingArgv {}

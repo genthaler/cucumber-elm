@@ -1,8 +1,8 @@
 module SupervisorState exposing (..)
 
-import StateMachine exposing (Allowed, State(State), map, untag)
+import StateMachine exposing (Allowed, State(..), map, untag)
 import Options exposing (CliOptions, RunTestsRecord)
-import PackageInfo exposing (PackageInfo)
+import Elm.Project exposing (..)
 
 
 makeState : model -> State trans model

@@ -1,4 +1,4 @@
-module GherkinParser exposing (asA, background, comment, detailText, docString, effectiveEndOfLine, examples, feature, iWantTo, inOrderTo, interspace, newline, noArg, noBackground, parse, scenario, scenarioOutline, space, spaces, step, tab, table, tableCellContent, tableRow, tableRows, tag, tags, zeroOrMore)
+module GherkinParser exposing (feature, parse)
 
 {-| As a rule, all these parsers start with what they need i.e. commit to a path immediately, and consume all whitespace at the end.
 -}
@@ -10,22 +10,6 @@ import Gherkin exposing (..)
 import Parser exposing ((|.), (|=), Parser, Trailing(..), backtrackable, chompUntilEndOr, chompWhile, commit, deadEndsToString, end, getChompedString, keyword, lazy, lineComment, map, oneOf, run, sequence, succeed, symbol, token, variable)
 import Set
 import String
-
-
-
--- Utility parsers
-
-
-{-| Parse using an arbitrary parser combinator.
--}
-parse : Parser res -> String -> Result String res
-parse parser s =
-    case run parser s of
-        Ok result ->
-            Ok result
-
-        Err deadEnds ->
-            Err <| Debug.toString deadEnds
 
 
 {-| Apply a parser zero or more times
@@ -204,6 +188,7 @@ tags =
         |. interspace
 
 
+
 -- Gherkin keyword line parsers
 
 
@@ -333,7 +318,11 @@ noBackground =
         |. interspace
 
 
-{-| Parse an entire.
+
+-- Public API
+
+
+{-| Parse a feature.
 -}
 feature : Parser Feature
 feature =
@@ -349,4 +338,16 @@ feature =
         |= iWantTo
         |= oneOf [ background, noBackground ]
         |= zeroOrMore (oneOf [ scenario, scenarioOutline ])
-        -- |. end
+        |. end
+
+
+{-| Parse using an arbitrary parser combinator.
+-}
+parse : Parser res -> String -> Result String res
+parse parser s =
+    case run parser s of
+        Ok result ->
+            Ok result
+
+        Err deadEnds ->
+            Err <| Debug.toString deadEnds

@@ -1,13 +1,8 @@
-module GherkinFixtures exposing (background1, background2, backgroundContent2, butIAmTryingNotToBeAFool, defer, examples, examplesContentWithTag, examplesWithTag, feature, featureContent, featureWith2ScenariosWithTagsContent, featureWithScenarioOutlineWithExamplesWithTags, featureWithScenarioOutlineWithExamplesWithTagsContent, featureWithScenarioWithTags, featureWithTags, featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTags, featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTagsContent, givenIAmTryingToHaveFun, givenJumpsOverTheLazyDog, givenTheQuickBrownFox, givenTheWorldIsRound, noTags, nowIsTheTime, scenario, scenarioContent, scenarioOutline, scenarioOutlineContent, scenarioOutlineWithTags, scenarioOutlineWithTagsContent, scenarioWithTags, scenarioWithTagsContent, simpleFeature, simpleFeatureContent, simpleScenario, stepContent, stepContent2, table1, table2, tableContent1, tableRowContent, tagBlah, tagsFooBar)
+module GherkinFixtures exposing (background1, background2, backgroundContent2, butIAmTryingNotToBeAFool, examples, examplesContentWithTag, examplesWithTag, feature, featureContent, featureWith2ScenariosWithTagsContent, featureWithScenarioOutlineWithExamplesWithTags, featureWithScenarioOutlineWithExamplesWithTagsContent, featureWithScenarioWithTags, featureWithTags, featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTags, featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTagsContent, givenIAmTryingToHaveFun, givenJumpsOverTheLazyDog, givenTheQuickBrownFox, givenTheWorldIsRound, noTags, nowIsTheTime, scenario, scenarioContent, scenarioOutline, scenarioOutlineContent, scenarioOutlineWithTags, scenarioOutlineWithTagsContent, scenarioWithTags, scenarioWithTagsContent, simpleFeature, simpleFeatureContent, simpleScenario, stepContent, stepContent2, table1, table2, tableContent1, tableRowContent, tagBlah, tagsFooBar)
 
 import Gherkin exposing (..)
 
 
-{-| defer execution
--}
-defer : a -> (() -> a)
-defer x =
-    \() -> x
 
 
 noTags : List a

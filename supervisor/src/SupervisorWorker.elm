@@ -1,16 +1,15 @@
 port module SupervisorWorker exposing (..)
 
 import Options exposing (..)
-import PackageInfo exposing (decoder)
+import Elm.Project exposing (..)
 import Platform exposing (programWithFlags)
 import Ports exposing (..)
 import SupervisorState exposing (..)
 import Task
 import StateMachine exposing (untag, map)
 import Json.Decode
-import Help exposing (..)
 import Cli.Program
-
+ 
 
 type Msg
     = NoOp
