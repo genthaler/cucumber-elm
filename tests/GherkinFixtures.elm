@@ -52,7 +52,7 @@ nowIsTheTime =
 
 tableRowContent : String
 tableRowContent =
-    "| Now | is | the | time |"
+    "| Now | is | the | time |\n"
 
 
 table1 : Table
@@ -65,7 +65,8 @@ table1 =
 tableContent1 : String
 tableContent1 =
     """| Now | is | the | time |
-          | For | all | good | men | """
+          | For | all | good | men | 
+    """
 
 
 table2 : Table
@@ -79,7 +80,8 @@ stepContent : String
 stepContent =
     """Given I am trying to have fun
   | Now | is | the | time |
-  | For | all | good | men | """
+  | For | all | good | men | 
+  """
 
 
 stepContent2 : String
@@ -206,7 +208,8 @@ examplesContentWithTag =
     """@blah
     Examples:
       | Now |
-      | For | """
+      | For | 
+    """
 
 
 simpleFeature : Feature

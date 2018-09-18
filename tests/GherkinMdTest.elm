@@ -14,13 +14,14 @@ all =
             \_ ->
                 let
                     expected =
-                        """@foo @bar
+                        String.replace "\r" "" <|
+                            """@foo @bar
 # Feature: Living life
 
 > As a person
 
 > In order to get through life
- 
+
 > I want to be able to do stuff
 
 ## Background: Some basic info

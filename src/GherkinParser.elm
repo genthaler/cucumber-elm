@@ -1,14 +1,13 @@
-module GherkinParser exposing  (..)
-
--- (asA, background, comment, detailText, docString, effectiveEndOfLine, examples,zeroOrMore, feature, iWantTo, inOrderTo, interspace, loops, loopsHelp, newline, noArg, noBackground, parse, scenario, scenarioOutline, space, spaces, step, tab, table, tableCellContent, tableRow, tableRows, tag, tags)
+module GherkinParser exposing (asA, background, comment, detailText, docString, effectiveEndOfLine, examples, feature, iWantTo, inOrderTo, interspace, newline, noArg, noBackground, parse, scenario, scenarioOutline, space, spaces, step, tab, table, tableCellContent, tableRow, tableRows, tag, tags, zeroOrMore)
 
 {-| As a rule, all these parsers start with what they need i.e. commit to a path immediately, and consume all whitespace at the end.
 -}
 
--- (asA, background, comment, detailText, docString, effectiveEndOfLine, examples, feature, iWantTo, inOrderTo, interspace, loops, loopsHelp, newline, noArg, noBackground, parse, scenario, scenarioOutline, spaces, step, table, tableCellContent, tableRow, tableRows, tag, tags)
+-- (asA, background, comment, detailText, docString, effectiveEndOfLine, examples,zeroOrMore, feature, iWantTo, inOrderTo, interspace, newline, noArg, noBackground, parse, scenario, scenarioOutline, space, spaces, step, tab, table, tableCellContent, tableRow, tableRows, tag, tags)
+-- (asA, background, comment, detailText, docString, effectiveEndOfLine, examples, feature, iWantTo, inOrderTo, interspace, newline, noArg, noBackground, parse, scenario, scenarioOutline, spaces, step, table, tableCellContent, tableRow, tableRows, tag, tags)
 
 import Gherkin exposing (..)
-import Parser exposing ((|.), (|=), Parser, Trailing(..), backtrackable, chompUntilEndOr, chompWhile, commit, deadEndsToString, end, getChompedString, keyword, lazy, lineComment, loop, map, oneOf, run, sequence, succeed, symbol, token, variable)
+import Parser exposing ((|.), (|=), Parser, Trailing(..), backtrackable, chompUntilEndOr, chompWhile, commit, deadEndsToString, end, getChompedString, keyword, lazy, lineComment, map, oneOf, run, sequence, succeed, symbol, token, variable)
 import Set
 import String
 
@@ -38,24 +37,6 @@ zeroOrMore p =
             |= p
             |= lazy (\_ -> zeroOrMore p)
         , succeed []
-        ]
-
-
-loops : Parser a -> Parser () -> Parser (List a)
-loops statementParser separatorParser =
-    loop [] (loopsHelp statementParser separatorParser)
-
-
-loopsHelp : Parser a -> Parser () -> List a -> Parser (Parser.Step (List a) (List a))
-loopsHelp statementParser separatorParser statements =
-    oneOf
-        [ succeed (\statement -> Parser.Loop (statement :: statements))
-            |= statementParser
-            |. spaces
-            |. separatorParser
-            |. spaces
-        , succeed ()
-            |> map (\_ -> Parser.Done (List.reverse statements))
         ]
 
 
@@ -91,7 +72,7 @@ tab =
 -}
 newline : Parser ()
 newline =
-    oneOf [ end, token "\r\n", token "\r", token "\n" ]
+    oneOf [ token "\u{000D}\n", token "\u{000D}", token "\n" ]
 
 
 {-| Parse a newline
@@ -121,7 +102,7 @@ detailText : Parser String
 detailText =
     (getChompedString <|
         succeed ()
-            |. chompWhile (\c -> c /= '#' && c /= '\n' && c /= '\r')
+            |. chompWhile (\c -> c /= '#' && c /= '\n' && c /= '\u{000D}')
     )
         |. effectiveEndOfLine
 
@@ -138,6 +119,7 @@ docString =
         |. token tripleQuote
         |= (getChompedString <| chompUntilEndOr tripleQuote)
         |. token tripleQuote
+        |. interspace
 
 
 
@@ -219,7 +201,7 @@ tag =
 tags : Parser (List Tag)
 tags =
     zeroOrMore tag
-
+        |. interspace
 
 
 -- Gherkin keyword line parsers
@@ -233,6 +215,7 @@ asA =
         |. keyword "As a"
         |. spaces
         |= detailText
+        |. interspace
 
 
 {-| Parse an `In order to` line.
@@ -243,6 +226,7 @@ inOrderTo =
         |. keyword "In order to"
         |. spaces
         |= detailText
+        |. interspace
 
 
 {-| Parse an `I want to` line.
@@ -253,6 +237,7 @@ iWantTo =
         |. keyword "I want to"
         |. spaces
         |= detailText
+        |. interspace
 
 
 {-| Parse an absent step argument.
@@ -260,6 +245,7 @@ iWantTo =
 noArg : Parser StepArg
 noArg =
     succeed NoArg
+        |. interspace
 
 
 {-| Parse a step.
@@ -282,7 +268,6 @@ step =
             , map DataTable table
             , noArg
             ]
-        |. interspace
 
 
 {-| Parse a scenario outline example section.
@@ -290,9 +275,10 @@ step =
 examples : Parser Examples
 examples =
     succeed Examples
-        |= tags
-        |. interspace
+        |= backtrackable tags
         |. keyword "Examples:"
+        |. spaces
+        |. detailText
         |. interspace
         |= table
         |. interspace
@@ -303,14 +289,12 @@ examples =
 scenario : Parser Scenario
 scenario =
     succeed Scenario
-        |= tags
-        |. interspace
+        |= backtrackable tags
         |. keyword "Scenario:"
         |. spaces
         |= detailText
         |. interspace
-        |= loops step newline
-        |. interspace
+        |= zeroOrMore step
 
 
 {-| Parse a scenario outline.
@@ -318,15 +302,14 @@ scenario =
 scenarioOutline : Parser Scenario
 scenarioOutline =
     succeed ScenarioOutline
-        |= tags
-        |. interspace
+        |= backtrackable tags
         |. keyword "Scenario Outline:"
         |. spaces
         |= detailText
         |. interspace
-        |= loops step newline
+        |= zeroOrMore step
         |. interspace
-        |= loops examples newline
+        |= zeroOrMore examples
         |. interspace
 
 
@@ -339,8 +322,7 @@ background =
         |. spaces
         |= detailText
         |. interspace
-        |= loops step newline
-        |. interspace
+        |= zeroOrMore step
 
 
 {-| Parse an absent background section.
@@ -348,6 +330,7 @@ background =
 noBackground : Parser Background
 noBackground =
     succeed NoBackground
+        |. interspace
 
 
 {-| Parse an entire.
@@ -362,13 +345,8 @@ feature =
         |= detailText
         |. interspace
         |= asA
-        |. interspace
         |= inOrderTo
-        |. interspace
         |= iWantTo
-        |. interspace
         |= oneOf [ background, noBackground ]
-        |. interspace
-        |= loops (oneOf [ scenario, scenarioOutline ]) newline
-        |. interspace
-        |. end
+        |= zeroOrMore (oneOf [ scenario, scenarioOutline ])
+        -- |. end

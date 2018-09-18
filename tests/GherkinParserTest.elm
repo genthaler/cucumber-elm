@@ -4,8 +4,9 @@ import Expect
 import Gherkin exposing (..)
 import GherkinFixtures exposing (..)
 import GherkinParser
-import Test exposing (..)
 import Parser exposing ((|.))
+import Test exposing (..)
+
 
 all : Test
 all =
@@ -18,11 +19,10 @@ all =
                 in
                 Expect.equal (GherkinParser.parse GherkinParser.comment comment)
                     (Result.Ok ())
-        , only <|
-            test "parse whitespace correctly" <|
-                \_ ->
-                    Expect.equal (GherkinParser.parse (Parser.succeed () |. GherkinParser.zeroOrMore (Parser.oneOf [GherkinParser.space, GherkinParser.tab]) |. Parser.end) "  ")
-                        (Result.Ok ())
+        , test "parse whitespace correctly" <|
+            \_ ->
+                Expect.equal (GherkinParser.parse GherkinParser.interspace "  ")
+                    (Result.Ok ())
         , test "parses AsA correctly" <|
             \_ ->
                 let
