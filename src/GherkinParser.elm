@@ -56,7 +56,7 @@ tab =
 -}
 newline : Parser ()
 newline =
-    oneOf [ token "\u{000D}\n", token "\u{000D}", token "\n" ]
+    oneOf [ token "\r\n", token "\r", token "\n" ]
 
 
 {-| Parse a newline
@@ -86,7 +86,7 @@ detailText : Parser String
 detailText =
     (getChompedString <|
         succeed ()
-            |. chompWhile (\c -> c /= '#' && c /= '\n' && c /= '\u{000D}')
+            |. chompWhile (\c -> c /= '#' && c /= '\n' && c /= '\r')
     )
         |. effectiveEndOfLine
 
@@ -122,7 +122,7 @@ tableCellContent =
 
 {-| Parse a step argument table row.
 
-This is saying, any text bookended by non-pipe, non-whitespace characters
+This is saying, any text bookended by non-pipe, non-whitespace characters, punctuated by an end-of-line
 
 -}
 tableRow : Parser Row
@@ -140,10 +140,7 @@ tableRow =
         |. interspace
 
 
-{-| Parse a step argument table rows.
-
-This is saying, any text bookended by non-pipe, non-whitespace characters
-
+{-| Parse step argument table rows.
 -}
 tableRows : Parser (List Row)
 tableRows =

@@ -7,7 +7,7 @@ import GherkinParser
 import Parser exposing ((|.))
 import Test exposing (..)
 
- 
+
 all : Test
 all =
     describe "parsing Gherkin"

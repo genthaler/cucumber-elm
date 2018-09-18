@@ -3,8 +3,6 @@ module GherkinFixtures exposing (background1, background2, backgroundContent2, b
 import Gherkin exposing (..)
 
 
-
-
 noTags : List a
 noTags =
     []
