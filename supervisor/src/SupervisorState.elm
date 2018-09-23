@@ -1,7 +1,7 @@
 module SupervisorState exposing (..)
 
 import StateMachine exposing (Allowed, State(..), map, untag)
-import Options exposing (CliOptions, RunTestsRecord)
+import SupervisorOptions exposing (CliOptions, RunTestsRecord)
 import Elm.Project exposing (..)
 
 
