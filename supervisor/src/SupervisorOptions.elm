@@ -1,4 +1,4 @@
-module Options exposing (..)
+module SupervisorOptions exposing (CliOptions(..), Flags, ReportFormat(..), RunTestsRecord, dummy, maybeToResult, program)
 
 import Cli.Option as Option
 import Cli.OptionsParser as OptionsParser exposing (with)
@@ -8,7 +8,7 @@ import Ports
 
 
 type CliOptions
-    = Init
+    = Init (Maybe String)
     | RunTests RunTestsRecord
 
 
@@ -29,22 +29,24 @@ type ReportFormat
     | Console
 
 
-programConfig : Program.Config CliOptions
-programConfig =
+program : Program.Config CliOptions
+program =
     Program.config { version = "1.2.3" }
         |> Program.add
             (OptionsParser.buildSubCommand "init" Init
+                |> OptionsParser.withOptionalPositionalArg
+                    (Option.optionalPositionalArg "folder to initialise")
                 |> OptionsParser.end
             )
         |> Program.add
             (OptionsParser.build RunTestsRecord
                 |> with
                     (Option.optionalKeywordArg "glue-arguments-function"
-                        |> Option.validateMapIfPresent String.toInt
+                        |> Option.validateMapIfPresent (String.toInt >> maybeToResult)
                     )
                 |> with
                     (Option.optionalKeywordArg "tags"
-                        |> Option.validateMapIfPresent String.toInt
+                        |> Option.validateMapIfPresent (String.toInt >> maybeToResult)
                     )
                 |> with (Option.optionalKeywordArg "compiler")
                 |> with (Option.optionalKeywordArg "add-dependencies")
@@ -53,9 +55,9 @@ programConfig =
                     (Option.optionalKeywordArg "report"
                         |> Option.withDefault "console"
                         |> Option.oneOf Console
-                            [ ("json" , Json)
-                            , ("junit" ,Junit)
-                            , ("console" ,Console)
+                            [ ( "json", Json )
+                            , ( "junit", Junit )
+                            , ( "console", Console )
                             ]
                     )
                 |> OptionsParser.withRestArgs (Option.restArgs "TESTFILES")
@@ -69,28 +71,15 @@ dummy =
     Json.Decode.string
 
 
-init : Flags -> CliOptions -> Cmd Never
-init flags msg =
-    (case msg of
-        Init ->
-            "Initializing test suite..."
+maybeToResult : Maybe value -> Result String value
+maybeToResult maybe =
+    case maybe of
+        Just value ->
+            Ok value
 
-        RunTests options ->
-            [ "Running the following test files: " ++ toString options.testFiles |> Just
-            , "watch: " ++ toString options.watch |> Just
-            , options.maybeFuzz |> Maybe.map (\glueArgumentsFunction -> "glue-arguments-function: " ++ toString glueArgumentsFunction)
-            , options.maybeSeed |> Maybe.map (\tags -> "tags: " ++ toString tags)
-            , options.reportFormat |> toString |> Just
-            , options.maybeCompilerPath |> Maybe.map (\compilerPath -> "compiler: " ++ toString compilerPath)
-            , options.maybeDependencies |> Maybe.map (\dependencies -> "dependencies: " ++ toString dependencies)
-            ]
-                |> List.filterMap identity
-                |> String.join "\n"
-    )
-        |> Ports.print
+        Nothing ->
+            Err "Could not convert."
 
-
- 
 
 type alias Flags =
     Program.FlagsIncludingArgv {}

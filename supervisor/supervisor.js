@@ -7,12 +7,16 @@ const glob = require("glob")
 const R = require('rambda')
 // const proxyquire = require('proxyquire')
 const compiler = require('node-elm-compiler')
-const supervisor = require('cucumber-elm-supervisor');
+// const supervisor = require('cucumber-elm-supervisor');
+const supervisor = require('supervisorWorker.js');
 const requireFromString = require('require-from-string');
 
-const supervisorWorker = supervisor.SupervisorWorker.worker({
-  argv: process.argv
+const supervisorWorker = supervisor.SupervisorWorker.init({
+  flags: {
+    argv: process.argv
+  }
 })
+
 const compile = compiler.compile;
 const compileToString = compiler.compileToString;
 const XMLHttpRequest = require('xhr2')

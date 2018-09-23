@@ -1,15 +1,14 @@
-port module SupervisorWorker exposing (..)
+port module SupervisorWorker exposing (Model, Msg(..), init, main, message, subscriptions, update)
 
-import Options exposing (..)
+import Cli.Program as Program
 import Elm.Project exposing (..)
-import Platform exposing (programWithFlags)
+import Json.Decode
 import Ports exposing (..)
+import StateMachine exposing (map, untag)
+import SupervisorOptions exposing (..)
 import SupervisorState exposing (..)
 import Task
-import StateMachine exposing (untag, map)
-import Json.Decode
-import Cli.Program
- 
+
 
 type Msg
     = NoOp
@@ -30,9 +29,25 @@ message msg =
     Task.perform identity (Task.succeed msg)
 
 
-init : Cli.Program.FlagsIncludingArgv {} -> CliOptions -> ( Model, Cmd Msg )
-init flags cliOptions =
-    ( { matchCount = 0 }, Cmd.none )
+init : Program.FlagsIncludingArgv flags -> CliOptions -> ( Model, Cmd msg )
+init flags options =
+    (toStarting options, (case options of
+        Init folder ->
+            "Initializing test suite..."
+
+        RunTests runOptions ->
+            [ "Running the following test files: " ++ Debug.toString runOptions.testFiles |> Just
+            , "watch: " ++ Debug.toString runOptions.watch |> Just
+            , runOptions.maybeFuzz |> Maybe.map (\glueArgumentsFunction -> "glue-arguments-function: " ++ Debug.toString glueArgumentsFunction)
+            , runOptions.maybeSeed |> Maybe.map (\tags -> "tags: " ++ Debug.toString tags)
+            , runOptions.reportFormat |> Debug.toString |> Just
+            , runOptions.maybeCompilerPath |> Maybe.map (\compilerPath -> "compiler: " ++ Debug.toString compilerPath)
+            , runOptions.maybeDependencies |> Maybe.map (\dependencies -> "dependencies: " ++ Debug.toString dependencies)
+            ]
+                |> List.filterMap identity
+                |> String.join "\n"
+    )
+        |> Ports.print)
 
 
 update : CliOptions -> Msg -> Model -> ( Model, Cmd Msg )
@@ -41,78 +56,52 @@ update cliOptions msg model =
         noOp =
             ( model, Cmd.none )
     in
-        case Debug.log "( model, msg ) = " ( model, msg ) of
-            ( Starting state, NoOp ) ->
-                case state |> untag |> .option of
-                    Help ->
-                        ( toHelping state, message NoOp )
+    case ( model, msg ) of
+        ( Starting state, NoOp ) ->
+            case state |> untag |> .option of
+                -- Help ->
+                --     ( toHelping state, message NoOp )
+                -- Version ->
+                --     ( toVersioning state, message NoOp )
+                Init folder ->
+                    ( toInitialising
+                        (Maybe.withDefault "." folder)
+                        state
+                    , message NoOp
+                    )
 
-                    Version ->
-                        ( toVersioning state, message NoOp )
+                RunTests runOption ->
+                    ( model, message NoOp )
 
-                    Init folder ->
-                        ( toInitialising folder state, message NoOp )
+        ( Ending state, NoOp ) ->
+            ( model, end (state |> untag) )
 
-                    Run runOption ->
-                        ( model, message NoOp )
+        ( Initialising _, NoOp ) ->
+            noOp
 
-            ( Ending state, NoOp ) ->
-                ( model, end (state |> untag) )
+        ( GettingPackageInfo _, NoOp ) ->
+            noOp
 
-            ( Helping state, NoOp ) ->
-                ( toEnding 0 state, echoRequest helpText )
+        ( ConstructingFolder _, NoOp ) ->
+            noOp
 
-            ( Versioning state, msg ) ->
-                case msg of
-                    NoOp ->
-                        ( model, fileReadRequest "elm-package.json" )
+        ( Compiling _, NoOp ) ->
+            noOp
 
-                    FileRead content ->
-                        case Json.Decode.decodeString PackageInfo.decoder content of
-                            Ok packageInfo ->
-                                ( toEnding 0 state
-                                , echoRequest
-                                    ("Version: "
-                                        ++ (String.join "." <|
-                                                List.map
-                                                    (toString << (\f -> f packageInfo.version))
-                                                    [ .major, .minor, .patch ]
-                                           )
-                                    )
-                                )
+        ( StartingRunner _, NoOp ) ->
+            noOp
 
-                            Err err ->
-                                ( toEnding 1 state, echoRequest ("Version: " ++ (err)) )
+        ( ResolvingGherkinFiles _, NoOp ) ->
+            noOp
 
-                    _ ->
-                        noOp
+        ( TestingGherkinFiles _, NoOp ) ->
+            noOp
 
-            ( Initialising _, NoOp ) ->
-                noOp
+        ( Watching _, NoOp ) ->
+            noOp
 
-            ( GettingPackageInfo _, NoOp ) ->
-                noOp
-
-            ( ConstructingFolder _, NoOp ) ->
-                noOp
-
-            ( Compiling _, NoOp ) ->
-                noOp
-
-            ( StartingRunner _, NoOp ) ->
-                noOp
-
-            ( ResolvingGherkinFiles _, NoOp ) ->
-                noOp
-
-            ( TestingGherkinFiles _, NoOp ) ->
-                noOp
-
-            ( Watching _, NoOp ) ->
-                noOp
-
-            ( _, _ ) ->
-                Debug.crash "Invalid State Transition" noOp
+        ( _, _ ) ->
+            Debug.log "Invalid State Transition" noOp
 
 
 subscriptions : Model -> Sub Msg
@@ -148,11 +137,11 @@ subscriptions model =
 
 main : Program.StatefulProgram Model Msg CliOptions {}
 main =
-    Program.stateful
+    Program.stateful 
         { printAndExitFailure = Ports.printAndExitFailure
         , printAndExitSuccess = Ports.printAndExitSuccess
         , init = init
-        , config = programConfig
-        , subscriptions = subscriptions
+        , config = program
         , update = update
+        , subscriptions = subscriptions
         }
