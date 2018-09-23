@@ -27,8 +27,8 @@ type ReportFormat
     = Json
     | Junit
     | Console
-
-
+ 
+ 
 programConfig : Program.Config CliOptions
 programConfig =
     Program.config { version = "1.2.3" }
@@ -76,13 +76,13 @@ init flags msg =
             "Initializing test suite..."
 
         RunTests options ->
-            [ "Running the following test files: " ++ toString options.testFiles |> Just
-            , "watch: " ++ toString options.watch |> Just
-            , options.maybeFuzz |> Maybe.map (\glueArgumentsFunction -> "glue-arguments-function: " ++ toString glueArgumentsFunction)
-            , options.maybeSeed |> Maybe.map (\tags -> "tags: " ++ toString tags)
-            , options.reportFormat |> toString |> Just
-            , options.maybeCompilerPath |> Maybe.map (\compilerPath -> "compiler: " ++ toString compilerPath)
-            , options.maybeDependencies |> Maybe.map (\dependencies -> "dependencies: " ++ toString dependencies)
+            [ "Running the following test files: " ++ Debug.toString options.testFiles |> Just
+            , "watch: " ++ Debug.toString options.watch |> Just
+            , options.maybeFuzz |> Maybe.map (\glueArgumentsFunction -> "glue-arguments-function: " ++ Debug.toString glueArgumentsFunction)
+            , options.maybeSeed |> Maybe.map (\tags -> "tags: " ++ Debug.toString tags)
+            , options.reportFormat |> Debug.toString |> Just
+            , options.maybeCompilerPath |> Maybe.map (\compilerPath -> "compiler: " ++ Debug.toString compilerPath)
+            , options.maybeDependencies |> Maybe.map (\dependencies -> "dependencies: " ++ Debug.toString dependencies)
             ]
                 |> List.filterMap identity
                 |> String.join "\n"

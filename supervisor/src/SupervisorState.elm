@@ -19,7 +19,7 @@ makeState =
    The only way to transition from one state to another is through one of the state transition methods in this module.
 -}
 
-
+ 
 type SupervisorState
     = Starting (State { helping : Allowed, initialising : Allowed, versioning : Allowed } { option : CliOptions })
     | Ending (State { ending : Allowed } Int)
