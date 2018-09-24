@@ -1,4 +1,4 @@
-port module Ports exposing (cucumberBootRequest, cucumberBootResponse, cucumberTestRequest, cucumberTestResponse, echoRequest, end, fileGlobResolveRequest, fileGlobResolveResponse, fileReadRequest, fileReadResponse, fileWriteRequest, fileWriteResponse, print, printAndExitFailure, printAndExitSuccess, shellRequest, shellResponse)
+port module Ports exposing (cucumberBootRequest, cucumberBootResponse, cucumberTestRequest, cucumberTestResponse, echoRequest, end, fileGlobResolveRequest, fileGlobResolveResponse, fileReadRequest, fileReadResponse, fileWriteRequest, fileWriteResponse, shellRequest, shellResponse)
 
 
 port fileReadRequest : String -> Cmd msg
@@ -41,12 +41,3 @@ port cucumberTestResponse : (String -> msg) -> Sub msg
 
 
 port end : Int -> Cmd msg
-
-
-port print : String -> Cmd msg
-
-
-port printAndExitFailure : String -> Cmd msg
-
-
-port printAndExitSuccess : String -> Cmd msg

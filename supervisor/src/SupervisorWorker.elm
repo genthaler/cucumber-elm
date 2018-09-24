@@ -48,7 +48,7 @@ init flags options =
                 |> List.filterMap identity
                 |> String.join "\n"
       )
-        |> Ports.print
+        |> echoRequest
     )
 
 
@@ -140,10 +140,10 @@ subscriptions model =
 main : Program.StatefulProgram Model Msg CliOptions {}
 main =
     Program.stateful
-        { printAndExitFailure = Ports.printAndExitFailure
-        , printAndExitSuccess = Ports.printAndExitSuccess
+        { printAndExitFailure = (\msg -> Cmd.batch [echoRequest msg, end 1])
+        , printAndExitSuccess = (\msg -> Cmd.batch [echoRequest msg, end 0])
         , init = init
-        , config = program
+        , config = config
         , update = update
         , subscriptions = subscriptions
         }

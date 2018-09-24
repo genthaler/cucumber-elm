@@ -1,4 +1,4 @@
-module SupervisorOptions exposing (CliOptions(..), Flags, ReportFormat(..), RunTestsRecord, dummy, maybeToResult, program)
+module SupervisorOptions exposing (CliOptions(..), ReportFormat(..), RunTestsRecord, config)
 
 import Cli.Option as Option
 import Cli.OptionsParser as OptionsParser exposing (with)
@@ -29,8 +29,8 @@ type ReportFormat
     | Console
 
 
-program : Program.Config CliOptions
-program =
+config : Program.Config CliOptions
+config =
     Program.config { version = "1.2.3" }
         |> Program.add
             (OptionsParser.buildSubCommand "init" Init
@@ -65,12 +65,6 @@ program =
             )
 
 
-dummy : Decoder String
-dummy =
-    -- this is a workaround for an Elm compiler bug
-    Json.Decode.string
-
-
 maybeToResult : Maybe value -> Result String value
 maybeToResult maybe =
     case maybe of
@@ -79,7 +73,3 @@ maybeToResult maybe =
 
         Nothing ->
             Err "Could not convert."
-
-
-type alias Flags =
-    Program.FlagsIncludingArgv {}
