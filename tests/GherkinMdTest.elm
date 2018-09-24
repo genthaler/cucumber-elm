@@ -14,7 +14,7 @@ all =
             \_ ->
                 let
                     expected =
-                        String.replace "\r" "" <|
+                        String.replace "\u{000D}" "" <|
                             """@foo @bar
 # Feature: Living life
 

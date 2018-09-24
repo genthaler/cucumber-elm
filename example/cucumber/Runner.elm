@@ -1,8 +1,8 @@
-port module Runner exposing (..)
+port module Runner exposing (Model, Msg(..), cucumberRequest, cucumberResponse, glueFunctions, init, main, resultToString, subscriptions, update)
 
-import Platform
 import Cucumber
 import Cucumber.StepDefs
+import Platform
 
 
 port cucumberResponse : String -> Cmd msg
@@ -41,7 +41,7 @@ resultToString result =
 
 update : Msg -> Model -> ( Model, Cmd msg )
 update (Feature feature) model =
-    ( model, feature |> (Cucumber.expectFeatureText glueFunctions []) |> resultToString |> cucumberResponse )
+    ( model, feature |> Cucumber.expectFeatureText glueFunctions [] |> resultToString |> cucumberResponse )
 
 
 subscriptions : Model -> Sub Msg

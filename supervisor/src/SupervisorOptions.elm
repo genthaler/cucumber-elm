@@ -80,5 +80,6 @@ maybeToResult maybe =
         Nothing ->
             Err "Could not convert."
 
+
 type alias Flags =
     Program.FlagsIncludingArgv {}

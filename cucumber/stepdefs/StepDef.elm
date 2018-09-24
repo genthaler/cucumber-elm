@@ -1,10 +1,11 @@
-module CucumberTest.StepDef exposing (..)
+module CucumberTest.StepDef exposing (alwaysFail, alwaysPass, failIfDescriptionContainsFail)
 
-{-| Note that we don't really need to invoke any *real* business code here.
+{-| Note that we don't really need to invoke any _real_ business code here.
 -}
 
 import Cucumber.StepDef exposing (..)
 import Regex
+
 
 
 -- type alias StepDefFunction state =
@@ -30,5 +31,6 @@ failIfDescriptionContainsFail description stepArg initialState =
             )
     then
         Err ("Failing because description contains 'fail'" ++ description)
+
     else
         Ok initialState

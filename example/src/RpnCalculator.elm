@@ -1,8 +1,9 @@
-module RpnCalculator exposing (..)
+module RpnCalculator exposing (Entry(..), Model, Msg(..), OperationType(..), init, main, update, view)
 
-import Html exposing (Html, text, div, h1, img, ul, li, input, button, br)
+import Html exposing (Html, br, button, div, h1, img, input, li, text, ul)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+
 
 
 ---- MODEL ----
@@ -66,7 +67,7 @@ update msg ({ stack, numStr, message } as model) =
                                 Divide ->
                                     (//)
                     in
-                        { stack = (fn first second) :: rest, numStr = "", message = "" }
+                    { stack = fn first second :: rest, numStr = "", message = "" }
 
                 ( Input str, stack ) ->
                     { model | numStr = str }
@@ -79,7 +80,7 @@ update msg ({ stack, numStr, message } as model) =
                         Err err ->
                             { model | numStr = "", message = err }
     in
-        ( newModel, Cmd.none )
+    ( newModel, Cmd.none )
 
 
 

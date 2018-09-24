@@ -1,4 +1,4 @@
-module RpnCalculatorHelper exposing (..)
+module RpnCalculatorHelper exposing (State, assertStackTop, enter, input, press, push, stringToOperation)
 
 import RpnCalculator exposing (..)
 
@@ -36,6 +36,7 @@ assertStackTop int (( { stack }, _ ) as state) =
         [ top ] ->
             if top == int then
                 Ok state
+
             else
                 Err <| "Expected " ++ toString int ++ ", got " ++ toString top
 

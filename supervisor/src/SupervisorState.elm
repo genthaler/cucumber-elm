@@ -1,8 +1,8 @@
-module SupervisorState exposing (..)
+module SupervisorState exposing (SupervisorState(..), makeState, toCompiling, toConstructingFolder, toEnding, toGettingPackageInfo, toHelping, toInitialising, toResolvingGherkinFiles, toStarting, toStartingRunner, toTestingGherkinFile, toVersioning, toWatching)
 
+import Elm.Project exposing (..)
 import StateMachine exposing (Allowed, State(..), map, untag)
 import SupervisorOptions exposing (CliOptions, RunTestsRecord)
-import Elm.Project exposing (..)
 
 
 makeState : model -> State trans model
@@ -19,7 +19,7 @@ makeState =
    The only way to transition from one state to another is through one of the state transition methods in this module.
 -}
 
- 
+
 type SupervisorState
     = Starting (State { helping : Allowed, initialising : Allowed, versioning : Allowed } { option : CliOptions })
     | Ending (State { ending : Allowed } Int)

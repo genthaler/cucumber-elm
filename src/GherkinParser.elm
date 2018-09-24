@@ -56,7 +56,7 @@ tab =
 -}
 newline : Parser ()
 newline =
-    oneOf [ token "\r\n", token "\r", token "\n" ]
+    oneOf [ token "\u{000D}\n", token "\u{000D}", token "\n" ]
 
 
 {-| Parse a newline
@@ -86,7 +86,7 @@ detailText : Parser String
 detailText =
     (getChompedString <|
         succeed ()
-            |. chompWhile (\c -> c /= '#' && c /= '\n' && c /= '\r')
+            |. chompWhile (\c -> c /= '#' && c /= '\n' && c /= '\u{000D}')
     )
         |. effectiveEndOfLine
 

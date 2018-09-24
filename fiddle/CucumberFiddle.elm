@@ -1,15 +1,16 @@
-module CucumberFiddle exposing (..)
+module CucumberFiddle exposing (Model, Msg(..), displayError, get, init, main, update, view)
 
-import Markdown
 import Gherkin
 import GherkinMd
 import GherkinParser
-import Task exposing (Task)
-import Html exposing (Html, text, div, textarea, button, ul, li)
-import Html.Attributes exposing (value, name)
+import Html exposing (Html, button, div, li, text, textarea, ul)
+import Html.Attributes exposing (name, value)
 import Html.Events exposing (onClick, onInput)
 import Http
 import List exposing (map, repeat)
+import Markdown
+import Task exposing (Task)
+
 
 
 -- MODEL
@@ -42,55 +43,54 @@ get source =
 
 init : ( Model, Cmd Msg )
 init =
-    { source = Just """Feature: Cucumber Fiddle application\x0D
-    As a BDD practitioner\x0D
-    In order to work in a BDD Elm environment\x0D
-    I want to be able to run Gherkin features against an Elm codebase and see how well the codebase implements the features\x0D
-\x0D
-    Background: The world is round\x0D
-        Given I have loaded the CucumberFiddle application\x0D
-        | Now | is | the | time |\x0D
-        | For | all | good | men |\x0D
-\x0D
-    Scenario: Format a feature\x0D
-        Given I have entered a feature in the feature editor\x0D
-        When I format the feature\x0D
-        Then I see the formatted feature\x0D
-\x0D
-    Scenario: Run a feature\x0D
-        Given I have entered a feature in the feature editor\x0D
-        When I run the feature\x0D
-        Then I see any errors interleaved in the output\x0D
-\x0D
-    Scenario: Show list of available features on the server\x0D
-        Then I can see the list of available features\x0D
-\x0D
-    Scenario: Selecting a feature from the server\x0D
-        When I select a feature from the list of available features\x0D
-        Then I can see the feature\x0D
-\x0D
-    Scenario: Selecting a feature from the client\x0D
-        When I select a feature file from local\x0D
-        Then I can see the feature \"\"\" Here's a DocString \"\"\"\x0D
-\x0D
-    @foo\x0D
-    @bar\x0D
-    Scenario Outline: Have fun\x0D
-      Given I am trying to have fun\x0D
-        | Now | is | the | time |\x0D
-        | For | all | good | men |\x0D
-      But I am trying not to be a fool\x0D
-      @blah\x0D
-      Examples:\x0D
-        | Now |\x0D
-        | For |\x0D
+    { source = Just """Feature: Cucumber Fiddle application\u{000D}
+    As a BDD practitioner\u{000D}
+    In order to work in a BDD Elm environment\u{000D}
+    I want to be able to run Gherkin features against an Elm codebase and see how well the codebase implements the features\u{000D}
+\u{000D}
+    Background: The world is round\u{000D}
+        Given I have loaded the CucumberFiddle application\u{000D}
+        | Now | is | the | time |\u{000D}
+        | For | all | good | men |\u{000D}
+\u{000D}
+    Scenario: Format a feature\u{000D}
+        Given I have entered a feature in the feature editor\u{000D}
+        When I format the feature\u{000D}
+        Then I see the formatted feature\u{000D}
+\u{000D}
+    Scenario: Run a feature\u{000D}
+        Given I have entered a feature in the feature editor\u{000D}
+        When I run the feature\u{000D}
+        Then I see any errors interleaved in the output\u{000D}
+\u{000D}
+    Scenario: Show list of available features on the server\u{000D}
+        Then I can see the list of available features\u{000D}
+\u{000D}
+    Scenario: Selecting a feature from the server\u{000D}
+        When I select a feature from the list of available features\u{000D}
+        Then I can see the feature\u{000D}
+\u{000D}
+    Scenario: Selecting a feature from the client\u{000D}
+        When I select a feature file from local\u{000D}
+        Then I can see the feature \"\"\" Here's a DocString \"\"\"\u{000D}
+\u{000D}
+    @foo\u{000D}
+    @bar\u{000D}
+    Scenario Outline: Have fun\u{000D}
+      Given I am trying to have fun\u{000D}
+        | Now | is | the | time |\u{000D}
+        | For | all | good | men |\u{000D}
+      But I am trying not to be a fool\u{000D}
+      @blah\u{000D}
+      Examples:\u{000D}
+        | Now |\u{000D}
+        | For |\u{000D}
     """
     , feature = Nothing
     , errors = []
     }
         -- ! [ get "CucumberFiddle.feature" ]
-        !
-            []
+        ! []
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -157,7 +157,7 @@ view model =
                     text "waiting..."
 
                 Just feature ->
-                    feature |> GherkinMd.featureMd |> (Markdown.toHtml [])
+                    feature |> GherkinMd.featureMd |> Markdown.toHtml []
             ]
         , ul [] (map (li [] << repeat 1 << text) model.errors)
         , button [ onClick Format ] [ text "Format" ]

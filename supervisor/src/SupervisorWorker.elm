@@ -19,7 +19,7 @@ type Msg
     | Require Int
     | Cucumber String
 
- 
+
 type alias Model =
     SupervisorState
 
@@ -31,7 +31,8 @@ message msg =
 
 init : Program.FlagsIncludingArgv flags -> CliOptions -> ( Model, Cmd msg )
 init flags options =
-    (toStarting options, (case options of
+    ( toStarting options
+    , (case options of
         Init folder ->
             "Initializing test suite..."
 
@@ -46,8 +47,9 @@ init flags options =
             ]
                 |> List.filterMap identity
                 |> String.join "\n"
+      )
+        |> Ports.print
     )
-        |> Ports.print)
 
 
 update : CliOptions -> Msg -> Model -> ( Model, Cmd Msg )
@@ -137,7 +139,7 @@ subscriptions model =
 
 main : Program.StatefulProgram Model Msg CliOptions {}
 main =
-    Program.stateful 
+    Program.stateful
         { printAndExitFailure = Ports.printAndExitFailure
         , printAndExitSuccess = Ports.printAndExitSuccess
         , init = init

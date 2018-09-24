@@ -1,4 +1,4 @@
-module RpnCalculatorStepdefs exposing (..)
+module RpnCalculatorStepdefs exposing (StepArgParsed(..), parseRegex, stepDef)
 
 import Cucumber.StepDefs exposing (..)
 import Gherkin exposing (..)
@@ -57,15 +57,15 @@ stepDef regex stepArg state =
                         _ ->
                             Err <| "Expecting a row 3 items wide, got " ++ toString list ++ " instead."
             in
-                case List.tail table of
-                    Nothing ->
-                        Err <| "Expecting a table with at least a header row, got" ++ toString table
+            case List.tail table of
+                Nothing ->
+                    Err <| "Expecting a table with at least a header row, got" ++ toString table
 
-                    Just tableContent ->
-                        List.foldl (doRow >> Result.andThen) (Ok state) tableContent
+                Just tableContent ->
+                    List.foldl (doRow >> Result.andThen) (Ok state) tableContent
 
         state ->
-            Err <| "Unexpected input, description: " ++ regex ++ ", stepArg: " ++ (toString stepArg)
+            Err <| "Unexpected input, description: " ++ regex ++ ", stepArg: " ++ toString stepArg
 
 
 

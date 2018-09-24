@@ -1,8 +1,8 @@
-port module Runner exposing (..)
+port module Runner exposing (Model, Msg(..), cucumberRequest, cucumberResponse, glueFunctions, init, main, subscriptions, update)
 
-import Platform exposing (program)
 import Cucumber
 import Cucumber.StepDefs
+import Platform exposing (program)
 
 
 port cucumberResponse : String -> Cmd msg
@@ -37,7 +37,7 @@ update (Feature feature) model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     cucumberRequest Feature
- 
+
 
 main : Program Never Model Msg
 main =
