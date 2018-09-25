@@ -31,16 +31,15 @@ message msg =
 
 init : Program.FlagsIncludingArgv flags -> CliOptions -> ( Model, Cmd msg )
 init flags options =
-    ( toStarting options
-    , (case options of
+    case options of
         Init folder ->
-            "Initializing test suite..."
+            "Initializing test suite in folder" ++ folder
 
         RunTests runOptions ->
             [ "Running the following test files: " ++ Debug.toString runOptions.testFiles |> Just
             , "watch: " ++ Debug.toString runOptions.watch |> Just
-            , runOptions.maybeFuzz |> Maybe.map (\glueArgumentsFunction -> "glue-arguments-function: " ++ Debug.toString glueArgumentsFunction)
-            , runOptions.maybeSeed |> Maybe.map (\tags -> "tags: " ++ Debug.toString tags)
+            , runOptions.maybeGlueArgumentsFunction |> Maybe.map (\glueArgumentsFunction -> "glue-arguments-function: " ++ Debug.toString glueArgumentsFunction)
+            , runOptions.maybeTags |> Maybe.map (\tags -> "tags: " ++ Debug.toString tags)
             , runOptions.reportFormat |> Debug.toString |> Just
             , runOptions.maybeCompilerPath |> Maybe.map (\compilerPath -> "compiler: " ++ Debug.toString compilerPath)
             , runOptions.maybeDependencies |> Maybe.map (\dependencies -> "dependencies: " ++ Debug.toString dependencies)
@@ -61,25 +60,18 @@ update cliOptions msg model =
     case ( model, msg ) of
         ( Starting state, NoOp ) ->
             case state |> untag |> .option of
-                -- Help ->
-                --     ( toHelping state, message NoOp )
-                -- Version ->
-                --     ( toVersioning state, message NoOp )
                 Init folder ->
-                    ( toInitialising
-                        (Maybe.withDefault "." folder)
-                        state
-                    , message NoOp
-                    )
+                    ( toInitialising folder state, message NoOp )
 
                 RunTests runOption ->
                     ( model, message NoOp )
 
-        ( Ending state, NoOp ) ->
-            ( model, end (state |> untag) )
+        ( Initialising state, NoOp ) ->
+            let 
+                initMessage = "Initializing test suite in folder" ++ (state |> untag |> .folder)
+            in 
+                (toEnding 0 state, message NoOp)
 
-        ( Initialising _, NoOp ) ->
-            noOp
 
         ( GettingPackageInfo _, NoOp ) ->
             noOp
@@ -101,6 +93,9 @@ update cliOptions msg model =
 
         ( Watching _, NoOp ) ->
             noOp
+
+        ( Ending state, NoOp ) ->
+            ( model, end (state |> untag) )
 
         ( _, _ ) ->
             Debug.log "Invalid State Transition" noOp
@@ -140,8 +135,8 @@ subscriptions model =
 main : Program.StatefulProgram Model Msg CliOptions {}
 main =
     Program.stateful
-        { printAndExitFailure = (\msg -> Cmd.batch [echoRequest msg, end 1])
-        , printAndExitSuccess = (\msg -> Cmd.batch [echoRequest msg, end 0])
+        { printAndExitFailure = \msg -> Cmd.batch [ echoRequest msg, end 1 ]
+        , printAndExitSuccess = \msg -> Cmd.batch [ echoRequest msg, end 0 ]
         , init = init
         , config = config
         , update = update

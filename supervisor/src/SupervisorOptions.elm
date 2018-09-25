@@ -8,13 +8,13 @@ import Ports
 
 
 type CliOptions
-    = Init (Maybe String)
+    = Init String
     | RunTests RunTestsRecord
 
 
 type alias RunTestsRecord =
-    { maybeFuzz : Maybe Int
-    , maybeSeed : Maybe Int
+    { maybeGlueArgumentsFunction : Maybe String
+    , maybeTags : Maybe String
     , maybeCompilerPath : Maybe String
     , maybeDependencies : Maybe String
     , watch : Bool
@@ -35,18 +35,20 @@ config =
         |> Program.add
             (OptionsParser.buildSubCommand "init" Init
                 |> OptionsParser.withOptionalPositionalArg
-                    (Option.optionalPositionalArg "folder to initialise")
+                    (Option.optionalPositionalArg "folder to initialise"
+                        |> Option.withDefault "."
+                    )
                 |> OptionsParser.end
             )
         |> Program.add
             (OptionsParser.build RunTestsRecord
                 |> with
                     (Option.optionalKeywordArg "glue-arguments-function"
-                        |> Option.validateMapIfPresent (String.toInt >> maybeToResult)
+                        |> Option.validateMapIfPresent Ok
                     )
                 |> with
                     (Option.optionalKeywordArg "tags"
-                        |> Option.validateMapIfPresent (String.toInt >> maybeToResult)
+                        |> Option.validateMapIfPresent Ok
                     )
                 |> with (Option.optionalKeywordArg "compiler")
                 |> with (Option.optionalKeywordArg "add-dependencies")
