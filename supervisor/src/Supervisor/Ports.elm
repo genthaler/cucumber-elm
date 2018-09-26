@@ -1,4 +1,4 @@
-port module Supervisor.Ports exposing (cucumberBootRequest, cucumberBootResponse, cucumberTestRequest, cucumberTestResponse, echoRequest, end, fileGlobResolveRequest, fileGlobResolveResponse, fileReadRequest, fileReadResponse, fileWriteRequest, fileWriteResponse, shellRequest, shellResponse)
+port module Supervisor.Ports exposing (cucumberBootRequest, cucumberBootResponse, cucumberTestRequest, cucumberTestResponse, echoRequest, end, fileGlobResolveRequest, fileGlobResolveResponse, fileReadRequest, fileReadResponse, fileWriteRequest, fileWriteResponse, logAndExit, shellRequest, shellResponse)
 
 
 port fileReadRequest : String -> Cmd msg
@@ -41,3 +41,8 @@ port cucumberTestResponse : (String -> msg) -> Sub msg
 
 
 port end : Int -> Cmd msg
+
+
+logAndExit : Int -> String -> Cmd msg
+logAndExit exitCode msg =
+    Cmd.batch [ echoRequest msg, end exitCode ]

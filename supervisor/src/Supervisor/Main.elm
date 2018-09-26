@@ -1,16 +1,16 @@
 module Supervisor.Main exposing (main)
- 
+
 import Cli.Program as Program
 import Elm.Project exposing (..)
 import Json.Decode
-import Supervisor.Ports exposing (..)
 import StateMachine exposing (map, untag)
-import Supervisor.Options exposing (..)
 import Supervisor.Model exposing (..)
+import Supervisor.Options exposing (..)
+import Supervisor.Ports exposing (..)
 import Task
 
 
-type Msg 
+type Msg
     = NoOp
     | FileRead String
     | FileWrite String
@@ -19,7 +19,15 @@ type Msg
     | Require Int
     | Cucumber String
 
+type InitActions
+    = GetCurrentDir
+    | GetModuleDir
+    | CopyModuleDir
+    | InitEnd
 
+type RunActions
+    = GetPackageInfo
+    | 
 
 message : msg -> Cmd msg
 message msg =
@@ -29,11 +37,28 @@ message msg =
 init : Program.FlagsIncludingArgv flags -> CliOptions -> ( Model, Cmd Msg )
 init flags options =
     case options of
-        Init folder -> 
-                    ( toInitialising folder , message NoOp )
- 
+        Init folder ->
+            let
+                initMessage =
+                    "Initializing test suite in folder " ++ folder
+            in
+            ( toInitialising folder, echoRequest initMessage )
+
         RunTests runOptions ->
-            (toGettingPackageInfo runOptions, message NoOp)
+            let
+                runMessage =
+                    [ "Running the following test files: " ++ Debug.toString runOptions.testFiles |> Just
+                    , "watch: " ++ Debug.toString runOptions.watch |> Just
+                    , runOptions.maybeGlueArgumentsFunction |> Maybe.map (\glueArgumentsFunction -> "glue-arguments-function: " ++ Debug.toString glueArgumentsFunction)
+                    , runOptions.maybeTags |> Maybe.map (\tags -> "tags: " ++ Debug.toString tags)
+                    , runOptions.reportFormat |> Debug.toString |> Just
+                    , runOptions.maybeCompilerPath |> Maybe.map (\compilerPath -> "compiler: " ++ Debug.toString compilerPath)
+                    , runOptions.maybeDependencies |> Maybe.map (\dependencies -> "dependencies: " ++ Debug.toString dependencies)
+                    ]
+                        |> List.filterMap identity
+                        |> String.join "\n"
+            in
+            ( toGettingPackageInfo runOptions, echoRequest runMessage )
 
 
 update : CliOptions -> Msg -> Model -> ( Model, Cmd Msg )
@@ -43,31 +68,28 @@ update cliOptions msg model =
             ( model, Cmd.none )
     in
     case ( model, msg ) of
-
         ( Initialising state, NoOp ) ->
-            let 
-                initMessage = "Initializing test suite in folder" ++ (state |> untag |> .folder)
-            in 
-                (toEnding 0 state, message NoOp)
+            let
+                folder = state |> untag |> .folder
+            in
+            -- Need to get current directory, module directory, copy template directory to destination
+            -- Maybe test compile?
+            -- Is this better done with a list of Taskish things to be done?
+            -- Problem is, you can't pass functions around in a model
+            -- So define a type with actions
+            -- create a list of those actions
+            -- on each update, match the top of the list and its expected message
+            -- if no match, error, else compute model and send message off and send a message
+            -- sounds a bit simpler than the state machine
 
- 
+            ( toEnding 0 state, message NoOp )
+
         ( GettingPackageInfo state, NoOp ) ->
-            let 
-                runOptions = state |> untag |> .runOptions
-                runMessage =
-                        [ "Running the following test files: " ++ Debug.toString runOptions.testFiles |> Just
-                            , "watch: " ++ Debug.toString runOptions.watch |> Just
-                            , runOptions.maybeGlueArgumentsFunction |> Maybe.map (\glueArgumentsFunction -> "glue-arguments-function: " ++ Debug.toString glueArgumentsFunction)
-                            , runOptions.maybeTags |> Maybe.map (\tags -> "tags: " ++ Debug.toString tags)
-                            , runOptions.reportFormat |> Debug.toString |> Just
-                            , runOptions.maybeCompilerPath |> Maybe.map (\compilerPath -> "compiler: " ++ Debug.toString compilerPath)
-                            , runOptions.maybeDependencies |> Maybe.map (\dependencies -> "dependencies: " ++ Debug.toString dependencies)
-                            ]
-                    |> List.filterMap identity
-                    |> String.join "\n"
-            in 
-                (toConstructingFolder {runOptions =runOptions} state , echoRequest runMessage) 
-
+            let
+                runOptions =
+                    state |> untag |> .runOptions
+            in
+            ( toConstructingFolder { runOptions = runOptions, project = project } state, )
 
         ( ConstructingFolder _, NoOp ) ->
             noOp
@@ -91,8 +113,8 @@ update cliOptions msg model =
             ( model, end (state |> untag) )
 
         ( _, _ ) ->
-            Debug.log "Invalid State Transition" noOp
-
+            ( model, logAndExit 1 
+                "Invalid State Transition")
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -128,8 +150,8 @@ subscriptions model =
 main : Program.StatefulProgram Model Msg CliOptions {}
 main =
     Program.stateful
-        { printAndExitFailure = \msg -> Cmd.batch [ echoRequest msg, end 1 ]
-        , printAndExitSuccess = \msg -> Cmd.batch [ echoRequest msg, end 0 ]
+        { printAndExitFailure = logAndExit 1
+        , printAndExitSuccess = logAndExit 0
         , init = init
         , config = config
         , update = update

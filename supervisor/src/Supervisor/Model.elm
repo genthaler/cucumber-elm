@@ -21,18 +21,15 @@ makeState =
 
 
 type Model
-    = Starting (State { helping : Allowed, initialising : Allowed, versioning : Allowed } { option : CliOptions })
-    | Ending (State { ending : Allowed } Int)
-    | Helping (State { ending : Allowed } { exitCode : Int })
-    | Versioning (State { ending : Allowed } { exitCode : Int })
-    | Initialising (State { ending : Allowed } { folder : String })
+    = Initialising (State { ending : Allowed } { folder : String })
     | GettingPackageInfo (State { constructingFolder : Allowed } { runOptions : RunOptions })
-    | ConstructingFolder (State { compiling : Allowed } { runOptions : RunOptions, packageInfo : PackageInfo })
+    | ConstructingFolder (State { compiling : Allowed } { runOptions : RunOptions, project : Project })
     | Compiling (State { startingRunner : Allowed } { gherkinFiles : List String })
     | StartingRunner (State { resolvingGherkinFiles : Allowed } { gherkinFiles : List String })
     | ResolvingGherkinFiles (State { testingGherkinFile : Allowed } { gherkinFiles : List String })
     | TestingGherkinFiles (State { ending : Allowed, watching : Allowed } { remainingGherkinFiles : List String, testedGherkinFiles : List String })
     | Watching (State { resolvingGherkinFiles : Allowed } { testedGherkinFiles : List String, remainingGherkinFiles : List String })
+    | Ending (State { ending : Allowed } Int)
 
 
 
@@ -54,9 +51,9 @@ toGettingPackageInfo runOptions =
 -- to make a transition.
 
 
-toConstructingFolder : PackageInfo -> State { a | constructingFolder : Allowed } { runOptions : RunOptions } -> Model
-toConstructingFolder packageInfo state =
-    ConstructingFolder <| makeState <| { runOptions = state |> untag |> .runOptions, packageInfo = packageInfo }
+toConstructingFolder : Project -> State { a | constructingFolder : Allowed } { runOptions : RunOptions } -> Model
+toConstructingFolder project state =
+    ConstructingFolder <| makeState <| { runOptions = state |> untag |> .runOptions, project = project }
 
 
 toCompiling : State { a | compiling : Allowed } { gherkinFiles : List String } -> Model
