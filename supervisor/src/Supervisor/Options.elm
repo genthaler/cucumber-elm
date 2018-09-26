@@ -1,18 +1,17 @@
-module SupervisorOptions exposing (CliOptions(..), ReportFormat(..), RunTestsRecord, config)
+module Supervisor.Options exposing (CliOptions(..), ReportFormat(..), RunOptions, config)
 
 import Cli.Option as Option
 import Cli.OptionsParser as OptionsParser exposing (with)
 import Cli.Program as Program
 import Json.Decode exposing (..)
-import Ports
 
 
 type CliOptions
     = Init String
-    | RunTests RunTestsRecord
+    | RunTests RunOptions
 
 
-type alias RunTestsRecord =
+type alias RunOptions =
     { maybeGlueArgumentsFunction : Maybe String
     , maybeTags : Maybe String
     , maybeCompilerPath : Maybe String
@@ -41,7 +40,7 @@ config =
                 |> OptionsParser.end
             )
         |> Program.add
-            (OptionsParser.build RunTestsRecord
+            (OptionsParser.build RunOptions
                 |> with
                     (Option.optionalKeywordArg "glue-arguments-function"
                         |> Option.validateMapIfPresent Ok

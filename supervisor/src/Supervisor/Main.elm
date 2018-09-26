@@ -1,16 +1,16 @@
-port module SupervisorWorker exposing (Model, Msg(..), init, main, message, subscriptions, update)
-
+module Supervisor.Main exposing (main)
+ 
 import Cli.Program as Program
 import Elm.Project exposing (..)
 import Json.Decode
-import Ports exposing (..)
+import Supervisor.Ports exposing (..)
 import StateMachine exposing (map, untag)
-import SupervisorOptions exposing (..)
-import SupervisorState exposing (..)
+import Supervisor.Options exposing (..)
+import Supervisor.Model exposing (..)
 import Task
 
 
-type Msg
+type Msg 
     = NoOp
     | FileRead String
     | FileWrite String
@@ -20,35 +20,20 @@ type Msg
     | Cucumber String
 
 
-type alias Model =
-    SupervisorState
-
 
 message : msg -> Cmd msg
 message msg =
     Task.perform identity (Task.succeed msg)
 
 
-init : Program.FlagsIncludingArgv flags -> CliOptions -> ( Model, Cmd msg )
+init : Program.FlagsIncludingArgv flags -> CliOptions -> ( Model, Cmd Msg )
 init flags options =
     case options of
-        Init folder ->
-            "Initializing test suite in folder" ++ folder
-
+        Init folder -> 
+                    ( toInitialising folder , message NoOp )
+ 
         RunTests runOptions ->
-            [ "Running the following test files: " ++ Debug.toString runOptions.testFiles |> Just
-            , "watch: " ++ Debug.toString runOptions.watch |> Just
-            , runOptions.maybeGlueArgumentsFunction |> Maybe.map (\glueArgumentsFunction -> "glue-arguments-function: " ++ Debug.toString glueArgumentsFunction)
-            , runOptions.maybeTags |> Maybe.map (\tags -> "tags: " ++ Debug.toString tags)
-            , runOptions.reportFormat |> Debug.toString |> Just
-            , runOptions.maybeCompilerPath |> Maybe.map (\compilerPath -> "compiler: " ++ Debug.toString compilerPath)
-            , runOptions.maybeDependencies |> Maybe.map (\dependencies -> "dependencies: " ++ Debug.toString dependencies)
-            ]
-                |> List.filterMap identity
-                |> String.join "\n"
-      )
-        |> echoRequest
-    )
+            (toGettingPackageInfo runOptions, message NoOp)
 
 
 update : CliOptions -> Msg -> Model -> ( Model, Cmd Msg )
@@ -58,13 +43,6 @@ update cliOptions msg model =
             ( model, Cmd.none )
     in
     case ( model, msg ) of
-        ( Starting state, NoOp ) ->
-            case state |> untag |> .option of
-                Init folder ->
-                    ( toInitialising folder state, message NoOp )
-
-                RunTests runOption ->
-                    ( model, message NoOp )
 
         ( Initialising state, NoOp ) ->
             let 
@@ -72,9 +50,24 @@ update cliOptions msg model =
             in 
                 (toEnding 0 state, message NoOp)
 
+ 
+        ( GettingPackageInfo state, NoOp ) ->
+            let 
+                runOptions = state |> untag |> .runOptions
+                runMessage =
+                        [ "Running the following test files: " ++ Debug.toString runOptions.testFiles |> Just
+                            , "watch: " ++ Debug.toString runOptions.watch |> Just
+                            , runOptions.maybeGlueArgumentsFunction |> Maybe.map (\glueArgumentsFunction -> "glue-arguments-function: " ++ Debug.toString glueArgumentsFunction)
+                            , runOptions.maybeTags |> Maybe.map (\tags -> "tags: " ++ Debug.toString tags)
+                            , runOptions.reportFormat |> Debug.toString |> Just
+                            , runOptions.maybeCompilerPath |> Maybe.map (\compilerPath -> "compiler: " ++ Debug.toString compilerPath)
+                            , runOptions.maybeDependencies |> Maybe.map (\dependencies -> "dependencies: " ++ Debug.toString dependencies)
+                            ]
+                    |> List.filterMap identity
+                    |> String.join "\n"
+            in 
+                (toConstructingFolder {runOptions =runOptions} state , echoRequest runMessage) 
 
-        ( GettingPackageInfo _, NoOp ) ->
-            noOp
 
         ( ConstructingFolder _, NoOp ) ->
             noOp

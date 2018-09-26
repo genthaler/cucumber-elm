@@ -1,8 +1,8 @@
-module SupervisorState exposing (SupervisorState(..), makeState, toCompiling, toConstructingFolder, toEnding, toGettingPackageInfo, toHelping, toInitialising, toResolvingGherkinFiles, toStarting, toStartingRunner, toTestingGherkinFile, toVersioning, toWatching)
+module Supervisor.Model exposing (Model(..), makeState, toCompiling, toConstructingFolder, toEnding, toGettingPackageInfo, toInitialising, toResolvingGherkinFiles, toStartingRunner, toTestingGherkinFile, toWatching)
 
 import Elm.Project exposing (..)
 import StateMachine exposing (Allowed, State(..), map, untag)
-import SupervisorOptions exposing (CliOptions, RunTestsRecord)
+import Supervisor.Options exposing (CliOptions, RunOptions)
 
 
 makeState : model -> State trans model
@@ -20,14 +20,14 @@ makeState =
 -}
 
 
-type SupervisorState
+type Model
     = Starting (State { helping : Allowed, initialising : Allowed, versioning : Allowed } { option : CliOptions })
     | Ending (State { ending : Allowed } Int)
     | Helping (State { ending : Allowed } { exitCode : Int })
     | Versioning (State { ending : Allowed } { exitCode : Int })
     | Initialising (State { ending : Allowed } { folder : String })
-    | GettingPackageInfo (State { constructingFolder : Allowed } { runOptions : RunTestsRecord })
-    | ConstructingFolder (State { compiling : Allowed } { runOptions : RunTestsRecord, packageInfo : PackageInfo })
+    | GettingPackageInfo (State { constructingFolder : Allowed } { runOptions : RunOptions })
+    | ConstructingFolder (State { compiling : Allowed } { runOptions : RunOptions, packageInfo : PackageInfo })
     | Compiling (State { startingRunner : Allowed } { gherkinFiles : List String })
     | StartingRunner (State { resolvingGherkinFiles : Allowed } { gherkinFiles : List String })
     | ResolvingGherkinFiles (State { testingGherkinFile : Allowed } { gherkinFiles : List String })
@@ -36,12 +36,17 @@ type SupervisorState
 
 
 
--- Initial state constructor.
+-- Initial state constructors.
 
 
-toStarting : CliOptions -> SupervisorState
-toStarting option =
-    Starting <| makeState { option = option }
+toInitialising : String -> Model
+toInitialising folder =
+    Initialising <| makeState { folder = folder }
+
+
+toGettingPackageInfo : RunOptions -> Model
+toGettingPackageInfo runOptions =
+    GettingPackageInfo <| makeState { runOptions = runOptions }
 
 
 
@@ -49,56 +54,36 @@ toStarting option =
 -- to make a transition.
 
 
-toHelping : State { a | helping : Allowed } b -> SupervisorState
-toHelping state =
-    Helping <| makeState { exitCode = 0 }
-
-
-toVersioning : State { a | versioning : Allowed } b -> SupervisorState
-toVersioning state =
-    Versioning <| makeState { exitCode = 0 }
-
-
-toInitialising : String -> State { a | initialising : Allowed } b -> SupervisorState
-toInitialising folder state =
-    Initialising <| makeState { folder = folder }
-
-
-toGettingPackageInfo : RunTestsRecord -> State { a | gettingPackageInfo : Allowed } b -> SupervisorState
-toGettingPackageInfo runOptions state =
-    GettingPackageInfo <| makeState { runOptions = runOptions }
-
-
-toConstructingFolder : PackageInfo -> State { a | constructingFolder : Allowed } { runOptions : RunTestsRecord } -> SupervisorState
+toConstructingFolder : PackageInfo -> State { a | constructingFolder : Allowed } { runOptions : RunOptions } -> Model
 toConstructingFolder packageInfo state =
     ConstructingFolder <| makeState <| { runOptions = state |> untag |> .runOptions, packageInfo = packageInfo }
 
 
-toCompiling : State { a | compiling : Allowed } { gherkinFiles : List String } -> SupervisorState
+toCompiling : State { a | compiling : Allowed } { gherkinFiles : List String } -> Model
 toCompiling state =
     Compiling <| makeState <| untag <| state
 
 
-toStartingRunner : List String -> State { a | startingRunner : Allowed } {} -> SupervisorState
+toStartingRunner : List String -> State { a | startingRunner : Allowed } {} -> Model
 toStartingRunner gherkinFiles state =
     StartingRunner <| makeState { gherkinFiles = gherkinFiles }
 
 
-toResolvingGherkinFiles : List String -> State { a | resolvingGherkinFiles : Allowed } {} -> SupervisorState
+toResolvingGherkinFiles : List String -> State { a | resolvingGherkinFiles : Allowed } {} -> Model
 toResolvingGherkinFiles gherkinFiles state =
     ResolvingGherkinFiles <| makeState { gherkinFiles = gherkinFiles }
 
 
-toTestingGherkinFile : List String -> State { a | testingGherkinFile : Allowed } {} -> SupervisorState
+toTestingGherkinFile : List String -> State { a | testingGherkinFile : Allowed } {} -> Model
 toTestingGherkinFile gherkinFiles state =
     TestingGherkinFiles <| makeState { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
 
 
-toWatching : List String -> State { a | watching : Allowed } {} -> SupervisorState
+toWatching : List String -> State { a | watching : Allowed } {} -> Model
 toWatching gherkinFiles state =
     Watching <| makeState { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
 
 
-toEnding : Int -> State { a | ending : Allowed } b -> SupervisorState
+toEnding : Int -> State { a | ending : Allowed } b -> Model
 toEnding exitCode state =
     Ending <| makeState exitCode
