@@ -57,7 +57,7 @@ init flags options =
                         |> List.filterMap identity
                         |> String.join "\n"
             in
-            ( toGettingPackageInfo runOptions, echoRequest runMessage )
+            ( toRunGettingPackageInfo runOptions, echoRequest runMessage )
 
 
 update : CliOptions -> Msg -> Model -> ( Model, Cmd Msg )
@@ -81,32 +81,32 @@ update cliOptions msg model =
             -- if no match, error, else compute model and send message off and send a message
             -- sounds a bit simpler than the state machine
 
-            ( toEnding 0 state, message NoOp )
+            ( toInitGettingCurrentDir ) 
 
-        ( GettingPackageInfo state, NoOp ) ->
+        ( RunGettingPackageInfo state, NoOp ) ->
             let
                 runOptions =
                     state |> untag |> .runOptions
             in 
             noOp
-            -- ( toConstructingFolder { runOptions = runOptions, project = project } state, )
+            -- ( toRunConstructingFolder { runOptions = runOptions, project = project } state, )
 
-        ( ConstructingFolder _, NoOp ) ->
+        ( RunConstructingFolder _, NoOp ) ->
             noOp
 
-        ( Compiling _, NoOp ) ->
+        ( RunCompiling _, NoOp ) ->
             noOp
 
-        ( StartingRunner _, NoOp ) ->
+        ( RunStartingRunner _, NoOp ) ->
             noOp
 
-        ( ResolvingGherkinFiles _, NoOp ) ->
+        ( RunResolvingGherkinFiles _, NoOp ) ->
             noOp
 
-        ( TestingGherkinFiles _, NoOp ) ->
+        ( RunTestingGherkinFiles _, NoOp ) ->
             noOp
 
-        ( Watching _, NoOp ) ->
+        ( RunWatching _, NoOp ) ->
             noOp
 
         ( Ending state, NoOp ) ->
@@ -122,22 +122,22 @@ subscriptions model =
         InitStart _ ->
             fileReadResponse FileRead
 
-        GettingPackageInfo _ ->
+        RunGettingPackageInfo _ ->
             Sub.none
 
-        ConstructingFolder _ ->
+        RunConstructingFolder _ ->
             fileWriteResponse FileWrite
 
-        Compiling _ ->
+        RunCompiling _ ->
             shellResponse Shell
 
-        StartingRunner _ ->
+        RunStartingRunner _ ->
             Sub.none
 
-        ResolvingGherkinFiles _ ->
+        RunResolvingGherkinFiles _ ->
             Sub.none
 
-        TestingGherkinFiles _ ->
+        RunTestingGherkinFiles _ ->
             cucumberTestResponse Cucumber
 
         _ ->
