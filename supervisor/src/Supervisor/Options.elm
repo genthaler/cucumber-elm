@@ -64,13 +64,3 @@ config =
                 |> OptionsParser.withRestArgs (Option.restArgs "TESTFILES")
                 |> OptionsParser.map RunTests
             )
-
-
-maybeToResult : Maybe value -> Result String value
-maybeToResult maybe =
-    case maybe of
-        Just value ->
-            Ok value
-
-        Nothing ->
-            Err "Could not convert."

@@ -27,7 +27,6 @@ type InitActions
 
 type RunActions
     = GetPackageInfo
-    | 
 
 message : msg -> Cmd msg
 message msg =
@@ -42,7 +41,7 @@ init flags options =
                 initMessage =
                     "Initializing test suite in folder " ++ folder
             in
-            ( toInitialising folder, echoRequest initMessage )
+            ( toInitStart folder, echoRequest initMessage )
 
         RunTests runOptions ->
             let
@@ -68,7 +67,7 @@ update cliOptions msg model =
             ( model, Cmd.none )
     in
     case ( model, msg ) of
-        ( Initialising state, NoOp ) ->
+        ( InitStart state, NoOp ) ->
             let
                 folder = state |> untag |> .folder
             in
@@ -88,8 +87,9 @@ update cliOptions msg model =
             let
                 runOptions =
                     state |> untag |> .runOptions
-            in
-            ( toConstructingFolder { runOptions = runOptions, project = project } state, )
+            in 
+            noOp
+            -- ( toConstructingFolder { runOptions = runOptions, project = project } state, )
 
         ( ConstructingFolder _, NoOp ) ->
             noOp
@@ -119,10 +119,7 @@ update cliOptions msg model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     case model of
-        Versioning _ ->
-            fileReadResponse FileRead
-
-        Initialising _ ->
+        InitStart _ ->
             fileReadResponse FileRead
 
         GettingPackageInfo _ ->

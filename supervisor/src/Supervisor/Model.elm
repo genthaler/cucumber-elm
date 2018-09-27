@@ -1,4 +1,4 @@
-module Supervisor.Model exposing (Model(..), makeState, toCompiling, toConstructingFolder, toEnding, toGettingPackageInfo, toInitialising, toResolvingGherkinFiles, toStartingRunner, toTestingGherkinFile, toWatching)
+module Supervisor.Model exposing (Model(..), makeState, toCompiling, toConstructingFolder, toEnding, toGettingPackageInfo, toInitStart, toResolvingGherkinFiles, toStartingRunner, toTestingGherkinFile, toWatching)
 
 import Elm.Project exposing (..)
 import StateMachine exposing (Allowed, State(..), map, untag)
@@ -21,7 +21,10 @@ makeState =
 
 
 type Model
-    = Initialising (State { ending : Allowed } { folder : String })
+    = InitStart (State { ending : Allowed } { folder : String })
+    | InitGettingCurrentDir (State { ending : Allowed } { folder : String })
+    | InitGettingModuleDir (State { ending : Allowed } { folder : String, currentDir: String })
+    | InitCopyingTemplate (State { ending : Allowed } { folder : String, currentDir: String, moduleDir:String })
     | GettingPackageInfo (State { constructingFolder : Allowed } { runOptions : RunOptions })
     | ConstructingFolder (State { compiling : Allowed } { runOptions : RunOptions, project : Project })
     | Compiling (State { startingRunner : Allowed } { gherkinFiles : List String })
@@ -36,9 +39,9 @@ type Model
 -- Initial state constructors.
 
 
-toInitialising : String -> Model
-toInitialising folder =
-    Initialising <| makeState { folder = folder }
+toInitStart : String -> Model
+toInitStart folder =
+    InitStart <| makeState { folder = folder }
 
 
 toGettingPackageInfo : RunOptions -> Model
@@ -47,8 +50,7 @@ toGettingPackageInfo runOptions =
 
 
 
--- State transition functions that can be applied only to states that are permitted
--- to make a transition.
+-- Init state transition functions 
 
 
 toConstructingFolder : Project -> State { a | constructingFolder : Allowed } { runOptions : RunOptions } -> Model
