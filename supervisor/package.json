@@ -8,13 +8,15 @@
   "private": true,
   "scripts": {
     "clean": "shx rm -rf node_modules && shx rm -rf elm-stuff",
-    "prepare": "elm make src/SupervisorWorker.elm --output=supervisorWorker.js",
+    "prepare": "elm make src/Supervisor/Main.elm --output=supervisorWorker.js",
     "test": "elm-test"
   },
   "dependencies": {},
   "devDependencies": {
     "elm": "^0.19.0",
     "elm-test": "^0.19.0-beta8",
+    "rambda": "^1.2.2",
+    "require-from-string": "^2.0.2",
     "shx": "^0.3.2"
   }
 }

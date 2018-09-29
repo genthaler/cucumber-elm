@@ -19,14 +19,17 @@ type Msg
     | Require Int
     | Cucumber String
 
+
 type InitActions
     = GetCurrentDir
     | GetModuleDir
     | CopyModuleDir
     | InitEnd
 
+
 type RunActions
     = GetPackageInfo
+
 
 message : msg -> Cmd msg
 message msg =
@@ -57,7 +60,7 @@ init flags options =
                         |> List.filterMap identity
                         |> String.join "\n"
             in
-            ( toGettingPackageInfo runOptions, echoRequest runMessage )
+            ( toGettingPackageInfo runOptions, Cmd.batch [ echoRequest runMessage, message NoOp ] )
 
 
 update : CliOptions -> Msg -> Model -> ( Model, Cmd Msg )
@@ -69,7 +72,8 @@ update cliOptions msg model =
     case ( model, msg ) of
         ( InitStart state, NoOp ) ->
             let
-                folder = state |> untag |> .folder
+                folder =
+                    state |> untag |> .folder
             in
             -- Need to get current directory, module directory, copy template directory to destination
             -- Maybe test compile?
@@ -80,17 +84,16 @@ update cliOptions msg model =
             -- on each update, match the top of the list and its expected message
             -- if no match, error, else compute model and send message off and send a message
             -- sounds a bit simpler than the state machine
-
             ( toEnding 0 state, message NoOp )
 
         ( GettingPackageInfo state, NoOp ) ->
             let
                 runOptions =
                     state |> untag |> .runOptions
-            in 
+            in
             noOp
-            -- ( toConstructingFolder { runOptions = runOptions, project = project } state, )
 
+        -- ( toConstructingFolder { runOptions = runOptions, project = project } state, )
         ( ConstructingFolder _, NoOp ) ->
             noOp
 
@@ -113,8 +116,11 @@ update cliOptions msg model =
             ( model, end (state |> untag) )
 
         ( _, _ ) ->
-            ( model, logAndExit 1 
-                "Invalid State Transition")
+            ( model
+            , logAndExit 1
+                "Invalid State Transition"
+            )
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =

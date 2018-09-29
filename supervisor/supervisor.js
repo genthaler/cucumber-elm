@@ -11,7 +11,7 @@ const compiler = require('node-elm-compiler')
 const supervisor = require('./supervisorWorker.js');
 const requireFromString = require('require-from-string');
 
-const supervisorWorker = supervisor.Elm.SupervisorWorker.init({
+const supervisorWorker = supervisor.Elm.Supervisor.Main.init({
   flags: {
     argv: process.argv
   }
