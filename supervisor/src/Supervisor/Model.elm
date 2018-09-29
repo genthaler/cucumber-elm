@@ -21,67 +21,76 @@ makeState =
 
 
 type Model
-    = InitStart (State { ending : Allowed } { folder : String })
-    | InitGettingCurrentDir (State { ending : Allowed } { folder : String })
-    | InitGettingModuleDir (State { ending : Allowed } { folder : String, currentDir: String })
-    | InitCopyingTemplate (State { ending : Allowed } { folder : String, currentDir: String, moduleDir:String })
-    | GettingPackageInfo (State { constructingFolder : Allowed } { runOptions : RunOptions })
-    | ConstructingFolder (State { compiling : Allowed } { runOptions : RunOptions, project : Project })
-    | Compiling (State { startingRunner : Allowed } { gherkinFiles : List String })
-    | StartingRunner (State { resolvingGherkinFiles : Allowed } { gherkinFiles : List String })
-    | ResolvingGherkinFiles (State { testingGherkinFile : Allowed } { gherkinFiles : List String })
-    | TestingGherkinFiles (State { ending : Allowed, watching : Allowed } { remainingGherkinFiles : List String, testedGherkinFiles : List String })
-    | Watching (State { resolvingGherkinFiles : Allowed } { testedGherkinFiles : List String, remainingGherkinFiles : List String })
+    = InitGettingCurrentDir (State { initGettingModuleDir : Allowed } { folder : String })
+    | InitGettingModuleDir (State { initCopyingTemplate : Allowed } { folder : String, currentDir : String })
+    | InitCopyingTemplate (State { ending : Allowed } { folder : String, currentDir : String, moduleDir : String })
+    | RunGettingPackageInfo (State { constructingFolder : Allowed } { runOptions : RunOptions })
+    | RunConstructingFolder (State { compiling : Allowed } { runOptions : RunOptions, project : Project })
+    | RunCompiling (State { startingRunner : Allowed } { gherkinFiles : List String })
+    | RunStartingRunner (State { resolvingGherkinFiles : Allowed } { gherkinFiles : List String })
+    | RunResolvingGherkinFiles (State { testingGherkinFile : Allowed } { gherkinFiles : List String })
+    | RunTestingGherkinFiles (State { ending : Allowed, watching : Allowed } { remainingGherkinFiles : List String, testedGherkinFiles : List String })
+    | RunWatching (State { resolvingGherkinFiles : Allowed } { testedGherkinFiles : List String, remainingGherkinFiles : List String })
     | Ending (State { ending : Allowed } Int)
 
 
 
--- Initial state constructors.
+-- Init state constructors.
 
 
-toInitStart : String -> Model
-toInitStart folder =
+toInitGettingCurrentDir : String -> Model
+toInitGettingCurrentDir folder =
     InitStart <| makeState { folder = folder }
 
 
-toGettingPackageInfo : RunOptions -> Model
-toGettingPackageInfo runOptions =
-    GettingPackageInfo <| makeState { runOptions = runOptions }
+toInitGettingModuleDir : Project -> State { a | constructingFolder : Allowed } { runOptions : RunOptions } -> Model
+toInitGettingModuleDir project state =
+    InitGettingModuleDir <| makeState <| { runOptions = state |> untag |> .runOptions, project = project }
 
 
-
--- Init state transition functions 
-
-
-toConstructingFolder : Project -> State { a | constructingFolder : Allowed } { runOptions : RunOptions } -> Model
-toConstructingFolder project state =
-    ConstructingFolder <| makeState <| { runOptions = state |> untag |> .runOptions, project = project }
+toInitCopyingTemplate : Project -> State { a | constructingFolder : Allowed } { runOptions : RunOptions } -> Model
+toInitCopyingTemplate project state =
+    InitCopyingTemplate <| makeState <| { runOptions = state |> untag |> .runOptions, project = project }
 
 
-toCompiling : State { a | compiling : Allowed } { gherkinFiles : List String } -> Model
-toCompiling state =
-    Compiling <| makeState <| untag <| state
+-- Run state constructors
 
 
-toStartingRunner : List String -> State { a | startingRunner : Allowed } {} -> Model
-toStartingRunner gherkinFiles state =
-    StartingRunner <| makeState { gherkinFiles = gherkinFiles }
+toRunGettingPackageInfo : RunOptions -> Model
+toRunGettingPackageInfo runOptions =
+    RunGettingPackageInfo <| makeState { runOptions = runOptions }
 
 
-toResolvingGherkinFiles : List String -> State { a | resolvingGherkinFiles : Allowed } {} -> Model
-toResolvingGherkinFiles gherkinFiles state =
-    ResolvingGherkinFiles <| makeState { gherkinFiles = gherkinFiles }
+toRunConstructingFolder : Project -> State { a | constructingFolder : Allowed } { runOptions : RunOptions } -> Model
+toRunConstructingFolder project state =
+    RunConstructingFolder <| makeState <| { runOptions = state |> untag |> .runOptions, project = project }
 
 
-toTestingGherkinFile : List String -> State { a | testingGherkinFile : Allowed } {} -> Model
-toTestingGherkinFile gherkinFiles state =
-    TestingGherkinFiles <| makeState { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
+toRunCompiling : State { a | compiling : Allowed } { gherkinFiles : List String } -> Model
+toRunCompiling state =
+    RunCompiling <| makeState <| untag <| state
 
 
-toWatching : List String -> State { a | watching : Allowed } {} -> Model
-toWatching gherkinFiles state =
-    Watching <| makeState { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
+toRunStartingRunner : List String -> State { a | startingRunner : Allowed } {} -> Model
+toRunStartingRunner gherkinFiles state =
+    RunStartingRunner <| makeState { gherkinFiles = gherkinFiles }
 
+
+toRunResolvingGherkinFiles : List String -> State { a | resolvingGherkinFiles : Allowed } {} -> Model
+toRunResolvingGherkinFiles gherkinFiles state =
+    RunResolvingGherkinFiles <| makeState { gherkinFiles = gherkinFiles }
+
+
+toRunTestingGherkinFile : List String -> State { a | testingGherkinFile : Allowed } {} -> Model
+toRunTestingGherkinFile gherkinFiles state =
+    RunTestingGherkinFiles <| makeState { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
+
+
+toRunWatching : List String -> State { a | watching : Allowed } {} -> Model
+toRunWatching gherkinFiles state =
+    RunWatching <| makeState { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
+
+-- End state constructor
 
 toEnding : Int -> State { a | ending : Allowed } b -> Model
 toEnding exitCode state =
