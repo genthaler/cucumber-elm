@@ -21,9 +21,8 @@ makeState =
 
 
 type Model
-    = InitStart (State { initGettingCurrentDir : Allowed } { folder : String })
-    | InitGettingCurrentDir (State { initGettingModuleDir : Allowed } { folder : String })
-    | InitGettingModuleDir (State { ending : Allowed } { folder : String, currentDir : String })
+    = InitGettingCurrentDir (State { initGettingModuleDir : Allowed } { folder : String })
+    | InitGettingModuleDir (State { initCopyingTemplate : Allowed } { folder : String, currentDir : String })
     | InitCopyingTemplate (State { ending : Allowed } { folder : String, currentDir : String, moduleDir : String })
     | RunGettingPackageInfo (State { constructingFolder : Allowed } { runOptions : RunOptions })
     | RunConstructingFolder (State { compiling : Allowed } { runOptions : RunOptions, project : Project })
