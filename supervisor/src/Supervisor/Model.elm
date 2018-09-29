@@ -1,4 +1,4 @@
-module Supervisor.Model exposing (Model(..), makeState, toCompiling, toConstructingFolder, toEnding, toGettingPackageInfo, toInitStart, toResolvingGherkinFiles, toStartingRunner, toTestingGherkinFile, toWatching)
+module Supervisor.Model exposing (Model(..), makeState, toEnding, toInitCopyingTemplate, toInitGettingCurrentDir, toInitGettingModuleDir, toRunCompiling, toRunConstructingFolder, toRunGettingPackageInfo, toRunResolvingGherkinFiles, toRunStartingRunner, toRunTestingGherkinFile, toRunWatching)
 
 import Elm.Project exposing (..)
 import StateMachine exposing (Allowed, State(..), map, untag)
@@ -40,17 +40,18 @@ type Model
 
 toInitGettingCurrentDir : String -> Model
 toInitGettingCurrentDir folder =
-    InitStart <| makeState { folder = folder }
+    InitGettingCurrentDir <| makeState { folder = folder }
 
 
-toInitGettingModuleDir : Project -> State { a | constructingFolder : Allowed } { runOptions : RunOptions } -> Model
-toInitGettingModuleDir project state =
-    InitGettingModuleDir <| makeState <| { runOptions = state |> untag |> .runOptions, project = project }
+toInitGettingModuleDir : String -> State { a | constructingFolder : Allowed } { folder : String, currentDir : String } -> Model
+toInitGettingModuleDir currentDir state =
+    InitGettingModuleDir <| makeState <| { folder = state |> untag |> .runOptions, currentDir = currentDir }
 
 
 toInitCopyingTemplate : Project -> State { a | constructingFolder : Allowed } { runOptions : RunOptions } -> Model
 toInitCopyingTemplate project state =
     InitCopyingTemplate <| makeState <| { runOptions = state |> untag |> .runOptions, project = project }
+
 
 
 -- Run state constructors
@@ -90,7 +91,10 @@ toRunWatching : List String -> State { a | watching : Allowed } {} -> Model
 toRunWatching gherkinFiles state =
     RunWatching <| makeState { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
 
+
+
 -- End state constructor
+
 
 toEnding : Int -> State { a | ending : Allowed } b -> Model
 toEnding exitCode state =
