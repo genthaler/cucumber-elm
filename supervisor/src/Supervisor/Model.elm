@@ -40,21 +40,37 @@ type Model
 
 toInitGettingCurrentDir : String -> Model
 toInitGettingCurrentDir folder =
-    InitGettingCurrentDir <| makeState { folder = folder }
+    InitGettingCurrentDir <|
+        makeState
+            { folder = folder
+            }
 
 
-toInitGettingModuleDir : String -> State { a | constructingFolder : Allowed } { folder : String, currentDir : String } -> Model
-toInitGettingModuleDir currentDir state =
-    InitGettingModuleDir <| makeState <| { folder = state |> untag |> .runOptions, currentDir = currentDir }
+toInitGettingModuleDir : State { a | initGettingModuleDir : Allowed } { folder : String } -> String -> Model
+toInitGettingModuleDir state currentDir =
+    InitGettingModuleDir <|
+        makeState <|
+            { folder = (untag state).folder
+            , currentDir = currentDir
+            }
 
 
-toInitCopyingTemplate : Project -> State { a | constructingFolder : Allowed } { runOptions : RunOptions } -> Model
-toInitCopyingTemplate project state =
-    InitCopyingTemplate <| makeState <| { runOptions = state |> untag |> .runOptions, project = project }
+toInitCopyingTemplate : State { a | initCopyingTemplate : Allowed } { folder : String, currentDir : String } -> String -> Model
+toInitCopyingTemplate state moduleDir =
+    InitCopyingTemplate <|
+        makeState <|
+            { folder = (untag state).folder
+            , currentDir = (untag state).currentDir
+            , moduleDir = moduleDir
+            }
 
 
 
 -- Run state constructors
+
+-- get current package info for project
+-- confirm that cucumber-elm is there
+-- construct an elm-json with project and cucumber dependencies
 
 
 toRunGettingPackageInfo : RunOptions -> Model
@@ -62,33 +78,33 @@ toRunGettingPackageInfo runOptions =
     RunGettingPackageInfo <| makeState { runOptions = runOptions }
 
 
-toRunConstructingFolder : Project -> State { a | constructingFolder : Allowed } { runOptions : RunOptions } -> Model
-toRunConstructingFolder project state =
+toRunConstructingFolder : State { a | constructingFolder : Allowed } { runOptions : RunOptions } -> Project -> Model
+toRunConstructingFolder state project =
     RunConstructingFolder <| makeState <| { runOptions = state |> untag |> .runOptions, project = project }
 
 
 toRunCompiling : State { a | compiling : Allowed } { gherkinFiles : List String } -> Model
 toRunCompiling state =
-    RunCompiling <| makeState <| untag <| state
+    RunCompiling <| makeState <| untag state
 
 
-toRunStartingRunner : List String -> State { a | startingRunner : Allowed } {} -> Model
-toRunStartingRunner gherkinFiles state =
+toRunStartingRunner : State { a | startingRunner : Allowed } {} -> List String -> Model
+toRunStartingRunner state gherkinFiles =
     RunStartingRunner <| makeState { gherkinFiles = gherkinFiles }
 
 
-toRunResolvingGherkinFiles : List String -> State { a | resolvingGherkinFiles : Allowed } {} -> Model
-toRunResolvingGherkinFiles gherkinFiles state =
+toRunResolvingGherkinFiles : State { a | resolvingGherkinFiles : Allowed } {} -> List String -> Model
+toRunResolvingGherkinFiles state gherkinFiles =
     RunResolvingGherkinFiles <| makeState { gherkinFiles = gherkinFiles }
 
 
-toRunTestingGherkinFile : List String -> State { a | testingGherkinFile : Allowed } {} -> Model
-toRunTestingGherkinFile gherkinFiles state =
+toRunTestingGherkinFile : State { a | testingGherkinFile : Allowed } {} -> List String -> Model
+toRunTestingGherkinFile state gherkinFiles =
     RunTestingGherkinFiles <| makeState { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
 
 
-toRunWatching : List String -> State { a | watching : Allowed } {} -> Model
-toRunWatching gherkinFiles state =
+toRunWatching : State { a | watching : Allowed } {} -> List String -> Model
+toRunWatching state gherkinFiles =
     RunWatching <| makeState { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
 
 
@@ -96,6 +112,6 @@ toRunWatching gherkinFiles state =
 -- End state constructor
 
 
-toEnding : Int -> State { a | ending : Allowed } b -> Model
-toEnding exitCode state =
+toEnding : State { a | ending : Allowed } b -> Int -> Model
+toEnding state exitCode =
     Ending <| makeState exitCode

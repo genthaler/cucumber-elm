@@ -20,17 +20,6 @@ type Msg
     | Cucumber String
 
 
-type InitActions
-    = GetCurrentDir
-    | GetModuleDir
-    | CopyModuleDir
-    | InitEnd
-
-
-type RunActions
-    = GetPackageInfo
-
-
 message : msg -> Cmd msg
 message msg =
     Task.perform identity (Task.succeed msg)
@@ -44,7 +33,7 @@ init flags options =
                 initMessage =
                     "Initializing test suite in folder " ++ folder
             in
-            ( toInitStart folder, echoRequest initMessage )
+            ( toInitGettingCurrentDir folder, Cmd.batch [ fileGlobResolveRequest ".", echoRequest initMessage ] )
 
         RunTests runOptions ->
             let
@@ -70,22 +59,24 @@ update cliOptions msg model =
             ( model, Cmd.none )
     in
     case ( model, msg ) of
-        ( InitStart state, NoOp ) ->
-            let
-                folder =
-                    state |> untag |> .folder
-            in
-            -- Need to get current directory, module directory, copy template directory to destination
-            -- Maybe test compile?
-            -- Is this better done with a list of Taskish things to be done?
-            -- Problem is, you can't pass functions around in a model
-            -- So define a type with actions
-            -- create a list of those actions
-            -- on each update, match the top of the list and its expected message
-            -- if no match, error, else compute model and send message off and send a message
-            -- sounds a bit simpler than the state machine
+        ( InitGettingCurrentDir state, FileList fileList ) ->
+            case fileList of
+                [ currentDir ] ->
+                    ( toInitGettingModuleDir state currentDir, fileGlobResolveRequest "." )
 
-            ( toInitGettingCurrentDir ) 
+                _ ->
+                    ( model, logAndExit 1 "expecting a single file as current directory" )
+
+        ( InitGettingModuleDir state, FileList fileList ) ->
+            case fileList of
+                [ moduleDir ] ->
+                    ( toInitCopyingTemplate state moduleDir, fileGlobResolveRequest "." )
+
+                _ ->
+                    ( model, logAndExit 1 "expecting a single file as module directory" )
+
+        ( InitCopyingTemplate state, Shell exitCode ) ->
+            ( toEnding state exitCode, Cmd.none )
 
         ( RunGettingPackageInfo state, NoOp ) ->
             let
@@ -93,8 +84,8 @@ update cliOptions msg model =
                     state |> untag |> .runOptions
             in
             noOp
-            -- ( toRunConstructingFolder { runOptions = runOptions, project = project } state, )
 
+        -- ( toRunConstructingFolder { runOptions = runOptions, project = project } state, )
         ( RunConstructingFolder _, NoOp ) ->
             noOp
 
@@ -126,11 +117,14 @@ update cliOptions msg model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     case model of
-        InitStart _ ->
-            fileReadResponse FileRead
+        InitGettingCurrentDir _ ->
+            fileGlobResolveResponse FileList
 
-        RunGettingPackageInfo _ ->
-            Sub.none
+        InitGettingModuleDir _ ->
+            fileGlobResolveResponse FileList
+
+        InitCopyingTemplate _ ->
+            shellResponse Shell
 
         RunConstructingFolder _ ->
             fileWriteResponse FileWrite
