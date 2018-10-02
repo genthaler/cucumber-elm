@@ -1,48 +1,48 @@
 port module Supervisor.Ports exposing (cucumberBootRequest, cucumberBootResponse, cucumberTestRequest, cucumberTestResponse, echoRequest, end, fileGlobResolveRequest, fileGlobResolveResponse, fileReadRequest, fileReadResponse, fileWriteRequest, fileWriteResponse, logAndExit, shellRequest, shellResponse)
 
-
-port fileReadRequest : String -> Cmd msg
-
-
-port fileReadResponse : (String -> msg) -> Sub msg
+import Json.Decode as D
+import Json.Encode as E
 
 
-port fileWriteRequest : ( String, String ) -> Cmd msg
+type Response
+    = NoOp
+    | FileRead String
+    | FileWrite String
+    | FileList (List String)
+    | Shell Int
+    | Require Int
+    | Cucumber String
 
 
-port fileWriteResponse : (String -> msg) -> Sub msg
+port request : String -> Cmd msg
 
 
-port echoRequest : String -> Cmd msg
+port response : (String -> msg) -> Sub msg
 
 
-port shellRequest : String -> Cmd msg
+fileReadRequest : String -> Cmd msg
+fileReadRequest fileName =
+    request E.object
+        [ ( "command", E.string "FileRead" )
+        , ( "fileName", E.string fileName )
+        ]
 
 
-port shellResponse : (Int -> msg) -> Sub msg
 
-
-port fileGlobResolveRequest : String -> Cmd msg
-
-
-port fileGlobResolveResponse : (List String -> msg) -> Sub msg
-
-
-port cucumberBootRequest : String -> Cmd msg
-
-
-port cucumberBootResponse : (Int -> msg) -> Sub msg
-
-
-port cucumberTestRequest : String -> Cmd msg
-
-
-port cucumberTestResponse : (String -> msg) -> Sub msg
-
-
-port end : Int -> Cmd msg
-
-
-logAndExit : Int -> String -> Cmd msg
-logAndExit exitCode msg =
-    Cmd.batch [ echoRequest msg, end exitCode ]
+fileReadResponse : (String -> msg) -> Sub msg
+-- fileReadResponse =
+-- fileWriteRequest : ( String, String ) -> Cmd msg
+-- fileWriteResponse : (String -> msg) -> Sub msg
+-- echoRequest : String -> Cmd msg
+-- shellRequest : String -> Cmd msg
+-- shellResponse : (Int -> msg) -> Sub msg
+-- fileGlobResolveRequest : String -> Cmd msg
+-- fileGlobResolveResponse : (List String -> msg) -> Sub msg
+-- cucumberBootRequest : String -> Cmd msg
+-- cucumberBootResponse : (Int -> msg) -> Sub msg
+-- cucumberTestRequest : String -> Cmd msg
+-- cucumberTestResponse : (String -> msg) -> Sub msg
+-- end : Int -> Cmd msg
+-- logAndExit : Int -> String -> Cmd msg
+-- logAndExit exitCode msg =
+--     Cmd.batch [ echoRequest msg, end exitCode ]

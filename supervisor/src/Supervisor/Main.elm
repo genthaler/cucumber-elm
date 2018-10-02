@@ -10,14 +10,6 @@ import Supervisor.Ports exposing (..)
 import Task
 
 
-type Msg
-    = NoOp
-    | FileRead String
-    | FileWrite String
-    | FileList (List String)
-    | Shell Int
-    | Require Int
-    | Cucumber String
 
 
 message : msg -> Cmd msg

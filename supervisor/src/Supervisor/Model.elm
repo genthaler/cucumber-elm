@@ -21,7 +21,8 @@ makeState =
 
 
 type Model
-    = InitGettingCurrentDir (State { initGettingModuleDir : Allowed } { folder : String })
+    = InitStart (State { initGettingCurrentDir : Allowed } { folder : String })
+    | InitGettingCurrentDir (State { initGettingModuleDir : Allowed } { folder : String })
     | InitGettingModuleDir (State { initCopyingTemplate : Allowed } { folder : String, currentDir : String })
     | InitCopyingTemplate (State { ending : Allowed } { folder : String, currentDir : String, moduleDir : String })
     | RunGettingPackageInfo (State { constructingFolder : Allowed } { runOptions : RunOptions })
@@ -38,12 +39,17 @@ type Model
 -- Init state constructors.
 
 
-toInitGettingCurrentDir : String -> Model
-toInitGettingCurrentDir folder =
+toInitStart : String -> Model
+toInitStart folder =
     InitGettingCurrentDir <|
         makeState
             { folder = folder
             }
+
+toInitGettingCurrentDir : State { a | initGettingCurrentDir : Allowed } { folder : String } -> Model
+toInitGettingCurrentDir =
+    InitGettingCurrentDir <<
+        untag 
 
 
 toInitGettingModuleDir : State { a | initGettingModuleDir : Allowed } { folder : String } -> String -> Model
@@ -67,7 +73,6 @@ toInitCopyingTemplate state moduleDir =
 
 
 -- Run state constructors
-
 -- get current package info for project
 -- confirm that cucumber-elm is there
 -- construct an elm-json with project and cucumber dependencies
