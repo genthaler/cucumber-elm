@@ -20,81 +20,95 @@ const supervisorWorker = supervisor.Elm.Supervisor.Main.init({
 const compile = compiler.compile;
 const compileToString = compiler.compileToString;
 
-/*
- * Wire up request
- */
-supervisorWorker.ports.request.subscribe(cmd => {
-  switch (cmd.command) {
-    case "Echo":
-      shell.echo(cmd.message)
-      break;
+const send = supervisorWorker.ports.response.send;
 
-    case "FileRead":
-      supervisorWorker.ports.response.send({ fileContent: shell.cat(cmd.fileName).stdout });
-      break;
+supervisorWorker.ports.request.subscribe(
+  cmd => {
+    switch (cmd.command) {
+      case "Echo":
+        send(shell.echo(cmd.message));
+        break;
 
-    case "FileWrite":
-      supervisorWorker.ports.response.send({ exitCode: shell.echo(cmd.fileContent).to(path.resolve(cmd.fileName)).code });
-      break;
+      case "FileRead":
+        send(shell.cat(cmd.fileName));
+        break;
 
-    case "FileList":
-      glob(cmd.glob, {}, (er, files) => {
-        if (er == null) {
-          supervisorWorker.ports.response.send({ fileList: files });
-        } else {
-          supervisorWorker.ports.response.send({ error: er.message });
-        }
-      });
-      break;
+      case "FileWrite":
+        send(shell.echo(cmd.fileContent).to(path.resolve(cmd.fileName)));
+        break;
 
-    case "Shell":
-      supervisorWorker.ports.response.send({ exitCode: shell.echo(cmd.fileContent).to(path.resolve(cmd.fileName)).code });
-      break;
+      case "FileList":
+        glob(cmd.glob, {}, (er, files) => {
+          if (er == null) {
+            send({
+              code: 0,
+              fileList: files
+            });
+          } else {
+            send({
+              code: 1,
+              stderr: er.message
+            });
+          }
+        });
+        break;
 
-    case "Require":
-      shell.echo(cmd.message)
-      break;
+      case "Shell":
+        send(shell.exec(cmd.cmd));
+        break;
 
-    case "CucumberBoot":
-      shell.echo(cmd.message)
-      break;
+      case "Require":
+        send(shell.echo(cmd.message));
+        break;
 
-    case "Cucumber":
-      shell.echo(cmd.message)
-      break;
-      
-    case "End":
-      process.exit(cmd.exitCode);
-      break;
-  }
-})
+      case "CucumberBoot":
+        send(shell.echo(cmd.message));
+        break;
 
-supervisorWorker.ports.shellRequest.subscribe(
-  R.pipe(
-    shell.exec,
-    supervisorWorker.ports.shellResponse.send
-  )
-)
+      case "Cucumber":
+        send(shell.echo(cmd.message));
+        break;
 
-supervisorWorker.ports.copyRequest.subscribe(
-  (source, destination) => {
-    R.pipe(
-      shell.cp('-rf', path.resolve(source), path.resolve(destination)).code,
-      supervisorWorker.ports.copyResponse.send
-    )
-  }
-)
+      case "Copy":
+        send(shell.cp('-rf', path.resolve(cmd.source), path.resolve(cmd.destination)));
+        break;
+
+      case "Compile":
+        compiler.compileToString(path.resolve(source), {
+            yes: true,
+            verbose: true,
+            cwd: path.dirname(path.resolve(source)),
+            output: '.js'
+          })
+          .then((result) => supervisorWorker.ports.compileResponse.send({
+            result: result,
+            error: '',
+            success: true
+          }))
+          .catch((error) => supervisorWorker.ports.compileResponse.send({
+            result: '',
+            error: error,
+            success: false
+          }));
+        break;
+
+      case "Exit":
+        send(shell.exit(cmd.exitCode));
+        break;
+    }
+  });
+
 
 // var result = compiler.compileToStringSync(prependFixturesDir("Parent.elm"), opts);
 
 supervisorWorker.ports.compileRequest.subscribe(
   (source) => {
     compiler.compileToString(path.resolve(source), {
-      yes: true,
-      verbose: true,
-      cwd: path.dirname(path.resolve(source)),
-      output: '.js'
-    })
+        yes: true,
+        verbose: true,
+        cwd: path.dirname(path.resolve(source)),
+        output: '.js'
+      })
       .then((result) => supervisorWorker.ports.compileResponse.send({
         result: result,
         error: '',
@@ -125,4 +139,3 @@ supervisorWorker.ports.cucumberBootRequest.subscribe(
 // proxyquire.noPreserveCache()
 // let runnerWorker = proxyquire(resolvedRunnerLocation).Runner.worker()
 // proxyquire.preserveCache()
-

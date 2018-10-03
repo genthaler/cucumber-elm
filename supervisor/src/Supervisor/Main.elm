@@ -11,7 +11,7 @@ import Task
 
 
 message : msg -> Cmd msg
-message msg =
+message msg = 
     Task.perform identity (Task.succeed msg)
 
 
@@ -49,6 +49,9 @@ update cliOptions msg model =
             ( model, Cmd.none )
     in
     case ( model, msg ) of
+        ( _, Stderr stderr ) ->
+            ( model, logAndExit 1 stderr)
+
         ( InitGettingCurrentDir state, FileList fileList ) ->
             case fileList of
                 [ currentDir ] ->
@@ -65,8 +68,8 @@ update cliOptions msg model =
                 _ ->
                     ( model, logAndExit 1 "expecting a single file as module directory" )
 
-        ( InitCopyingTemplate state, Shell exitCode stdout ) ->
-            ( toEnding state exitCode, Cmd.none )
+        ( InitCopyingTemplate state, Stdout stdout ) ->
+            ( toEnding state 0, Cmd.none )
 
         ( RunGettingPackageInfo state, NoOp ) ->
             let
@@ -94,8 +97,8 @@ update cliOptions msg model =
         ( RunWatching _, NoOp ) ->
             noOp
 
-        ( Ending state, NoOp ) ->
-            ( model, end (state |> untag) )
+        ( Ending state, _ ) ->
+            ( model, exit (state |> untag) )
 
         ( _, _ ) ->
             ( model
@@ -105,7 +108,8 @@ update cliOptions msg model =
 
 
 subscriptions : Model -> Sub Response
-subscriptions model = response
+subscriptions model =
+    response
 
 
 main : Program.StatefulProgram Model Response CliOptions {}

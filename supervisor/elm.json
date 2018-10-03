@@ -12,6 +12,7 @@
             "elm/html": "1.0.0",
             "elm/json": "1.0.0",
             "elm/project-metadata-utils": "1.0.0",
+            "elm-community/json-extra": "4.0.0",
             "elm-community/list-extra": "8.0.0",
             "elm-community/result-extra": "2.2.1",
             "the-sett/elm-state-machines": "1.0.1"
@@ -21,7 +22,8 @@
             "elm/regex": "1.0.0",
             "elm/time": "1.0.0",
             "elm/url": "1.0.0",
-            "elm/virtual-dom": "1.0.0"
+            "elm/virtual-dom": "1.0.0",
+            "rtfeldman/elm-iso8601-date-strings": "1.1.2"
         }
     },
     "test-dependencies": {
