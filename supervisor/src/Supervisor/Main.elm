@@ -10,14 +10,12 @@ import Supervisor.Ports exposing (..)
 import Task
 
 
-
-
 message : msg -> Cmd msg
 message msg =
     Task.perform identity (Task.succeed msg)
 
 
-init : Program.FlagsIncludingArgv flags -> CliOptions -> ( Model, Cmd Msg )
+init : Program.FlagsIncludingArgv flags -> CliOptions -> ( Model, Cmd Response )
 init flags options =
     case options of
         Init folder ->
@@ -25,7 +23,7 @@ init flags options =
                 initMessage =
                     "Initializing test suite in folder " ++ folder
             in
-            ( toInitGettingCurrentDir folder, Cmd.batch [ fileGlobResolveRequest ".", echoRequest initMessage ] )
+            ( toInitStart folder, echoRequest initMessage )
 
         RunTests runOptions ->
             let
@@ -44,7 +42,7 @@ init flags options =
             ( toRunGettingPackageInfo runOptions, echoRequest runMessage )
 
 
-update : CliOptions -> Msg -> Model -> ( Model, Cmd Msg )
+update : CliOptions -> Response -> Model -> ( Model, Cmd Response )
 update cliOptions msg model =
     let
         noOp =
@@ -54,7 +52,7 @@ update cliOptions msg model =
         ( InitGettingCurrentDir state, FileList fileList ) ->
             case fileList of
                 [ currentDir ] ->
-                    ( toInitGettingModuleDir state currentDir, fileGlobResolveRequest "." )
+                    ( toInitGettingModuleDir state currentDir, fileListRequest "." )
 
                 _ ->
                     ( model, logAndExit 1 "expecting a single file as current directory" )
@@ -62,12 +60,12 @@ update cliOptions msg model =
         ( InitGettingModuleDir state, FileList fileList ) ->
             case fileList of
                 [ moduleDir ] ->
-                    ( toInitCopyingTemplate state moduleDir, fileGlobResolveRequest "." )
+                    ( toInitCopyingTemplate state moduleDir, fileListRequest "." )
 
                 _ ->
                     ( model, logAndExit 1 "expecting a single file as module directory" )
 
-        ( InitCopyingTemplate state, Shell exitCode ) ->
+        ( InitCopyingTemplate state, Shell exitCode stdout ) ->
             ( toEnding state exitCode, Cmd.none )
 
         ( RunGettingPackageInfo state, NoOp ) ->
@@ -106,38 +104,11 @@ update cliOptions msg model =
             )
 
 
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    case model of
-        InitGettingCurrentDir _ ->
-            fileGlobResolveResponse FileList
-
-        InitGettingModuleDir _ ->
-            fileGlobResolveResponse FileList
-
-        InitCopyingTemplate _ ->
-            shellResponse Shell
-
-        RunConstructingFolder _ ->
-            fileWriteResponse FileWrite
-
-        RunCompiling _ ->
-            shellResponse Shell
-
-        RunStartingRunner _ ->
-            Sub.none
-
-        RunResolvingGherkinFiles _ ->
-            Sub.none
-
-        RunTestingGherkinFiles _ ->
-            cucumberTestResponse Cucumber
-
-        _ ->
-            Sub.none
+subscriptions : Model -> Sub Response
+subscriptions model = response
 
 
-main : Program.StatefulProgram Model Msg CliOptions {}
+main : Program.StatefulProgram Model Response CliOptions {}
 main =
     Program.stateful
         { printAndExitFailure = logAndExit 1

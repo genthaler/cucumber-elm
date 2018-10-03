@@ -21,39 +21,53 @@ const compile = compiler.compile;
 const compileToString = compiler.compileToString;
 
 /*
- * Wire up echoRequest
+ * Wire up request
  */
-supervisorWorker.ports.echoRequest.subscribe(shell.echo)
+supervisorWorker.ports.request.subscribe(cmd => {
+  switch (cmd.command) {
+    case "Echo":
+      shell.echo(cmd.message)
+      break;
 
-/*
- * Wire up fileReadRequest/Response
- */
-supervisorWorker.ports.fileReadRequest.subscribe(
-  R.pipe(
-    (fileName) => shell.cat(fileName).stdout,
-    supervisorWorker.ports.fileReadResponse.send
-  )
-)
+    case "FileRead":
+      supervisorWorker.ports.response.send({ fileContent: shell.cat(cmd.fileName).stdout });
+      break;
 
-/*
- * Wire up fileWriteRequest/Response
- */
-supervisorWorker.ports.fileWriteRequest.subscribe(
-  R.pipe(
-    (fileName, fileContent) => shell.echo(fileContent).to(path.resolve(fileName)).code,
-    supervisorWorker.ports.fileWriteResponse.send
-  )
-)
+    case "FileWrite":
+      supervisorWorker.ports.response.send({ exitCode: shell.echo(cmd.fileContent).to(path.resolve(cmd.fileName)).code });
+      break;
 
-/*
- * Wire up fileGlobResolveRequest/Response
- */
-supervisorWorker.ports.fileGlobResolveRequest.subscribe(
-  (fileGlob) => glob(fileGlob, {}, (er, files) => {
-    console.log(er)
-    supervisorWorker.ports.fileGlobResolveResponse.send(files)
-  })
-)
+    case "FileList":
+      glob(cmd.glob, {}, (er, files) => {
+        if (er == null) {
+          supervisorWorker.ports.response.send({ fileList: files });
+        } else {
+          supervisorWorker.ports.response.send({ error: er.message });
+        }
+      });
+      break;
+
+    case "Shell":
+      supervisorWorker.ports.response.send({ exitCode: shell.echo(cmd.fileContent).to(path.resolve(cmd.fileName)).code });
+      break;
+
+    case "Require":
+      shell.echo(cmd.message)
+      break;
+
+    case "CucumberBoot":
+      shell.echo(cmd.message)
+      break;
+
+    case "Cucumber":
+      shell.echo(cmd.message)
+      break;
+      
+    case "End":
+      process.exit(cmd.exitCode);
+      break;
+  }
+})
 
 supervisorWorker.ports.shellRequest.subscribe(
   R.pipe(
@@ -76,11 +90,11 @@ supervisorWorker.ports.copyRequest.subscribe(
 supervisorWorker.ports.compileRequest.subscribe(
   (source) => {
     compiler.compileToString(path.resolve(source), {
-        yes: true,
-        verbose: true,
-        cwd: path.dirname(path.resolve(source)),
-        output: '.js'
-      })
+      yes: true,
+      verbose: true,
+      cwd: path.dirname(path.resolve(source)),
+      output: '.js'
+    })
       .then((result) => supervisorWorker.ports.compileResponse.send({
         result: result,
         error: '',
@@ -112,4 +126,3 @@ supervisorWorker.ports.cucumberBootRequest.subscribe(
 // let runnerWorker = proxyquire(resolvedRunnerLocation).Runner.worker()
 // proxyquire.preserveCache()
 
-supervisorWorker.ports.end.subscribe(process.exit)

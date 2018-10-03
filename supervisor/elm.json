@@ -13,6 +13,7 @@
             "elm/json": "1.0.0",
             "elm/project-metadata-utils": "1.0.0",
             "elm-community/list-extra": "8.0.0",
+            "elm-community/result-extra": "2.2.1",
             "the-sett/elm-state-machines": "1.0.1"
         },
         "indirect": {

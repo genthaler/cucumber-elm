@@ -1,4 +1,4 @@
-module Supervisor.Model exposing (Model(..), makeState, toEnding, toInitCopyingTemplate, toInitGettingCurrentDir, toInitGettingModuleDir, toRunCompiling, toRunConstructingFolder, toRunGettingPackageInfo, toRunResolvingGherkinFiles, toRunStartingRunner, toRunTestingGherkinFile, toRunWatching)
+module Supervisor.Model exposing (Model(..), makeState, toEnding, toInitCopyingTemplate, toInitGettingCurrentDir, toInitGettingModuleDir, toInitStart, toRunCompiling, toRunConstructingFolder, toRunGettingPackageInfo, toRunResolvingGherkinFiles, toRunStartingRunner, toRunTestingGherkinFile, toRunWatching)
 
 import Elm.Project exposing (..)
 import StateMachine exposing (Allowed, State(..), map, untag)
@@ -41,15 +41,12 @@ type Model
 
 toInitStart : String -> Model
 toInitStart folder =
-    InitGettingCurrentDir <|
-        makeState
-            { folder = folder
-            }
+    InitStart <| makeState { folder = folder }
+
 
 toInitGettingCurrentDir : State { a | initGettingCurrentDir : Allowed } { folder : String } -> Model
-toInitGettingCurrentDir =
-    InitGettingCurrentDir <<
-        untag 
+toInitGettingCurrentDir state =
+    InitGettingCurrentDir <| makeState <| untag state
 
 
 toInitGettingModuleDir : State { a | initGettingModuleDir : Allowed } { folder : String } -> String -> Model
