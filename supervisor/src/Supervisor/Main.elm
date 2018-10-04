@@ -10,8 +10,8 @@ import Supervisor.Ports exposing (..)
 import Task
 
 
-message : msg -> Cmd msg
-message msg = 
+message : msg -> Cmd msg 
+message msg =
     Task.perform identity (Task.succeed msg)
 
 
@@ -39,7 +39,7 @@ init flags options =
                         |> List.filterMap identity
                         |> String.join "\n"
             in
-            ( toRunGettingPackageInfo runOptions, echoRequest runMessage )
+            ( toRunStart runOptions, echoRequest runMessage )
 
 
 update : CliOptions -> Response -> Model -> ( Model, Cmd Response )
@@ -50,7 +50,7 @@ update cliOptions msg model =
     in
     case ( model, msg ) of
         ( _, Stderr stderr ) ->
-            ( model, logAndExit 1 stderr)
+            ( model, logAndExit 1 stderr )
 
         ( InitGettingCurrentDir state, FileList fileList ) ->
             case fileList of
@@ -59,7 +59,7 @@ update cliOptions msg model =
 
                 _ ->
                     ( model, logAndExit 1 "expecting a single file as current directory" )
-
+ 
         ( InitGettingModuleDir state, FileList fileList ) ->
             case fileList of
                 [ moduleDir ] ->
@@ -69,35 +69,30 @@ update cliOptions msg model =
                     ( model, logAndExit 1 "expecting a single file as module directory" )
 
         ( InitCopyingTemplate state, Stdout stdout ) ->
-            ( toEnding state 0, Cmd.none )
+            ( toExiting state 0, Cmd.none )
 
         ( RunGettingPackageInfo state, NoOp ) ->
-            let
-                runOptions =
-                    state |> untag |> .runOptions
-            in
-            noOp
+            ( toRunConstructingFolder state (), Cmd.none )
 
-        -- ( toRunConstructingFolder { runOptions = runOptions, project = project } state, )
-        ( RunConstructingFolder _, NoOp ) ->
-            noOp
+        ( RunConstructingFolder state, NoOp ) ->
+            ( toRunCompiling state, Cmd.none )
 
-        ( RunCompiling _, NoOp ) ->
-            noOp
+        ( RunCompiling state, NoOp ) ->
+            ( toRunStartingRunner state [], Cmd.none )
 
-        ( RunStartingRunner _, NoOp ) ->
-            noOp
+        ( RunStartingRunner state, NoOp ) ->
+            ( toRunResolvingGherkinFiles state [], Cmd.none )
+ 
+        ( RunResolvingGherkinFiles state, NoOp ) ->
+            ( toRunTestingGherkinFiles state [], Cmd.none )
+ 
+        ( RunTestingGherkinFiles state, NoOp ) ->
+            ( toRunWatching state [], Cmd.none )
 
-        ( RunResolvingGherkinFiles _, NoOp ) ->
-            noOp
+        ( RunWatching state, NoOp ) ->
+            ( toRunCompiling state, Cmd.none )
 
-        ( RunTestingGherkinFiles _, NoOp ) ->
-            noOp
-
-        ( RunWatching _, NoOp ) ->
-            noOp
-
-        ( Ending state, _ ) ->
+        ( Exiting state, NoOp ) ->
             ( model, exit (state |> untag) )
 
         ( _, _ ) ->

@@ -1,13 +1,8 @@
-module Supervisor.Model exposing (Model(..), makeState, toEnding, toInitCopyingTemplate, toInitGettingCurrentDir, toInitGettingModuleDir, toInitStart, toRunCompiling, toRunConstructingFolder, toRunGettingPackageInfo, toRunResolvingGherkinFiles, toRunStartingRunner, toRunTestingGherkinFile, toRunWatching)
+module Supervisor.Model exposing (Model(..), toExiting, toInitCopyingTemplate, toInitGettingCurrentDir, toInitGettingModuleDir, toInitStart, toRunCompiling, toRunConstructingFolder, toRunGettingPackageInfo, toRunResolvingGherkinFiles, toRunStart, toRunStartingRunner, toRunTestingGherkinFiles, toRunWatching)
 
 import Elm.Project exposing (..)
 import StateMachine exposing (Allowed, State(..), map, untag)
-import Supervisor.Options exposing (CliOptions, RunOptions)
-
-
-makeState : model -> State trans model
-makeState =
-    State
+import Supervisor.Options exposing (RunOptions)
 
 
 
@@ -24,15 +19,16 @@ type Model
     = InitStart (State { initGettingCurrentDir : Allowed } { folder : String })
     | InitGettingCurrentDir (State { initGettingModuleDir : Allowed } { folder : String })
     | InitGettingModuleDir (State { initCopyingTemplate : Allowed } { folder : String, currentDir : String })
-    | InitCopyingTemplate (State { ending : Allowed } { folder : String, currentDir : String, moduleDir : String })
-    | RunGettingPackageInfo (State { constructingFolder : Allowed } { runOptions : RunOptions })
-    | RunConstructingFolder (State { compiling : Allowed } { runOptions : RunOptions, project : Project })
-    | RunCompiling (State { startingRunner : Allowed } { gherkinFiles : List String })
-    | RunStartingRunner (State { resolvingGherkinFiles : Allowed } { gherkinFiles : List String })
-    | RunResolvingGherkinFiles (State { testingGherkinFile : Allowed } { gherkinFiles : List String })
-    | RunTestingGherkinFiles (State { ending : Allowed, watching : Allowed } { remainingGherkinFiles : List String, testedGherkinFiles : List String })
-    | RunWatching (State { resolvingGherkinFiles : Allowed } { testedGherkinFiles : List String, remainingGherkinFiles : List String })
-    | Ending (State { ending : Allowed } Int)
+    | InitCopyingTemplate (State { exiting : Allowed } { folder : String, currentDir : String, moduleDir : String })
+    | RunStart (State { runGettingPackageInfo : Allowed } { runOptions : RunOptions })
+    | RunGettingPackageInfo (State { runConstructingFolder : Allowed } { runOptions : RunOptions })
+    | RunConstructingFolder (State { runCompiling : Allowed } { runOptions : RunOptions, project : Project })
+    | RunCompiling (State { runStartingRunner : Allowed } { gherkinFiles : List String })
+    | RunStartingRunner (State { runResolvingGherkinFiles : Allowed } { gherkinFiles : List String })
+    | RunResolvingGherkinFiles (State { runResolvingGherkinFiles : Allowed } { gherkinFiles : List String })
+    | RunTestingGherkinFiles (State { exiting : Allowed, watching : Allowed } { remainingGherkinFiles : List String, testedGherkinFiles : List String })
+    | RunWatching (State { runResolvingGherkinFiles : Allowed, runCompiling : Allowed } { testedGherkinFiles : List String, remainingGherkinFiles : List String })
+    | Exiting (State { exiting : Allowed } Int)
 
 
 
@@ -41,18 +37,18 @@ type Model
 
 toInitStart : String -> Model
 toInitStart folder =
-    InitStart <| makeState { folder = folder }
+    InitStart <| State { folder = folder }
 
 
 toInitGettingCurrentDir : State { a | initGettingCurrentDir : Allowed } { folder : String } -> Model
 toInitGettingCurrentDir state =
-    InitGettingCurrentDir <| makeState <| untag state
+    InitGettingCurrentDir <| State <| untag state
 
 
 toInitGettingModuleDir : State { a | initGettingModuleDir : Allowed } { folder : String } -> String -> Model
 toInitGettingModuleDir state currentDir =
     InitGettingModuleDir <|
-        makeState <|
+        State <|
             { folder = (untag state).folder
             , currentDir = currentDir
             }
@@ -61,7 +57,7 @@ toInitGettingModuleDir state currentDir =
 toInitCopyingTemplate : State { a | initCopyingTemplate : Allowed } { folder : String, currentDir : String } -> String -> Model
 toInitCopyingTemplate state moduleDir =
     InitCopyingTemplate <|
-        makeState <|
+        State <|
             { folder = (untag state).folder
             , currentDir = (untag state).currentDir
             , moduleDir = moduleDir
@@ -75,45 +71,50 @@ toInitCopyingTemplate state moduleDir =
 -- construct an elm-json with project and cucumber dependencies
 
 
-toRunGettingPackageInfo : RunOptions -> Model
-toRunGettingPackageInfo runOptions =
-    RunGettingPackageInfo <| makeState { runOptions = runOptions }
+toRunStart : RunOptions -> Model
+toRunStart runOptions =
+    RunStart <| State { runOptions = runOptions }
 
 
-toRunConstructingFolder : State { a | constructingFolder : Allowed } { runOptions : RunOptions } -> Project -> Model
+toRunGettingPackageInfo : State { a | runConstructingFolder : Allowed } { runOptions : RunOptions } -> Model
+toRunGettingPackageInfo state =
+    RunGettingPackageInfo <| State <| untag state
+
+
+toRunConstructingFolder : State { a | runConstructingFolder : Allowed } { runOptions : RunOptions } -> Project -> Model
 toRunConstructingFolder state project =
-    RunConstructingFolder <| makeState <| { runOptions = state |> untag |> .runOptions, project = project }
+    RunConstructingFolder <| State <| { runOptions = state |> untag |> .runOptions, project = project }
 
 
-toRunCompiling : State { a | compiling : Allowed } { gherkinFiles : List String } -> Model
+toRunCompiling : State { a | runCompiling : Allowed } { gherkinFiles : List String } -> Model
 toRunCompiling state =
-    RunCompiling <| makeState <| untag state
+    RunCompiling <| State <| untag state
 
 
-toRunStartingRunner : State { a | startingRunner : Allowed } {} -> List String -> Model
+toRunStartingRunner : State { a | runStartingRunner : Allowed } {} -> List String -> Model
 toRunStartingRunner state gherkinFiles =
-    RunStartingRunner <| makeState { gherkinFiles = gherkinFiles }
+    RunStartingRunner <| State { gherkinFiles = gherkinFiles }
 
-
-toRunResolvingGherkinFiles : State { a | resolvingGherkinFiles : Allowed } {} -> List String -> Model
+ 
+toRunResolvingGherkinFiles : State { a | runResolvingGherkinFiles : Allowed } {} -> List String -> Model
 toRunResolvingGherkinFiles state gherkinFiles =
-    RunResolvingGherkinFiles <| makeState { gherkinFiles = gherkinFiles }
+    RunResolvingGherkinFiles <| State { gherkinFiles = gherkinFiles }
 
 
-toRunTestingGherkinFile : State { a | testingGherkinFile : Allowed } {} -> List String -> Model
-toRunTestingGherkinFile state gherkinFiles =
-    RunTestingGherkinFiles <| makeState { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
+toRunTestingGherkinFiles : State { a | runTestingGherkinFile : Allowed } {} -> List String -> Model
+toRunTestingGherkinFiles state gherkinFiles =
+    RunTestingGherkinFiles <| State { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
 
 
-toRunWatching : State { a | watching : Allowed } {} -> List String -> Model
+toRunWatching : State { a | runWatching : Allowed } {} -> List String -> Model
 toRunWatching state gherkinFiles =
-    RunWatching <| makeState { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
+    RunWatching <| State { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
 
 
 
 -- End state constructor
 
 
-toEnding : State { a | ending : Allowed } b -> Int -> Model
-toEnding state exitCode =
-    Ending <| makeState exitCode
+toExiting : State { a | exiting : Allowed } b -> Int -> Model
+toExiting state exitCode =
+    Exiting <| State exitCode

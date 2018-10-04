@@ -7,9 +7,12 @@ const glob = require("glob")
 const R = require('rambda')
 // const proxyquire = require('proxyquire')
 const compiler = require('node-elm-compiler')
-// const supervisor = require('cucumber-elm-supervisor');
+const compile = compiler.compile;
+const compileToString = compiler.compileToString;
 const supervisor = require('./supervisorWorker.js');
+// const supervisor = require('cucumber-elm-supervisor');
 const requireFromString = require('require-from-string');
+
 
 const supervisorWorker = supervisor.Elm.Supervisor.Main.init({
   flags: {
@@ -17,10 +20,7 @@ const supervisorWorker = supervisor.Elm.Supervisor.Main.init({
   }
 })
 
-const compile = compiler.compile;
-const compileToString = compiler.compileToString;
-
-const send = supervisorWorker.ports.response.send;
+const send = supervisorWorker.ports.rawResponse.send;
 
 supervisorWorker.ports.request.subscribe(
   cmd => {
@@ -53,6 +53,10 @@ supervisorWorker.ports.request.subscribe(
         });
         break;
 
+      case "Copy":
+        send(shell.cp('-rf', path.resolve(cmd.source), path.resolve(cmd.destination)));
+        break;
+
       case "Shell":
         send(shell.exec(cmd.cmd));
         break;
@@ -61,35 +65,40 @@ supervisorWorker.ports.request.subscribe(
         send(shell.echo(cmd.message));
         break;
 
-      case "CucumberBoot":
-        send(shell.echo(cmd.message));
-        break;
-
-      case "Cucumber":
-        send(shell.echo(cmd.message));
-        break;
-
-      case "Copy":
-        send(shell.cp('-rf', path.resolve(cmd.source), path.resolve(cmd.destination)));
-        break;
-
       case "Compile":
+        // var result = compiler.compileToStringSync(prependFixturesDir("Parent.elm"), opts);
         compiler.compileToString(path.resolve(source), {
-            yes: true,
-            verbose: true,
-            cwd: path.dirname(path.resolve(source)),
-            output: '.js'
-          })
-          .then((result) => supervisorWorker.ports.compileResponse.send({
+          yes: true,
+          verbose: true,
+          cwd: path.dirname(path.resolve(source)),
+          output: '.js'
+        })
+          .then((result) => send({
             result: result,
             error: '',
             success: true
           }))
-          .catch((error) => supervisorWorker.ports.compileResponse.send({
+          .catch((error) => send({
             result: '',
             error: error,
             success: false
           }));
+        break;
+
+      case "CucumberBoot":
+        (glueFunctionName, runnerSource) => {
+          let runnerWorker = requireFromString(runnerSource).Runner.worker();
+          supervisorWorker.ports.cucumberRunRequest.subscribe(runnerWorker.ports.cucumberRunRequest.send);
+          supervisorWorker.ports.cucumberRunResponse.subscribe(runnerWorker.ports.cucumberRunResponse.send);
+          send({ exitCode: 0 });
+        };
+        break;
+
+      case "CucumberTest":
+        send({
+          exitCode: 1,
+          stderr: "CucumberTest sent on the wrong port"
+        });
         break;
 
       case "Exit":
@@ -98,42 +107,6 @@ supervisorWorker.ports.request.subscribe(
     }
   });
 
-
-// var result = compiler.compileToStringSync(prependFixturesDir("Parent.elm"), opts);
-
-supervisorWorker.ports.compileRequest.subscribe(
-  (source) => {
-    compiler.compileToString(path.resolve(source), {
-        yes: true,
-        verbose: true,
-        cwd: path.dirname(path.resolve(source)),
-        output: '.js'
-      })
-      .then((result) => supervisorWorker.ports.compileResponse.send({
-        result: result,
-        error: '',
-        success: true
-      }))
-      .catch((error) => supervisorWorker.ports.compileResponse.send({
-        result: '',
-        error: error,
-        success: false
-      }))
-  }
-)
-
-/* 
- * - compile & run Runner JavaScript
- * - wire up the supervisor to the Runner
- * - let the supervisor know that the Runner is ready to accept requests to run features
- */
-supervisorWorker.ports.cucumberBootRequest.subscribe(
-  (glueFunctionName, runnerSource) => {
-    let runnerWorker = requireFromString(runnerSource).Runner.worker()
-    supervisorWorker.ports.cucumberRunRequest.subscribe(runnerWorker.ports.cucumberRunRequest.send)
-    supervisorWorker.ports.cucumberRunResponse.subscribe(runnerWorker.ports.cucumberRunResponse.send)
-    supervisorWorker.ports.cucumberBootResponse.send(true)
-  })
 
 // let runner = require(runnerJs);
 // proxyquire.noPreserveCache()

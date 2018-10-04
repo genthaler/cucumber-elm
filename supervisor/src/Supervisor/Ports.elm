@@ -1,11 +1,12 @@
 port module Supervisor.Ports exposing (Response(..), cucumberBootRequest, cucumberTestRequest, decoder, echoRequest, exit, fileListRequest, fileReadRequest, fileWriteRequest, logAndExit, request, response, shellRequest)
 
 import Json.Decode as D
+import Json.Decode.Extra as JDE
 import Json.Encode as E
 import Result.Extra
-import Json.Decode.Extra as JDE
 
- 
+
+
 -- Request
 
 
@@ -98,6 +99,7 @@ type Response
     | Stdout String
     | Stderr String
     | FileList (List String)
+    | CucumberResult String
 
 
 port rawResponse : (D.Value -> msg) -> Sub msg
@@ -119,7 +121,7 @@ decoder =
 
                     else
                         D.map Stderr <| JDE.withDefault "No stderr available" <| D.field "stderr" D.string
-                ) 
+                )
         , D.map FileList (D.field "fileList" (D.list D.string))
         , D.map Stdout (D.field "stdout" D.string)
         ]
