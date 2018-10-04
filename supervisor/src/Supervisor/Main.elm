@@ -10,7 +10,7 @@ import Supervisor.Ports exposing (..)
 import Task
 
 
-message : msg -> Cmd msg 
+message : msg -> Cmd msg
 message msg =
     Task.perform identity (Task.succeed msg)
 
@@ -59,7 +59,7 @@ update cliOptions msg model =
 
                 _ ->
                     ( model, logAndExit 1 "expecting a single file as current directory" )
- 
+
         ( InitGettingModuleDir state, FileList fileList ) ->
             case fileList of
                 [ moduleDir ] ->
@@ -82,10 +82,10 @@ update cliOptions msg model =
 
         ( RunStartingRunner state, NoOp ) ->
             ( toRunResolvingGherkinFiles state [], Cmd.none )
- 
+
         ( RunResolvingGherkinFiles state, NoOp ) ->
             ( toRunTestingGherkinFiles state [], Cmd.none )
- 
+
         ( RunTestingGherkinFiles state, NoOp ) ->
             ( toRunWatching state [], Cmd.none )
 
@@ -96,10 +96,7 @@ update cliOptions msg model =
             ( model, exit (state |> untag) )
 
         ( _, _ ) ->
-            ( model
-            , logAndExit 1
-                "Invalid State Transition"
-            )
+            ( model, logAndExit 1 "Invalid State Transition" )
 
 
 subscriptions : Model -> Sub Response

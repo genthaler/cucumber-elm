@@ -68,11 +68,11 @@ supervisorWorker.ports.request.subscribe(
       case "Compile":
         // var result = compiler.compileToStringSync(prependFixturesDir("Parent.elm"), opts);
         compiler.compileToString(path.resolve(source), {
-          yes: true,
-          verbose: true,
-          cwd: path.dirname(path.resolve(source)),
-          output: '.js'
-        })
+            yes: true,
+            verbose: true,
+            cwd: path.dirname(path.resolve(source)),
+            output: '.js'
+          })
           .then((result) => send({
             result: result,
             error: '',
@@ -90,21 +90,25 @@ supervisorWorker.ports.request.subscribe(
           let runnerWorker = requireFromString(runnerSource).Runner.worker();
           supervisorWorker.ports.cucumberRunRequest.subscribe(runnerWorker.ports.cucumberRunRequest.send);
           supervisorWorker.ports.cucumberRunResponse.subscribe(runnerWorker.ports.cucumberRunResponse.send);
-          send({ exitCode: 0 });
+          send({
+            exitCode: 0
+          });
         };
-        break;
-
-      case "CucumberTest":
-        send({
-          exitCode: 1,
-          stderr: "CucumberTest sent on the wrong port"
-        });
         break;
 
       case "Exit":
         send(shell.exit(cmd.exitCode));
         break;
+
+      default:
+        send({
+          exitCode: 1,
+          stderr: cmd.command + " sent on the wrong port"
+        });
+        break;
+
     }
+
   });
 
 

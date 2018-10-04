@@ -66,9 +66,6 @@ toInitCopyingTemplate state moduleDir =
 
 
 -- Run state constructors
--- get current package info for project
--- confirm that cucumber-elm is there
--- construct an elm-json with project and cucumber dependencies
 
 
 toRunStart : RunOptions -> Model
@@ -95,7 +92,7 @@ toRunStartingRunner : State { a | runStartingRunner : Allowed } {} -> List Strin
 toRunStartingRunner state gherkinFiles =
     RunStartingRunner <| State { gherkinFiles = gherkinFiles }
 
- 
+
 toRunResolvingGherkinFiles : State { a | runResolvingGherkinFiles : Allowed } {} -> List String -> Model
 toRunResolvingGherkinFiles state gherkinFiles =
     RunResolvingGherkinFiles <| State { gherkinFiles = gherkinFiles }

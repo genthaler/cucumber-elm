@@ -1,14 +1,14 @@
-port module Runner exposing (Model, Msg(..), cucumberRequest, cucumberResponse, glueFunctions, init, main, subscriptions, update)
+port module Runner exposing (main)
 
 import Cucumber
 import Cucumber.StepDefs
 import Platform exposing (program)
 
 
-port cucumberResponse : String -> Cmd msg
-
-
 port cucumberRequest : (String -> msg) -> Sub msg
+
+
+port cucumberResponse : String -> Cmd msg
 
 
 type Msg
@@ -31,7 +31,7 @@ init =
 
 update : Msg -> Model -> ( Model, Cmd msg )
 update (Feature feature) model =
-    ( model, feature |> Cucumber.expectFeatureText |> Result.toMaybe |> reportFeature )
+    ( model, feature |> Cucumber.expectFeatureText |> Result.toMaybe |> cucumberResponse )
 
 
 subscriptions : Model -> Sub Msg
