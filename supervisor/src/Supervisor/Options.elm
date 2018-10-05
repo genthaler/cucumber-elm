@@ -8,6 +8,7 @@ import Json.Decode exposing (..)
 
 type CliOptions
     = Init String
+    | Stepdefs String
     | RunTests RunOptions
 
 
@@ -33,6 +34,14 @@ config =
     Program.config { version = "1.2.3" }
         |> Program.add
             (OptionsParser.buildSubCommand "init" Init
+                |> OptionsParser.withOptionalPositionalArg
+                    (Option.optionalPositionalArg "folder to initialise"
+                        |> Option.withDefault "."
+                    )
+                |> OptionsParser.end
+            )
+        |> Program.add
+            (OptionsParser.buildSubCommand "stepdefs" Stepdefs
                 |> OptionsParser.withOptionalPositionalArg
                     (Option.optionalPositionalArg "folder to initialise"
                         |> Option.withDefault "."

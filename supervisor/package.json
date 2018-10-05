@@ -11,12 +11,14 @@
     "prepare": "elm make src/Supervisor/Main.elm --output=supervisorWorker.js",
     "test": "elm-test"
   },
-  "dependencies": {},
-  "devDependencies": {
+  "dependencies": {
     "elm": "^0.19.0",
-    "elm-test": "^0.19.0-beta8",
     "rambda": "^1.2.2",
     "require-from-string": "^2.0.2",
+    "elmi-to-json": "^0.19.0"
+  },
+  "devDependencies": {
+    "elm-test": "^0.19.0-beta8",
     "shx": "^0.3.2"
   }
 }
