@@ -35,8 +35,7 @@ supervisorWorker.ports.request.subscribe(
         break;
 
       case "ExportedInterfaces":
-        elmi(cmd.fileName, "0.19.0")
-          .then(send);
+        send(shell.exec('elmi-to-json'));
         break;
 
       case "FileWrite":
@@ -74,11 +73,11 @@ supervisorWorker.ports.request.subscribe(
       case "Compile":
         // var result = compiler.compileToStringSync(prependFixturesDir("Parent.elm"), opts);
         compiler.compileToString(path.resolve(source), {
-          yes: true,
-          verbose: true,
-          cwd: path.dirname(path.resolve(source)),
-          output: '.js'
-        })
+            yes: true,
+            verbose: true,
+            cwd: path.dirname(path.resolve(source)),
+            output: '.js'
+          })
           .then((result) => send({
             result: result,
             error: '',
