@@ -124,4 +124,5 @@ decoder =
                 )
         , D.map FileList (D.field "fileList" (D.list D.string))
         , D.map Stdout (D.field "stdout" D.string)
+        , D.map Stdout (D.field "stdout" D.string)
         ]
