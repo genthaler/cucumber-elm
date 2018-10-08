@@ -2,7 +2,7 @@ module Supervisor.Main exposing (main)
 
 import Cli.Program as Program
 import Elm.Project exposing (..)
-import Json.Decode
+import Json.Decode as D
 import StateMachine exposing (map, untag)
 import Supervisor.Model exposing (..)
 import Supervisor.Options exposing (..)
@@ -52,6 +52,14 @@ update cliOptions msg model =
         ( _, Stderr stderr ) ->
             ( model, logAndExit 1 stderr )
 
+        ( InitStart state, _ ) ->
+            case fileList of
+                [ currentDir ] ->
+                    ( toInitGettingModuleDir state currentDir, fileListRequest "." )
+
+                _ ->
+                    ( model, logAndExit 1 "expecting a single file as current directory" )
+
         ( InitGettingCurrentDir state, FileList fileList ) ->
             case fileList of
                 [ currentDir ] ->
@@ -63,7 +71,7 @@ update cliOptions msg model =
         ( InitGettingModuleDir state, FileList fileList ) ->
             case fileList of
                 [ moduleDir ] ->
-                    ( toInitCopyingTemplate state moduleDir, fileListRequest "." )
+                    ( toInitCopyingTemplate state moduleDir, shellRequest ("cp -R") )
 
                 _ ->
                     ( model, logAndExit 1 "expecting a single file as module directory" )

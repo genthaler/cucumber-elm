@@ -41,6 +41,15 @@ echoRequest message =
             ]
 
 
+copyRequest : String -> Cmd msg
+copyRequest cmd =
+    request <|
+        E.object
+            [ ( "command", E.string "Copy" )
+            , ( "cmd", E.string cmd )
+            ]
+
+
 shellRequest : String -> Cmd msg
 shellRequest cmd =
     request <|
