@@ -40,8 +40,8 @@ toInitStart folder =
     InitStart <| State { folder = folder }
 
 
-toInitGettingCurrentDir : State { a | initGettingCurrentDir : Allowed } { folder : String } -> Model
-toInitGettingCurrentDir state =
+toInitGettingTargetDir : State { a | initGettingCurrentDir : Allowed } { folder : String } -> Model
+toInitGettingTargetDir state =
     InitGettingCurrentDir <| State <| untag state
 
 

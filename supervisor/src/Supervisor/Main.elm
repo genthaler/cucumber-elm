@@ -47,34 +47,31 @@ update cliOptions msg model =
     let
         noOp =
             ( model, Cmd.none )
+        crash errorMessage = 
+           ( model, logAndExit 1 errorMessage )
+
     in
     case ( model, msg ) of
         ( _, Stderr stderr ) ->
             ( model, logAndExit 1 stderr )
 
         ( InitStart state, _ ) ->
-            case fileList of
-                [ currentDir ] ->
-                    ( toInitGettingModuleDir state currentDir, fileListRequest "." )
+            ( InitGettingTargetDir state , fileListRequest "." )
 
-                _ ->
-                    ( model, logAndExit 1 "expecting a single file as current directory" )
 
-        ( InitGettingCurrentDir state, FileList fileList ) ->
-            case fileList of
-                [ currentDir ] ->
-                    ( toInitGettingModuleDir state currentDir, fileListRequest "." )
-
-                _ ->
-                    ( model, logAndExit 1 "expecting a single file as current directory" )
-
-        ( InitGettingModuleDir state, FileList fileList ) ->
+        ( InitGettingTargetDir state, FileList fileList ) ->
             case fileList of
                 [ moduleDir ] ->
                     ( toInitCopyingTemplate state moduleDir, shellRequest ("cp -R") )
 
                 _ ->
-                    ( model, logAndExit 1 "expecting a single file as module directory" )
+                   crash "expecting a single file as module directory" 
+        ( InitGettingModuleDir state, FileList fileList ) ->
+            if  List.member "runner" fileList then
+                    ( toInitGettingTargetDir state, fileListRequest "." )
+            else
+                    crash "expecting a single file as current directory" 
+
 
         ( InitCopyingTemplate state, Stdout stdout ) ->
             ( toExiting state 0, Cmd.none )
