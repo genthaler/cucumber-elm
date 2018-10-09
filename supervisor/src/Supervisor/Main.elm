@@ -4,7 +4,7 @@ import Cli.Program as Program
 import Elm.Project exposing (..)
 import Json.Decode as D
 import Json.Encode as E
-import StateMachine exposing (map, untag)
+import StateMachine exposing (State(..), map, untag)
 import Supervisor.Model exposing (..)
 import Supervisor.Options exposing (..)
 import Supervisor.Ports exposing (..)
@@ -122,16 +122,16 @@ update cliOptions msg model =
                     ( model, logAndExit 1 (D.errorToString error) )
 
         ( RunUpdatingUserCucumberElmJson state, Stdout typesJson ) ->
-            ( toRunGettingTypes state, shellRequest "run elmi-to-json" )
+            ( toRunGettingTypes state, shellRequest "elmi-to-json" )
 
-        ( RunGettingTypes state, Stdout typesJson ) ->
+        ( RunGettingTypes ((State data) as state), Stdout typesJson ) ->
             ( toRunCompilingRunner state, shellRequest "runner.elm with stepdefs from typesJson" )
 
         ( RunCompilingRunner state, NoOp ) ->
-            ( toRunStartingRunner state [], Cmd.none )
+            ( toRunStartingRunner state, Cmd.none )
 
         ( RunStartingRunner state, NoOp ) ->
-            ( toRunResolvingGherkinFiles state [], Cmd.none )
+            ( toRunResolvingGherkinFiles state, Cmd.none )
 
         ( RunResolvingGherkinFiles state, NoOp ) ->
             ( toRunTestingGherkinFiles state [], Cmd.none )

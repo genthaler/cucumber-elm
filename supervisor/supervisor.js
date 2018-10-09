@@ -6,7 +6,6 @@ const path = require('path')
 const glob = require("glob")
 const R = require('rambda')
 // const proxyquire = require('proxyquire')
-const elmi = require('node-elm-interface-to-json');
 const compiler = require('node-elm-compiler')
 const compile = compiler.compile;
 const compileToString = compiler.compileToString;
@@ -73,11 +72,11 @@ supervisorWorker.ports.request.subscribe(
       case "Compile":
         // var result = compiler.compileToStringSync(prependFixturesDir("Parent.elm"), opts);
         compiler.compileToString(path.resolve(source), {
-            yes: true,
-            verbose: true,
-            cwd: path.dirname(path.resolve(source)),
-            output: '.js'
-          })
+          yes: true,
+          verbose: true,
+          cwd: path.dirname(path.resolve(source)),
+          output: '.js'
+        })
           .then((result) => send({
             result: result,
             error: '',

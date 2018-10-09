@@ -25,14 +25,14 @@ type Model
     | RunGettingUserPackageInfo (State { runGettingUserCucumberPackageInfo : Allowed } { runOptions : RunOptions })
     | RunGettingUserCucumberPackageInfo (State { runGettingModuleDir : Allowed } { runOptions : RunOptions, userProject : Project })
     | RunGettingModuleDir (State { runGettingModulePackageInfo : Allowed } { runOptions : RunOptions, userProject : Project, userCucumberProject : Project })
-    | RunGettingModulePackageInfo (State { runUpdatingUserCucumber : Allowed } { runOptions : RunOptions, userProject : Project, userCucumberProject : Project })
+    | RunGettingModulePackageInfo (State { runUpdatingUserCucumberElmJson : Allowed } { runOptions : RunOptions, userProject : Project, userCucumberProject : Project })
     | RunUpdatingUserCucumberElmJson (State { runGettingTypes : Allowed } { runOptions : RunOptions })
     | RunGettingTypes (State { runCompilingRunner : Allowed } { runOptions : RunOptions })
-    | RunCompilingRunner (State { runStartingRunner : Allowed } { gherkinFiles : List String })
-    | RunStartingRunner (State { runResolvingGherkinFiles : Allowed } { gherkinFiles : List String })
-    | RunResolvingGherkinFiles (State { runResolvingGherkinFiles : Allowed } { gherkinFiles : List String })
-    | RunTestingGherkinFiles (State { runWatching : Allowed } { remainingGherkinFiles : List String, testedGherkinFiles : List String })
-    | RunWatching (State { runResolvingGherkinFiles : Allowed, runCompiling : Allowed } { testedGherkinFiles : List String, remainingGherkinFiles : List String })
+    | RunCompilingRunner (State { runStartingRunner : Allowed } { runOptions : RunOptions })
+    | RunStartingRunner (State { runResolvingGherkinFiles : Allowed } { runOptions : RunOptions })
+    | RunResolvingGherkinFiles (State { runTestingGherkinFiles : Allowed } { runOptions : RunOptions })
+    | RunTestingGherkinFiles (State { runWatching : Allowed } { runOptions : RunOptions, remainingGherkinFiles : List String, testedGherkinFiles : List String })
+    | RunWatching (State { runResolvingGherkinFiles : Allowed, runCompilingRunner : Allowed } { runOptions : RunOptions })
 
 
 
@@ -88,12 +88,12 @@ toRunGettingModuleDir (State state) userCucumberProject =
     RunGettingModuleDir <| State { runOptions = state.runOptions, userProject = state.userProject, userCucumberProject = userCucumberProject }
 
 
-toRunGettingModulePackageInfo : State { a | runGettingPackageInfo : Allowed } { runOptions : RunOptions, userProject : Project, userCucumberProject : Project } -> Model
+toRunGettingModulePackageInfo : State { a | runGettingModulePackageInfo : Allowed } { runOptions : RunOptions, userProject : Project, userCucumberProject : Project } -> Model
 toRunGettingModulePackageInfo (State state) =
     RunGettingModulePackageInfo <| State state
 
 
-toRunUpdatingUserCucumberElmJson : State { a | runGettingTypes : Allowed } { runOptions : RunOptions } -> Model
+toRunUpdatingUserCucumberElmJson : State { a | runUpdatingUserCucumberElmJson : Allowed } { b | runOptions : RunOptions } -> Model
 toRunUpdatingUserCucumberElmJson (State state) =
     RunUpdatingUserCucumberElmJson <| State { runOptions = state.runOptions }
 
@@ -103,26 +103,31 @@ toRunGettingTypes (State state) =
     RunGettingTypes <| State { runOptions = state.runOptions }
 
 
-toRunCompilingRunner : State { a | runCompiling : Allowed } { gherkinFiles : List String } -> Model
+toRunCompilingRunner : State { a | runCompilingRunner : Allowed } { runOptions : RunOptions } -> Model
 toRunCompilingRunner (State state) =
     RunCompilingRunner <| State <| state
 
 
-toRunStartingRunner : State { a | runStartingRunner : Allowed } {} -> List String -> Model
-toRunStartingRunner (State state) gherkinFiles =
-    RunStartingRunner <| State { gherkinFiles = gherkinFiles }
+toRunStartingRunner : State { a | runStartingRunner : Allowed } { runOptions : RunOptions } -> Model
+toRunStartingRunner (State state) =
+    RunStartingRunner <| State state
 
 
-toRunResolvingGherkinFiles : State { a | runResolvingGherkinFiles : Allowed } {} -> List String -> Model
-toRunResolvingGherkinFiles (State state) gherkinFiles =
-    RunResolvingGherkinFiles <| State { gherkinFiles = gherkinFiles }
+toRunResolvingGherkinFiles : State { a | runResolvingGherkinFiles : Allowed } { runOptions : RunOptions } -> Model
+toRunResolvingGherkinFiles (State state) =
+    RunResolvingGherkinFiles <| State state
 
 
-toRunTestingGherkinFiles : State { a | runTestingGherkinFile : Allowed } {} -> List String -> Model
+toRunTestingGherkinFiles : State { a | runTestingGherkinFiles : Allowed } { runOptions : RunOptions } -> List String -> Model
 toRunTestingGherkinFiles (State state) gherkinFiles =
-    RunTestingGherkinFiles <| State { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
+    RunTestingGherkinFiles <|
+        State
+            { runOptions = state.runOptions
+            , remainingGherkinFiles = gherkinFiles
+            , testedGherkinFiles = []
+            }
 
 
-toRunWatching : State { a | runWatching : Allowed } {} -> List String -> Model
+toRunWatching : State { a | runWatching : Allowed } { b | runOptions : RunOptions } -> List String -> Model
 toRunWatching (State state) gherkinFiles =
-    RunWatching <| State { remainingGherkinFiles = gherkinFiles, testedGherkinFiles = [] }
+    RunWatching <| State { runOptions = state.runOptions }

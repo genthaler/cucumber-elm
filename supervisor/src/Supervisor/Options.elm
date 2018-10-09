@@ -8,7 +8,6 @@ import Json.Decode exposing (..)
 
 type CliOptions
     = Init
-    | Stepdefs
     | RunTests RunOptions
 
 
@@ -34,10 +33,6 @@ config =
     Program.config { version = "1.2.3" }
         |> Program.add
             (OptionsParser.buildSubCommand "init" Init
-                |> OptionsParser.end
-            )
-        |> Program.add
-            (OptionsParser.buildSubCommand "stepdefs" Stepdefs
                 |> OptionsParser.end
             )
         |> Program.add
