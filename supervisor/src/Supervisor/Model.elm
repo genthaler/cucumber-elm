@@ -1,4 +1,4 @@
-module Supervisor.Model exposing (Model(..), toInitCopyingTemplate, toInitGettingCurrentDirListing, toInitGettingModuleDir, toInitStart, toRunCompiling, toRunConstructingFolder, toRunGettingModuleDir, toRunGettingModulePackageInfo, toRunGettingUserCucumberPackageInfo, toRunGettingUserPackageInfo, toRunResolvingGherkinFiles, toRunStart, toRunStartingRunner, toRunTestingGherkinFiles, toRunWatching)
+module Supervisor.Model exposing (Model(..), toInitCopyingTemplate, toInitGettingCurrentDirListing, toInitGettingModuleDir, toInitStart, toRunCompilingRunner, toRunGettingCurrentDirListing, toRunGettingModuleDir, toRunGettingModulePackageInfo, toRunGettingTypes, toRunGettingUserCucumberPackageInfo, toRunGettingUserPackageInfo, toRunResolvingGherkinFiles, toRunStart, toRunStartingRunner, toRunTestingGherkinFiles, toRunUpdatingUserCucumberElmJson, toRunWatching)
 
 import Elm.Project exposing (..)
 import StateMachine exposing (Allowed, State(..), map)
@@ -22,12 +22,13 @@ type Model
     | InitCopyingTemplate (State {} {})
     | RunStart (State { runGettingCurrentDirListing : Allowed } { runOptions : RunOptions })
     | RunGettingCurrentDirListing (State { runGettingUserPackageInfo : Allowed } { runOptions : RunOptions })
-    | RunGettingUserPackageInfo (State { runConstructingFolder : Allowed } { runOptions : RunOptions })
-    | RunGettingUserCucumberPackageInfo (State { runConstructingFolder : Allowed } { runOptions : RunOptions, userProject : Project })
-    | RunGettingModuleDir (State { runConstructingFolder : Allowed } { runOptions : RunOptions, userProject : Project, userCucumberProject : Project })
-    | RunGettingModulePackageInfo (State { runConstructingFolder : Allowed } { runOptions : RunOptions, userProject : Project, userCucumberProject : Project })
-    | RunConstructingFolder (State { runCompiling : Allowed } { runOptions : RunOptions, project : Project })
-    | RunCompiling (State { runStartingRunner : Allowed } { gherkinFiles : List String })
+    | RunGettingUserPackageInfo (State { runGettingUserCucumberPackageInfo : Allowed } { runOptions : RunOptions })
+    | RunGettingUserCucumberPackageInfo (State { runGettingModuleDir : Allowed } { runOptions : RunOptions, userProject : Project })
+    | RunGettingModuleDir (State { runGettingModulePackageInfo : Allowed } { runOptions : RunOptions, userProject : Project, userCucumberProject : Project })
+    | RunGettingModulePackageInfo (State { runUpdatingUserCucumber : Allowed } { runOptions : RunOptions, userProject : Project, userCucumberProject : Project })
+    | RunUpdatingUserCucumberElmJson (State { runGettingTypes : Allowed } { runOptions : RunOptions })
+    | RunGettingTypes (State { runCompilingRunner : Allowed } { runOptions : RunOptions })
+    | RunCompilingRunner (State { runStartingRunner : Allowed } { gherkinFiles : List String })
     | RunStartingRunner (State { runResolvingGherkinFiles : Allowed } { gherkinFiles : List String })
     | RunResolvingGherkinFiles (State { runResolvingGherkinFiles : Allowed } { gherkinFiles : List String })
     | RunTestingGherkinFiles (State { runWatching : Allowed } { remainingGherkinFiles : List String, testedGherkinFiles : List String })
@@ -67,18 +68,23 @@ toRunStart runOptions =
     RunStart <| State { runOptions = runOptions }
 
 
-toRunGettingUserPackageInfo : State { a | runGettingPackageInfo : Allowed } { runOptions : RunOptions } -> Model
+toRunGettingCurrentDirListing : State { a | runGettingCurrentDirListing : Allowed } { runOptions : RunOptions } -> Model
+toRunGettingCurrentDirListing (State state) =
+    RunGettingCurrentDirListing <| State state
+
+
+toRunGettingUserPackageInfo : State { a | runGettingUserPackageInfo : Allowed } { runOptions : RunOptions } -> Model
 toRunGettingUserPackageInfo (State state) =
     RunGettingUserPackageInfo <| State state
 
 
-toRunGettingUserCucumberPackageInfo : State { a | runGettingPackageInfo : Allowed } { runOptions : RunOptions } -> Project -> Model
+toRunGettingUserCucumberPackageInfo : State { a | runGettingUserCucumberPackageInfo : Allowed } { runOptions : RunOptions } -> Project -> Model
 toRunGettingUserCucumberPackageInfo (State state) userProject =
     RunGettingUserCucumberPackageInfo <| State { runOptions = state.runOptions, userProject = userProject }
 
- 
-toRunGettingModuleDir : State { a | runGettingModuleDir : Allowed } {runOptions : RunOptions , userProject : Project} -> Project -> Model
-toRunGettingModuleDir (State state) userCucumberProject=
+
+toRunGettingModuleDir : State { a | runGettingModuleDir : Allowed } { runOptions : RunOptions, userProject : Project } -> Project -> Model
+toRunGettingModuleDir (State state) userCucumberProject =
     RunGettingModuleDir <| State { runOptions = state.runOptions, userProject = state.userProject, userCucumberProject = userCucumberProject }
 
 
@@ -87,14 +93,19 @@ toRunGettingModulePackageInfo (State state) =
     RunGettingModulePackageInfo <| State state
 
 
-toRunConstructingFolder : State { a | runConstructingFolder : Allowed } { runOptions : RunOptions } -> Project -> Model
-toRunConstructingFolder (State state) project =
-    RunConstructingFolder <| State { runOptions = state.runOptions, project = project }
+toRunUpdatingUserCucumberElmJson : State { a | runGettingTypes : Allowed } { runOptions : RunOptions } -> Model
+toRunUpdatingUserCucumberElmJson (State state) =
+    RunUpdatingUserCucumberElmJson <| State { runOptions = state.runOptions }
 
 
-toRunCompiling : State { a | runCompiling : Allowed } { gherkinFiles : List String } -> Model
-toRunCompiling (State state) =
-    RunCompiling <| State <| state
+toRunGettingTypes : State { a | runGettingTypes : Allowed } { runOptions : RunOptions } -> Model
+toRunGettingTypes (State state) =
+    RunGettingTypes <| State { runOptions = state.runOptions }
+
+
+toRunCompilingRunner : State { a | runCompiling : Allowed } { gherkinFiles : List String } -> Model
+toRunCompilingRunner (State state) =
+    RunCompilingRunner <| State <| state
 
 
 toRunStartingRunner : State { a | runStartingRunner : Allowed } {} -> List String -> Model

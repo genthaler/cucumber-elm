@@ -3,6 +3,7 @@ module Supervisor.Main exposing (main)
 import Cli.Program as Program
 import Elm.Project exposing (..)
 import Json.Decode as D
+import Json.Encode as E
 import StateMachine exposing (map, untag)
 import Supervisor.Model exposing (..)
 import Supervisor.Options exposing (..)
@@ -72,19 +73,61 @@ update cliOptions msg model =
                     crash "expecting a single file as module directory"
 
         ( InitCopyingTemplate state, Stdout stdout ) ->
-            ( toInitCopyingTemplate state,  exit 0)
- 
+            ( model, exit 0 )
+
         ( RunStart state, NoOp ) ->
-            ( toRunGettingUserPackageInfo state, fileReadRequest "elm.json" )
+            ( toRunGettingCurrentDirListing state, fileListRequest "." )
+
+        ( RunGettingCurrentDirListing state, Stdout stdout ) ->
+            ( toRunGettingUserPackageInfo state
+            , fileReadRequest "elm.json"
+            )
 
         ( RunGettingUserPackageInfo state, Stdout stdout ) ->
-            
-            ( toRunConstructingFolder state (D.decodeString Elm.Project.decoder stdout), fileReadRequest "elm.json" )
+            case D.decodeString Elm.Project.decoder stdout of
+                Ok project ->
+                    ( toRunGettingUserCucumberPackageInfo state project
+                    , fileReadRequest "elm.json"
+                    )
 
-        ( RunConstructingFolder state, NoOp ) ->
-            ( toRunCompiling state, Cmd.none )
+                Err error ->
+                    ( model, logAndExit 1 (D.errorToString error) )
 
-        ( RunCompiling state, NoOp ) ->
+        ( RunGettingUserCucumberPackageInfo state, Stdout stdout ) ->
+            case D.decodeString Elm.Project.decoder stdout of
+                Ok project ->
+                    ( toRunGettingModuleDir state project
+                    , fileListRequest "."
+                    )
+
+                Err error ->
+                    ( model, logAndExit 1 (D.errorToString error) )
+
+        ( RunGettingModuleDir state, FileList fileList ) ->
+            case fileList of
+                [ moduleDir ] ->
+                    ( toRunGettingModulePackageInfo state, fileReadRequest (moduleDir ++ "/elm.json") )
+
+                _ ->
+                    crash "expecting a single file as module directory"
+
+        ( RunGettingModulePackageInfo state, Stdout stdout ) ->
+            case D.decodeString Elm.Project.decoder stdout of
+                Ok project ->
+                    ( toRunUpdatingUserCucumberElmJson state
+                    , fileWriteRequest "elm.json" (E.encode 0 <| Elm.Project.encode project)
+                    )
+
+                Err error ->
+                    ( model, logAndExit 1 (D.errorToString error) )
+
+        ( RunUpdatingUserCucumberElmJson state, Stdout typesJson ) ->
+            ( toRunGettingTypes state, shellRequest "run elmi-to-json" )
+
+        ( RunGettingTypes state, Stdout typesJson ) ->
+            ( toRunCompilingRunner state, shellRequest "runner.elm with stepdefs from typesJson" )
+
+        ( RunCompilingRunner state, NoOp ) ->
             ( toRunStartingRunner state [], Cmd.none )
 
         ( RunStartingRunner state, NoOp ) ->
@@ -97,7 +140,7 @@ update cliOptions msg model =
             ( toRunWatching state [], Cmd.none )
 
         ( RunWatching state, NoOp ) ->
-            ( toRunCompiling state, Cmd.none )
+            ( toRunCompilingRunner state, Cmd.none )
 
         ( _, _ ) ->
             ( model, logAndExit 1 "Invalid State Transition" )
