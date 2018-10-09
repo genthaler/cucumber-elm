@@ -18,12 +18,12 @@ message msg =
 init : Program.FlagsIncludingArgv flags -> CliOptions -> ( Model, Cmd Response )
 init flags options =
     case options of
-        Init folder ->
+        Init ->
             let
                 initMessage =
-                    "Initializing test suite in folder " ++ folder
+                    "Initializing test suite"
             in
-            ( toInitStart folder, echoRequest initMessage )
+            ( toInitStart, Cmd.batch [ echoRequest initMessage, message NoOp ] )
 
         RunTests runOptions ->
             let
@@ -39,45 +39,47 @@ init flags options =
                         |> List.filterMap identity
                         |> String.join "\n"
             in
-            ( toRunStart runOptions, echoRequest runMessage )
+            ( toRunStart runOptions, Cmd.batch [ echoRequest runMessage, message NoOp ] )
 
 
 update : CliOptions -> Response -> Model -> ( Model, Cmd Response )
 update cliOptions msg model =
     let
-        noOp =
-            ( model, Cmd.none )
-        crash errorMessage = 
-           ( model, logAndExit 1 errorMessage )
-
+        crash errorMessage =
+            ( model, logAndExit 1 errorMessage )
     in
     case ( model, msg ) of
         ( _, Stderr stderr ) ->
             ( model, logAndExit 1 stderr )
 
         ( InitStart state, _ ) ->
-            ( InitGettingTargetDir state , fileListRequest "." )
+            ( toInitGettingModuleDir state, fileListRequest "." )
 
-
-        ( InitGettingTargetDir state, FileList fileList ) ->
+        ( InitGettingModuleDir state, FileList fileList ) ->
             case fileList of
                 [ moduleDir ] ->
-                    ( toInitCopyingTemplate state moduleDir, shellRequest ("cp -R") )
+                    ( toInitGettingCurrentDirListing state moduleDir, fileListRequest "." )
 
                 _ ->
-                   crash "expecting a single file as module directory" 
-        ( InitGettingModuleDir state, FileList fileList ) ->
-            if  List.member "runner" fileList then
-                    ( toInitGettingTargetDir state, fileListRequest "." )
-            else
-                    crash "expecting a single file as current directory" 
+                    crash "expecting a single file as module directory"
 
+        ( InitGettingCurrentDirListing state, FileList fileList ) ->
+            case fileList of
+                [ moduleDir ] ->
+                    ( toInitCopyingTemplate state, shellRequest "cp -R" )
+
+                _ ->
+                    crash "expecting a single file as module directory"
 
         ( InitCopyingTemplate state, Stdout stdout ) ->
-            ( toExiting state 0, Cmd.none )
+            ( toInitCopyingTemplate state,  exit 0)
+ 
+        ( RunStart state, NoOp ) ->
+            ( toRunGettingUserPackageInfo state, fileReadRequest "elm.json" )
 
-        ( RunGettingPackageInfo state, NoOp ) ->
-            ( toRunConstructingFolder state (), Cmd.none )
+        ( RunGettingUserPackageInfo state, Stdout stdout ) ->
+            
+            ( toRunConstructingFolder state (D.decodeString Elm.Project.decoder stdout), fileReadRequest "elm.json" )
 
         ( RunConstructingFolder state, NoOp ) ->
             ( toRunCompiling state, Cmd.none )
@@ -96,9 +98,6 @@ update cliOptions msg model =
 
         ( RunWatching state, NoOp ) ->
             ( toRunCompiling state, Cmd.none )
-
-        ( Exiting state, NoOp ) ->
-            ( model, exit (state |> untag) )
 
         ( _, _ ) ->
             ( model, logAndExit 1 "Invalid State Transition" )
