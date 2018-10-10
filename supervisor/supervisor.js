@@ -26,7 +26,7 @@ supervisorWorker.ports.request.subscribe(
   cmd => {
     switch (cmd.command) {
       case "Echo":
-        send(shell.echo(cmd.message));
+        shell.echo(cmd.message);
         break;
 
       case "FileRead":
@@ -42,7 +42,7 @@ supervisorWorker.ports.request.subscribe(
         break;
 
       case "FileList":
-        glob(cmd.glob, {}, (er, files) => {
+        glob(cmd.glob, {cwd: path.resolve.apply(null, cmd.cwd)}, (er, files) => {
           if (er == null) {
             send({
               code: 0,
@@ -65,7 +65,8 @@ supervisorWorker.ports.request.subscribe(
         break;
 
       case "Copy":
-        send(shell.cp('-rf', path.resolve(cmd.from), path.resolve(cmd.to)));
+      console.log("Copy");
+      send(shell.cp('-rf', path.resolve.apply(null, cmd.from), path.resolve.apply(null, cmd.to)));
         break;
 
       case "Shell":
@@ -108,7 +109,8 @@ supervisorWorker.ports.request.subscribe(
         break;
 
       case "Exit":
-        send(shell.exit(cmd.exitCode));
+        shell.echo(cmd.message);
+        shell.exit(cmd.exitCode);
         break;
 
       default:

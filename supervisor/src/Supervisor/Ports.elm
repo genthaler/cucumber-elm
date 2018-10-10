@@ -1,4 +1,4 @@
-port module Supervisor.Ports exposing (Response(..), copyRequest, cucumberBootRequest, cucumberTestRequest, decoder, echoRequest, exit, fileListRequest, fileReadRequest, fileWriteRequest, logAndExit, moduleDirectoryRequest, rawResponse, request, response, shellRequest)
+port module Supervisor.Ports exposing (Response(..), copyRequest, cucumberBootRequest, cucumberTestRequest, decoder, echoRequest, exit, fileListRequest, fileReadRequest, fileWriteRequest,  moduleDirectoryRequest, rawResponse, request, response, shellRequest)
 
 import Json.Decode as D
 import Json.Decode.Extra as JDE
@@ -32,11 +32,12 @@ fileWriteRequest paths fileContent =
             ]
 
 
-fileListRequest : String -> Cmd msg
-fileListRequest glob =
+fileListRequest : List String -> String -> Cmd msg
+fileListRequest cwd glob =
     request <|
         E.object
             [ ( "command", E.string "FileList" )
+            , ( "cwd", E.list E.string cwd )
             , ( "glob", E.string glob )
             ]
 
@@ -94,18 +95,14 @@ cucumberTestRequest feature =
             ]
 
 
-exit : Int -> Cmd msg
-exit exitCode =
+exit : Int -> String -> Cmd msg
+exit exitCode message=
     request <|
         E.object
             [ ( "command", E.string "Exit" )
             , ( "exitCode", E.int exitCode )
+            , ( "message", E.string message )
             ]
-
-
-logAndExit : Int -> String -> Cmd msg
-logAndExit exitCode msg =
-    Cmd.batch [ echoRequest msg, exit exitCode ]
 
 
 
@@ -142,5 +139,5 @@ decoder =
                 )
         , D.map FileList (D.field "fileList" (D.list D.string))
         , D.map Stdout (D.field "stdout" D.string)
-        , D.map Stdout (D.field "stdout" D.string)
+        , D.map Stderr (D.succeed "could not match response")
         ]

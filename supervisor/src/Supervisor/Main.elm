@@ -42,16 +42,16 @@ init flags options =
             in
             ( toRunStart runOptions, Cmd.batch [ echoRequest runMessage, message NoOp ] )
 
-
+ 
 update : CliOptions -> Response -> Model -> ( Model, Cmd Response )
 update cliOptions msg model =
     let
         crash errorMessage =
-            ( model, logAndExit 1 errorMessage )
+            ( model, exit 1 errorMessage )
     in
     case ( model, msg ) of
         ( _, Stderr stderr ) ->
-            ( model, logAndExit 1 stderr )
+            ( model, exit 1 stderr )
 
         ( InitStart state, _ ) ->
             ( toInitGettingModuleDir state, moduleDirectoryRequest )
@@ -59,24 +59,19 @@ update cliOptions msg model =
         ( InitGettingModuleDir state, FileList fileList ) ->
             case fileList of
                 [ moduleDir ] ->
-                    ( toInitGettingCurrentDirListing state moduleDir, fileListRequest "." )
+                    Debug.log "InitGettingModuleDir" ( toInitGettingCurrentDirListing state moduleDir, fileListRequest [ moduleDir ] "*" )
 
                 _ ->
                     crash "expecting a single file as module directory"
 
-        ( InitGettingCurrentDirListing state, FileList fileList ) ->
-            case fileList of
-                [ moduleDir ] ->
-                    ( toInitCopyingTemplate state, shellRequest "cp -R" )
-
-                _ ->
-                    crash "expecting a single file as module directory"
+        ( InitGettingCurrentDirListing ((State data) as state), FileList fileList ) ->
+            ( toInitCopyingTemplate state, copyRequest [ data.moduleDir, "cucumber" ] [ "." ] )
 
         ( InitCopyingTemplate state, Stdout stdout ) ->
-            ( model, exit 0 )
+            ( model, exit 0 "Init complete")
 
         ( RunStart state, NoOp ) ->
-            ( toRunGettingCurrentDirListing state, fileListRequest "." )
+            Debug.log "RunStart" ( toRunGettingCurrentDirListing state, fileListRequest [ "." ] "*" )
 
         ( RunGettingCurrentDirListing state, Stdout stdout ) ->
             ( toRunGettingUserPackageInfo state
@@ -91,17 +86,17 @@ update cliOptions msg model =
                     )
 
                 Err error ->
-                    ( model, logAndExit 1 (D.errorToString error) )
+                    ( model, exit 1 (D.errorToString error) )
 
         ( RunGettingUserCucumberPackageInfo state, Stdout stdout ) ->
             case D.decodeString Elm.Project.decoder stdout of
                 Ok project ->
                     ( toRunGettingModuleDir state project
-                    , fileListRequest "."
+                    , fileListRequest [ "." ] "*"
                     )
 
                 Err error ->
-                    ( model, logAndExit 1 (D.errorToString error) )
+                    ( model, exit 1 (D.errorToString error) )
 
         ( RunGettingModuleDir state, FileList fileList ) ->
             case fileList of
@@ -119,7 +114,7 @@ update cliOptions msg model =
                     )
 
                 Err error ->
-                    ( model, logAndExit 1 (D.errorToString error) )
+                    ( model, exit 1 (D.errorToString error) )
 
         ( RunUpdatingUserCucumberElmJson state, Stdout typesJson ) ->
             ( toRunGettingTypes state, shellRequest "elmi-to-json" )
@@ -132,7 +127,7 @@ update cliOptions msg model =
                     )
 
                 Err error ->
-                    ( model, logAndExit 1 (D.errorToString error) )
+                    ( model, exit 1 (D.errorToString error) )
 
         ( RunCompilingRunner state, NoOp ) ->
             ( toRunStartingRunner state, Cmd.none )
@@ -147,10 +142,15 @@ update cliOptions msg model =
             ( toRunWatching state [], Cmd.none )
 
         ( RunWatching state, NoOp ) ->
-            ( toRunCompilingRunner state, Cmd.none )
-
-        ( _, _ ) ->
-            ( model, logAndExit 1 "Invalid State Transition" )
+            ( toRunCompilingRunner state, Cmd.none ) 
+ 
+        ( state, cmd ) ->
+            let 
+                _ = Debug.log "state" state
+                _ = Debug.log "cmd" cmd
+            in
+            
+            ( model, exit 1 "Invalid State Transition" )
 
 
 subscriptions : Model -> Sub Response
@@ -161,8 +161,8 @@ subscriptions model =
 main : Program.StatefulProgram Model Response CliOptions {}
 main =
     Program.stateful
-        { printAndExitFailure = logAndExit 1
-        , printAndExitSuccess = logAndExit 0
+        { printAndExitFailure = exit 1
+        , printAndExitSuccess = exit 0
         , init = init
         , config = config
         , update = update
