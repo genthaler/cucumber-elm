@@ -1,4 +1,4 @@
-port module Supervisor.Ports exposing (Response(..), cucumberBootRequest, cucumberTestRequest, decoder, echoRequest, exit, fileListRequest, fileReadRequest, fileWriteRequest, logAndExit, request, response, shellRequest)
+port module Supervisor.Ports exposing (Response(..), copyRequest, cucumberBootRequest, cucumberTestRequest, decoder, echoRequest, exit, fileListRequest, fileReadRequest, fileWriteRequest, logAndExit, moduleDirectoryRequest, rawResponse, request, response, shellRequest)
 
 import Json.Decode as D
 import Json.Decode.Extra as JDE
@@ -13,22 +13,49 @@ import Result.Extra
 port request : E.Value -> Cmd msg
 
 
-fileReadRequest : String -> Cmd msg
-fileReadRequest fileName =
+fileReadRequest : List String -> Cmd msg
+fileReadRequest paths =
     request <|
         E.object
             [ ( "command", E.string "FileRead" )
-            , ( "fileName", E.string fileName )
+            , ( "paths", E.list E.string paths )
             ]
 
 
-fileWriteRequest : String -> String -> Cmd msg
-fileWriteRequest fileName fileContent =
+fileWriteRequest : List String -> String -> Cmd msg
+fileWriteRequest paths fileContent =
     request <|
         E.object
             [ ( "command", E.string "FileWrite" )
-            , ( "fileName", E.string fileName )
+            , ( "paths", E.list E.string paths )
             , ( "fileContent", E.string fileContent )
+            ]
+
+
+fileListRequest : String -> Cmd msg
+fileListRequest glob =
+    request <|
+        E.object
+            [ ( "command", E.string "FileList" )
+            , ( "glob", E.string glob )
+            ]
+
+
+moduleDirectoryRequest : Cmd msg
+moduleDirectoryRequest =
+    request <|
+        E.object
+            [ ( "command", E.string "ModuleDirectory" )
+            ]
+
+
+copyRequest : List String -> List String -> Cmd msg
+copyRequest from to =
+    request <|
+        E.object
+            [ ( "command", E.string "Copy" )
+            , ( "to", E.list E.string from )
+            , ( "from", E.list E.string to )
             ]
 
 
@@ -41,30 +68,12 @@ echoRequest message =
             ]
 
 
-copyRequest : String -> Cmd msg
-copyRequest cmd =
-    request <|
-        E.object
-            [ ( "command", E.string "Copy" )
-            , ( "cmd", E.string cmd )
-            ]
-
-
 shellRequest : String -> Cmd msg
 shellRequest cmd =
     request <|
         E.object
             [ ( "command", E.string "Shell" )
             , ( "cmd", E.string cmd )
-            ]
-
-
-fileListRequest : String -> Cmd msg
-fileListRequest glob =
-    request <|
-        E.object
-            [ ( "command", E.string "FileList" )
-            , ( "glob", E.string glob )
             ]
 
 

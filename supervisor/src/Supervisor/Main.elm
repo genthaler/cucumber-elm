@@ -54,7 +54,7 @@ update cliOptions msg model =
             ( model, logAndExit 1 stderr )
 
         ( InitStart state, _ ) ->
-            ( toInitGettingModuleDir state, fileListRequest "." )
+            ( toInitGettingModuleDir state, moduleDirectoryRequest )
 
         ( InitGettingModuleDir state, FileList fileList ) ->
             case fileList of
@@ -80,14 +80,14 @@ update cliOptions msg model =
 
         ( RunGettingCurrentDirListing state, Stdout stdout ) ->
             ( toRunGettingUserPackageInfo state
-            , fileReadRequest "elm.json"
+            , fileReadRequest [ "elm.json" ]
             )
 
         ( RunGettingUserPackageInfo state, Stdout stdout ) ->
             case D.decodeString Elm.Project.decoder stdout of
                 Ok project ->
                     ( toRunGettingUserCucumberPackageInfo state project
-                    , fileReadRequest "elm.json"
+                    , fileReadRequest [ "elm.json" ]
                     )
 
                 Err error ->
@@ -106,7 +106,7 @@ update cliOptions msg model =
         ( RunGettingModuleDir state, FileList fileList ) ->
             case fileList of
                 [ moduleDir ] ->
-                    ( toRunGettingModulePackageInfo state, fileReadRequest (moduleDir ++ "/elm.json") )
+                    ( toRunGettingModulePackageInfo state, fileReadRequest [ moduleDir, "elm.json" ] )
 
                 _ ->
                     crash "expecting a single file as module directory"
@@ -115,7 +115,7 @@ update cliOptions msg model =
             case D.decodeString Elm.Project.decoder stdout of
                 Ok project ->
                     ( toRunUpdatingUserCucumberElmJson state
-                    , fileWriteRequest "elm.json" (E.encode 0 <| Elm.Project.encode project)
+                    , fileWriteRequest [ "elm.json" ] (E.encode 0 <| Elm.Project.encode project)
                     )
 
                 Err error ->

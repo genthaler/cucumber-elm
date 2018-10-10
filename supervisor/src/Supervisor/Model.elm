@@ -1,7 +1,8 @@
-module Supervisor.Model exposing (Model(..), toInitCopyingTemplate, toInitGettingCurrentDirListing, toInitGettingModuleDir, toInitStart, toRunCompilingRunner, toRunGettingCurrentDirListing, toRunGettingModuleDir, toRunGettingModulePackageInfo, toRunGettingTypes, toRunGettingUserCucumberPackageInfo, toRunGettingUserPackageInfo, toRunResolvingGherkinFiles, toRunStart, toRunStartingRunner, toRunTestingGherkinFiles, toRunUpdatingUserCucumberElmJson, toRunWatching)
+module Supervisor.Model exposing (Model(..), elmiModuleListDecoder, toInitCopyingTemplate, toInitGettingCurrentDirListing, toInitGettingModuleDir, toInitStart, toRunCompilingRunner, toRunGettingCurrentDirListing, toRunGettingModuleDir, toRunGettingModulePackageInfo, toRunGettingTypes, toRunGettingUserCucumberPackageInfo, toRunGettingUserPackageInfo, toRunResolvingGherkinFiles, toRunStart, toRunStartingRunner, toRunTestingGherkinFiles, toRunUpdatingUserCucumberElmJson, toRunWatching)
 
 import Dict
 import Elm.Project exposing (..)
+import Json.Decode as D
 import StateMachine exposing (Allowed, State(..), map)
 import Supervisor.Options exposing (RunOptions)
 
@@ -135,10 +136,40 @@ toRunWatching (State state) gherkinFiles =
 
 
 
--- List {moduleName:String, interface: {types: Dict String {annotation: {lambda: List {moduleName: {module: String, package: String}, name: TYPENAME, type: "Type"}}}}
+{-
+   Decodes the output of elmi-to-json into a list of tuples of module name and list of names of methods for the module that implement Stepdefs
+-}
 
 
-type alias ElmiModule =
-    { moduleName : String
-    , interface : { types : Dict.Dict String { annotation : { lambda : List { moduleName : { module_ : String, package : String }, typeName : String } } } }
-    }
+elmiModuleListDecoder : D.Decoder (List ( String, List String ))
+elmiModuleListDecoder =
+    D.list <|
+        D.map2 Tuple.pair
+            (D.field "moduleName" D.string)
+            (D.field "interface" <|
+                D.field "types" <|
+                    D.map
+                        (List.filterMap
+                            (\( typeName, argTypeList ) ->
+                                argTypeList
+                                    |> List.reverse
+                                    |> List.head
+                                    |> Maybe.andThen
+                                        (\( moduleName, name ) ->
+                                            if ( moduleName, name ) == ( "Cucumber", "Stepdef" ) then
+                                                Just typeName
+
+                                            else
+                                                Nothing
+                                        )
+                            )
+                        )
+                    <|
+                        D.keyValuePairs <|
+                            D.field "annotation" <|
+                                D.field "lambda" <|
+                                    D.list <|
+                                        D.map2 Tuple.pair
+                                            (D.field "moduleName" <| D.field "module" D.string)
+                                            (D.field "name" D.string)
+            )

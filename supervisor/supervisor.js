@@ -30,7 +30,7 @@ supervisorWorker.ports.request.subscribe(
         break;
 
       case "FileRead":
-        send(shell.cat(cmd.fileName));
+        send(shell.cat(paths.resolve(cmd.paths)));
         break;
 
       case "ExportedInterfaces":
@@ -38,7 +38,7 @@ supervisorWorker.ports.request.subscribe(
         break;
 
       case "FileWrite":
-        send(shell.echo(cmd.fileContent).to(path.resolve(cmd.fileName)));
+        send(shell.echo(cmd.fileContent).to(path.resolve(cmd.paths)));
         break;
 
       case "FileList":
@@ -57,8 +57,15 @@ supervisorWorker.ports.request.subscribe(
         });
         break;
 
+      case "ModuleDirectory":
+        send({
+          code: 0,
+          fileList: [__dirname]
+        });
+        break;
+
       case "Copy":
-        send(shell.cp('-rf', path.resolve(cmd.source), path.resolve(cmd.destination)));
+        send(shell.cp('-rf', path.resolve(cmd.from), path.resolve(cmd.to)));
         break;
 
       case "Shell":
