@@ -1,5 +1,6 @@
 module Supervisor.Model exposing (Model(..), toInitCopyingTemplate, toInitGettingCurrentDirListing, toInitGettingModuleDir, toInitStart, toRunCompilingRunner, toRunGettingCurrentDirListing, toRunGettingModuleDir, toRunGettingModulePackageInfo, toRunGettingTypes, toRunGettingUserCucumberPackageInfo, toRunGettingUserPackageInfo, toRunResolvingGherkinFiles, toRunStart, toRunStartingRunner, toRunTestingGherkinFiles, toRunUpdatingUserCucumberElmJson, toRunWatching)
 
+import Dict
 import Elm.Project exposing (..)
 import StateMachine exposing (Allowed, State(..), map)
 import Supervisor.Options exposing (RunOptions)
@@ -131,3 +132,13 @@ toRunTestingGherkinFiles (State state) gherkinFiles =
 toRunWatching : State { a | runWatching : Allowed } { b | runOptions : RunOptions } -> List String -> Model
 toRunWatching (State state) gherkinFiles =
     RunWatching <| State { runOptions = state.runOptions }
+
+
+
+-- List {moduleName:String, interface: {types: Dict String {annotation: {lambda: List {moduleName: {module: String, package: String}, name: TYPENAME, type: "Type"}}}}
+
+
+type alias ElmiModule =
+    { moduleName : String
+    , interface : { types : Dict.Dict String { annotation : { lambda : List { moduleName : { module_ : String, package : String }, typeName : String } } } }
+    }

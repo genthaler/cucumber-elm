@@ -125,7 +125,14 @@ update cliOptions msg model =
             ( toRunGettingTypes state, shellRequest "elmi-to-json" )
 
         ( RunGettingTypes ((State data) as state), Stdout typesJson ) ->
-            ( toRunCompilingRunner state, shellRequest "runner.elm with stepdefs from typesJson" )
+            case D.decodeString Elm.Project.decoder typesJson of
+                Ok project ->
+                    ( toRunCompilingRunner state
+                    , shellRequest "runner.elm with stepdefs from typesJson"
+                    )
+
+                Err error ->
+                    ( model, logAndExit 1 (D.errorToString error) )
 
         ( RunCompilingRunner state, NoOp ) ->
             ( toRunStartingRunner state, Cmd.none )
