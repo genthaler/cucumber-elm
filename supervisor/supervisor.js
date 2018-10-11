@@ -30,7 +30,7 @@ supervisorWorker.ports.request.subscribe(
         break;
 
       case "FileRead":
-        send(shell.cat(paths.resolve(cmd.paths)));
+        send(shell.cat(path.resolve.apply(null, cmd.paths)));
         break;
 
       case "ExportedInterfaces":
@@ -38,7 +38,7 @@ supervisorWorker.ports.request.subscribe(
         break;
 
       case "FileWrite":
-        send(shell.echo(cmd.fileContent).to(path.resolve(cmd.paths)));
+        send(shell.echo(cmd.fileContent).to(path.resolve.apply(null, cmd.paths)));
         break;
 
       case "FileList":

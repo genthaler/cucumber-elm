@@ -73,7 +73,7 @@ update cliOptions msg model =
         ( RunStart state, NoOp ) ->
             Debug.log "RunStart" ( toRunGettingCurrentDirListing state, fileListRequest [ "." ] "*" )
 
-        ( RunGettingCurrentDirListing state, Stdout stdout ) ->
+        ( RunGettingCurrentDirListing state, FileList fileList ) ->
             ( toRunGettingUserPackageInfo state
             , fileReadRequest [ "elm.json" ]
             )
@@ -92,7 +92,7 @@ update cliOptions msg model =
             case D.decodeString Elm.Project.decoder stdout of
                 Ok project ->
                     ( toRunGettingModuleDir state project
-                    , fileListRequest [ "." ] "*"
+                    , moduleDirectoryRequest
                     )
 
                 Err error ->
@@ -110,7 +110,7 @@ update cliOptions msg model =
             case D.decodeString Elm.Project.decoder stdout of
                 Ok project ->
                     ( toRunUpdatingUserCucumberElmJson state
-                    , fileWriteRequest [ "elm.json" ] (E.encode 0 <| Elm.Project.encode project)
+                    , fileWriteRequest [ "elm.json" ] (E.encode 4 <| Elm.Project.encode project)
                     )
 
                 Err error ->
@@ -120,7 +120,7 @@ update cliOptions msg model =
             ( toRunGettingTypes state, shellRequest "elmi-to-json" )
 
         ( RunGettingTypes ((State data) as state), Stdout typesJson ) ->
-            case D.decodeString Elm.Project.decoder typesJson of
+            case D.decodeString elmiModuleListDecoder typesJson of
                 Ok project ->
                     ( toRunCompilingRunner state
                     , shellRequest "runner.elm with stepdefs from typesJson"
