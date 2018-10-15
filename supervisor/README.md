@@ -25,3 +25,9 @@ These are the steps taken
     - still need to add functions that implement StepDef
     - can I get node-elm-compiler to specify an elm.json? then can parse the given one, add src directories and dependencies and use that instead of overwriting the existing one. If --watch, will need to watch elm.json as well. NO we can't
 
+
+
+# End state
+- need a cucumber folder that can be used as a template
+- want to be able to integration test that template
+- Don't want the test to depend on customer code otherwise it won't compile first time

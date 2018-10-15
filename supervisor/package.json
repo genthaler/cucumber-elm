@@ -6,10 +6,12 @@
   "author": "Gunther Enthaler <genthaler@users.noreply.github.com>",
   "main": "supervisorWorker.js",
   "private": true,
+  "bin": "supervisor.js",
   "scripts": {
     "clean": "shx rm -rf node_modules && shx rm -rf elm-stuff",
     "prepare": "elm make src/Supervisor/Main.elm --output=supervisorWorker.js",
-    "test": "elm-test"
+    "test": "elm-test",
+    "elmi": "elmi-to-json"
   },
   "dependencies": {
     "elm": "^0.19.0",

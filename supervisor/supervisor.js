@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 const shell = require('shelljs')
 const fs = require('fs')
 const path = require('path')
@@ -9,10 +8,11 @@ const R = require('rambda')
 const compiler = require('node-elm-compiler')
 const compile = compiler.compile;
 const compileToString = compiler.compileToString;
-const supervisor = require('./supervisorWorker.js');
+const supervisor = require(path.resolve(__dirname, 'supervisorWorker.js'));
 // const supervisor = require('cucumber-elm-supervisor');
 const requireFromString = require('require-from-string');
 
+console.log('BLAH')
 
 const supervisorWorker = supervisor.Elm.Supervisor.Main.init({
   flags: {
@@ -20,7 +20,11 @@ const supervisorWorker = supervisor.Elm.Supervisor.Main.init({
   }
 })
 
+console.log("1")
+
 const send = supervisorWorker.ports.rawResponse.send;
+
+console.log("2")
 
 supervisorWorker.ports.request.subscribe(
   cmd => {
@@ -34,7 +38,8 @@ supervisorWorker.ports.request.subscribe(
         break;
 
       case "ExportedInterfaces":
-        send(shell.exec('elmi-to-json'));
+        console.log('HELLO ' + path.resolve(__dirname, 'node_modules', '.bin', 'elmi-to-json'));
+        send(shell.exec(path.resolve(__dirname, 'node_modules', '.bin', 'elmi-to-json')));
         break;
 
       case "FileWrite":
@@ -42,7 +47,7 @@ supervisorWorker.ports.request.subscribe(
         break;
 
       case "FileList":
-        glob(cmd.glob, {cwd: path.resolve.apply(null, cmd.cwd)}, (er, files) => {
+        glob(cmd.glob, { cwd: path.resolve.apply(null, cmd.cwd) }, (er, files) => {
           if (er == null) {
             send({
               code: 0,
@@ -65,8 +70,8 @@ supervisorWorker.ports.request.subscribe(
         break;
 
       case "Copy":
-      console.log("Copy");
-      send(shell.cp('-rf', path.resolve.apply(null, cmd.from), path.resolve.apply(null, cmd.to)));
+        console.log("Copy");
+        send(shell.cp('-rf', path.resolve.apply(null, cmd.from), path.resolve.apply(null, cmd.to)));
         break;
 
       case "Shell":

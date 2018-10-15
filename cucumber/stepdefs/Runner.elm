@@ -5,6 +5,13 @@ import Cucumber.StepDefs
 import Platform
 
 
+
+{-
+   Don't modify or rely on this file. It will be overwritten when you run elm-cuke.
+   There's no need to keep this in source control either.
+-}
+
+
 port cucumberResponse : String -> Cmd msg
 
 
@@ -24,8 +31,8 @@ glueFunctions =
     ( "", [] )
 
 
-init : ( Model, Cmd a )
-init =
+init : () -> ( Model, Cmd a )
+init _ =
     ( { pendingRequests = [] }, Cmd.none )
 
 
@@ -49,9 +56,9 @@ subscriptions model =
     cucumberRequest Feature
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Platform.program
+    Platform.worker
         { init = init
         , update = update
         , subscriptions = subscriptions

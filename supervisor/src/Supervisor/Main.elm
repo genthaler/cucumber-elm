@@ -42,7 +42,7 @@ init flags options =
             in
             ( toRunStart runOptions, Cmd.batch [ echoRequest runMessage, message NoOp ] )
 
- 
+
 update : CliOptions -> Response -> Model -> ( Model, Cmd Response )
 update cliOptions msg model =
     let
@@ -59,7 +59,7 @@ update cliOptions msg model =
         ( InitGettingModuleDir state, FileList fileList ) ->
             case fileList of
                 [ moduleDir ] ->
-                    Debug.log "InitGettingModuleDir" ( toInitGettingCurrentDirListing state moduleDir, fileListRequest [ moduleDir ] "*" )
+                    ( toInitGettingCurrentDirListing state moduleDir, fileListRequest [ moduleDir ] "*" )
 
                 _ ->
                     crash "expecting a single file as module directory"
@@ -68,7 +68,7 @@ update cliOptions msg model =
             ( toInitCopyingTemplate state, copyRequest [ data.moduleDir, "cucumber" ] [ "." ] )
 
         ( InitCopyingTemplate state, Stdout stdout ) ->
-            ( model, exit 0 "Init complete")
+            ( model, exit 0 "Init complete" )
 
         ( RunStart state, NoOp ) ->
             Debug.log "RunStart" ( toRunGettingCurrentDirListing state, fileListRequest [ "." ] "*" )
@@ -117,7 +117,7 @@ update cliOptions msg model =
                     ( model, exit 1 (D.errorToString error) )
 
         ( RunUpdatingUserCucumberElmJson state, Stdout typesJson ) ->
-            ( toRunGettingTypes state, shellRequest "elmi-to-json" )
+            ( toRunGettingTypes state, shellRequest "npm run elmi" )
 
         ( RunGettingTypes ((State data) as state), Stdout typesJson ) ->
             case D.decodeString elmiModuleListDecoder typesJson of
@@ -142,14 +142,13 @@ update cliOptions msg model =
             ( toRunWatching state [], Cmd.none )
 
         ( RunWatching state, NoOp ) ->
-            ( toRunCompilingRunner state, Cmd.none ) 
- 
+            ( toRunCompilingRunner state, Cmd.none )
+
         ( state, cmd ) ->
-            let 
-                _ = Debug.log "state" state
-                _ = Debug.log "cmd" cmd
+            let
+                _ =
+                    Debug.log "( state, cmd )" ( state, cmd )
             in
-            
             ( model, exit 1 "Invalid State Transition" )
 
 

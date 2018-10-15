@@ -28,7 +28,9 @@ It handles parsing of feature files into a data structure made up of a number cu
 
 No JavaScript in this module.
 
-#### cucumber-elm/runner
+#### cucumber-elm/cucumber
+
+Cucumber tests for cucumber-elm. These tests largely mirror the cucumber-elm unit tests.
 
 This module is actually a template folder, which is copied and combined with the user's step definition code to create a new module that can be started by and can communicate with the supervisor CLI application. See [the runner README](./runner/README.md) for instructions.
 
@@ -44,17 +46,15 @@ Unit tests for the `supervisor` module.
 
 #### cucumber-elm/example
 
-This is an example project with Elm source, unit tests, Gherkin features, step definition code and unit tests for the step definition code.
+This is an example project with Elm source, Gherkin features, and Elm step definitions.
 
 Note that building and running the example project and verifying its behaviour is part of the build for the entire project.
+
+It is also the template project used when invoking `elm-cuke init`, although elm.json is modified and RpnCalculator is moved as part of the init process, and Runner.elm is modified when the project is run.
 
 #### cucumber-elm/tests
 
 Unit tests for cucumber-elm package.
-
-#### cucumber-elm/cucumber
-
-Cucumber tests for cucumber-elm. These tests largely mirror the cucumber-elm unit tests.
 
 #### cucumber-elm/fiddle TODO
 

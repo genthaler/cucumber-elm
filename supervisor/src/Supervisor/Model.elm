@@ -156,11 +156,12 @@ elmiModuleListDecoder =
                                     |> List.head
                                     |> Maybe.andThen
                                         (\( moduleName, name ) ->
-                                            if ( moduleName, name ) == ( "Cucumber", "Stepdef" ) then
-                                                Just typeName
+                                            case ( moduleName, name ) of
+                                                ( "Cucumber.StepDefs", "StepDefFunctionResult" ) ->
+                                                    Just typeName
 
-                                            else
-                                                Nothing
+                                                _ ->
+                                                    Nothing
                                         )
                             )
                         )
