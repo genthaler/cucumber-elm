@@ -1,4 +1,4 @@
-port module Supervisor.Ports exposing (Response(..), copyRequest, cucumberBootRequest, cucumberTestRequest, decoder, echoRequest, exit, fileListRequest, fileReadRequest, fileWriteRequest,  moduleDirectoryRequest, rawResponse, request, response, shellRequest)
+port module Supervisor.Ports exposing (Response(..), copyRequest, cucumberBootRequest, cucumberTestRequest, decoder, echoRequest, exit, fileListRequest, fileReadRequest, fileWriteRequest, moduleDirectoryRequest, rawResponse, request, response, shellRequest)
 
 import Json.Decode as D
 import Json.Decode.Extra as JDE
@@ -96,7 +96,7 @@ cucumberTestRequest feature =
 
 
 exit : Int -> String -> Cmd msg
-exit exitCode message=
+exit exitCode message =
     request <|
         E.object
             [ ( "command", E.string "Exit" )

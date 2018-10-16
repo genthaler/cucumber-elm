@@ -1,5 +1,6 @@
 module RpnCalculator exposing (Entry(..), Model, Msg(..), OperationType(..), init, main, update, view)
 
+import Browser
 import Html exposing (Html, br, button, div, h1, img, input, li, text, ul)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -30,57 +31,53 @@ type Msg
     | Press Entry
 
 
-init : ( Model, Cmd Msg )
+init : Model
 init =
-    ( { stack = [], numStr = "", message = "" }, Cmd.none )
+    { stack = [], numStr = "", message = "" }
 
 
 
 ---- UPDATE ----
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> Model
 update msg ({ stack, numStr, message } as model) =
-    let
-        newModel =
-            case ( msg, stack ) of
-                ( Press (Operation op), [] ) ->
-                    { model | message = "You can't apply an operation on an empty stack" }
+    case ( msg, stack ) of
+        ( Press (Operation op), [] ) ->
+            { model | message = "You can't apply an operation on an empty stack" }
 
-                ( Press (Operation op), head :: [] ) ->
-                    { model | message = "You can't apply an operation on a stack with only one number" }
+        ( Press (Operation op), head :: [] ) ->
+            { model | message = "You can't apply an operation on a stack with only one number" }
 
-                ( Press (Operation op), first :: second :: rest ) ->
-                    let
-                        fn : Int -> Int -> Int
-                        fn =
-                            case op of
-                                Add ->
-                                    (+)
+        ( Press (Operation op), first :: second :: rest ) ->
+            let
+                fn : Int -> Int -> Int
+                fn =
+                    case op of
+                        Add ->
+                            (+)
 
-                                Subtract ->
-                                    (-)
+                        Subtract ->
+                            (-)
 
-                                Multiply ->
-                                    (*)
+                        Multiply ->
+                            (*)
 
-                                Divide ->
-                                    (//)
-                    in
-                    { stack = fn first second :: rest, numStr = "", message = "" }
+                        Divide ->
+                            (//)
+            in
+            { stack = fn first second :: rest, numStr = "", message = "" }
 
-                ( Input str, stack ) ->
-                    { model | numStr = str }
+        ( Input str, _ ) ->
+            { model | numStr = str }
 
-                ( Press Push, stack ) ->
-                    case String.toInt numStr of
-                        Ok number ->
-                            { model | numStr = "", stack = number :: stack }
+        ( Press Push, _ ) ->
+            case String.toInt numStr of
+                Just number ->
+                    { model | numStr = "", stack = number :: stack }
 
-                        Err err ->
-                            { model | numStr = "", message = err }
-    in
-    ( newModel, Cmd.none )
+                Nothing ->
+                    { model | numStr = "", message = "Couldn't convert " ++ numStr ++ " to an integer" }
 
 
 
@@ -99,7 +96,7 @@ view ({ stack, numStr, message } as model) =
         , button [ type_ "button", onClick (Press <| Operation Multiply) ] [ text "*" ]
         , button [ type_ "button", onClick (Press <| Operation Divide) ] [ text "/" ]
         , br [] []
-        , ul [] (List.map (li [] << List.singleton << text << toString) stack)
+        , ul [] (List.map (li [] << List.singleton << text << String.fromInt) stack)
         , br [] []
         , text message
         ]
@@ -109,11 +106,9 @@ view ({ stack, numStr, message } as model) =
 ---- PROGRAM ----
 
 
-main : Program Never Model Msg
 main =
-    Html.program
+    Browser.sandbox
         { view = view
         , init = init
         , update = update
-        , subscriptions = always Sub.none
         }
