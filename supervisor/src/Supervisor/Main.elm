@@ -123,7 +123,7 @@ update cliOptions msg model =
             case D.decodeString elmiModuleListDecoder typesJson of
                 Ok project ->
                     ( toRunCompilingRunner state
-                    , shellRequest "runner.elm with stepdefs from typesJson"
+                    , shellRequest "Runner.elm with stepdefs from typesJson"
                     )
 
                 Err error ->
