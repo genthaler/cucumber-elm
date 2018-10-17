@@ -1,4 +1,4 @@
-port module Supervisor.Ports exposing (Response(..), copyRequest, cucumberBootRequest, cucumberTestRequest, decoder, echoRequest, exit, fileListRequest, fileReadRequest, fileWriteRequest, moduleDirectoryRequest, rawResponse, request, response, shellRequest)
+port module Supervisor.Ports exposing (Response(..), copyRequest, cucumberBootRequest, cucumberTestRequest, decoder, echoRequest, exit, exportedInterfacesRequest, fileListRequest, fileReadRequest, fileWriteRequest, moduleDirectoryRequest, rawResponse, request, response, shellRequest)
 
 import Json.Decode as D
 import Json.Decode.Extra as JDE
@@ -75,6 +75,14 @@ shellRequest cmd =
         E.object
             [ ( "command", E.string "Shell" )
             , ( "cmd", E.string cmd )
+            ]
+
+
+exportedInterfacesRequest : Cmd msg
+exportedInterfacesRequest =
+    request <|
+        E.object
+            [ ( "command", E.string "ExportedInterfaces" )
             ]
 
 

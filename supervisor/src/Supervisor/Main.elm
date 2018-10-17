@@ -117,7 +117,7 @@ update cliOptions msg model =
                     ( model, exit 1 (D.errorToString error) )
 
         ( RunUpdatingUserCucumberElmJson state, Stdout typesJson ) ->
-            ( toRunGettingTypes state, shellRequest "npm run elmi" )
+            ( toRunGettingTypes state, exportedInterfacesRequest )
 
         ( RunGettingTypes ((State data) as state), Stdout typesJson ) ->
             case D.decodeString elmiModuleListDecoder typesJson of

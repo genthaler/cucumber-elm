@@ -9,13 +9,12 @@
   "scripts": {
     "prepare": "elm make src/RpnCalculator.elm --output=rpncalculator.js",
     "pretest": "elm-test",
-    "elm-cuke": "elm-cuke",
-    "test": "npm run elm-cuke"
+    "test": "elm-cuke"
   },
   "dependencies": {},
   "devDependencies": {
     "elm": "^0.19.0",
     "elm-test": "^0.19.0-beta10",
-    "elm-cuke": "../supervisor"
+    "cucumber-elm": "file:.."
   }
 }

@@ -4,7 +4,6 @@ import Expect
 import Gherkin exposing (..)
 import GherkinFixtures exposing (..)
 import GherkinParser
-import Parser exposing ((|.))
 import Test exposing (..)
 
 
