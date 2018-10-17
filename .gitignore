@@ -16,7 +16,7 @@ runner.js
 index.html
 supervisorWorker.js
 rpncalculator.js
-cucumber-elm-0.0.1.tgz
+*.tgz
 
 # elm-package generated files
 elm-stuff

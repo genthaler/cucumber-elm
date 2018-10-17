@@ -24,7 +24,7 @@
   ],
   "private": true,
   "scripts": {
-    "prepare": "pushd supervisor && npm pack --dry-run && popd",
+    "prepare": "pushd supervisor && npm i && popd",
     "test": "elm-test && pushd supervisor && npm test && popd && pushd example && npm test && popd"
   },
   "dependencies": {
