@@ -24,7 +24,7 @@ Here's what's needed:
         - StepDefs (using constructed elm.json)
 
 
-These are the steps taken for Init
+## Init Steps
 - get the file listing for the user project
 - assert that there is no cucumber folder under the user project
     - point to the README.md for how we expect to see the project structured
@@ -38,7 +38,7 @@ These are the steps taken for Init
 - generate sample feature, Stepdef module and Runner.elm to cucumber folder
 - run the thing!!
 
-These are the steps taken for Running
+## Running Steps
 - get the file listing for the user project
 - assert that there is a cucumber folder under the user project
     - point to the README.md for how we expect to see the project structured

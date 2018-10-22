@@ -78,7 +78,7 @@ update cliOptions msg model =
                 ( model, exit 1 "Couldn't find elm.json in the current directory" )
 
             else if not (List.member "cucumber" fileList) then
-                ( model, exit 1 "Couldn't find cucumber in the current directory" )
+                ( model, exit 1 "Couldn't find a cucumber folder in the current directory" )
 
             else
                 ( toRunGettingUserPackageInfo state
@@ -87,8 +87,8 @@ update cliOptions msg model =
 
         ( RunGettingUserPackageInfo state, Stdout stdout ) ->
             case D.decodeString Elm.Project.decoder stdout of
-                Ok project ->
-                    ( toRunGettingUserCucumberPackageInfo state project
+                Ok userProject ->
+                    ( toRunGettingUserCucumberPackageInfo state userProject
                     , fileReadRequest [ "cucumber", "elm.json" ]
                     )
 
@@ -97,8 +97,10 @@ update cliOptions msg model =
 
         ( RunGettingUserCucumberPackageInfo state, Stdout stdout ) ->
             case D.decodeString Elm.Project.decoder stdout of
-                Ok project ->
-                    ( toRunGettingModuleDir state project
+                Ok userCucumberProject ->
+                
+                    if 
+                    ( toRunGettingModuleDir state userCucumberProject
                     , moduleDirectoryRequest
                     )
 

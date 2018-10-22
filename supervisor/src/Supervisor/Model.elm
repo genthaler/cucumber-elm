@@ -135,7 +135,6 @@ toRunWatching (State state) gherkinFiles =
     RunWatching <| State { runOptions = state.runOptions }
 
 
-
 {-
    Decodes the output of elmi-to-json into a list of tuples of module name and list of names of methods for the module that implement Stepdefs
 -}

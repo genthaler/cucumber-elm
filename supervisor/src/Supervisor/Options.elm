@@ -28,9 +28,13 @@ type ReportFormat
     | Console
 
 
+version : String
+version ="1.2.3"
+
+
 config : Program.Config CliOptions
 config =
-    Program.config { version = "1.2.3" }
+    Program.config { version = version }
         |> Program.add
             (OptionsParser.buildSubCommand "init" Init
                 |> OptionsParser.end
