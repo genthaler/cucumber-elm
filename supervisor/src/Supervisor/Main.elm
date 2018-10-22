@@ -71,18 +71,25 @@ update cliOptions msg model =
             ( model, exit 0 "Init complete" )
 
         ( RunStart state, NoOp ) ->
-            Debug.log "RunStart" ( toRunGettingCurrentDirListing state, fileListRequest [ "." ] "*" )
+            ( toRunGettingCurrentDirListing state, fileListRequest [ "." ] "*" )
 
         ( RunGettingCurrentDirListing state, FileList fileList ) ->
-            ( toRunGettingUserPackageInfo state
-            , fileReadRequest [ "elm.json" ]
-            )
+            if not (List.member "elm.json" fileList) then
+                ( model, exit 1 "Couldn't find elm.json in the current directory" )
+
+            else if not (List.member "cucumber" fileList) then
+                ( model, exit 1 "Couldn't find cucumber in the current directory" )
+
+            else
+                ( toRunGettingUserPackageInfo state
+                , fileReadRequest [ "elm.json" ]
+                )
 
         ( RunGettingUserPackageInfo state, Stdout stdout ) ->
             case D.decodeString Elm.Project.decoder stdout of
                 Ok project ->
                     ( toRunGettingUserCucumberPackageInfo state project
-                    , fileReadRequest [ "elm.json" ]
+                    , fileReadRequest [ "cucumber", "elm.json" ]
                     )
 
                 Err error ->

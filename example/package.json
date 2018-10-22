@@ -11,10 +11,11 @@
     "pretest": "elm-test",
     "test": "elm-cuke basic_arithmetic.feature"
   },
-  "dependencies": {},
+  "dependencies": {
+    "cucumber-elm": "file:../cucumber-elm-0.0.1.tgz"
+  },
   "devDependencies": {
     "elm": "^0.19.0",
-    "elm-test": "^0.19.0-beta10",
-    "cucumber-elm": "file:../cucumber-elm-0.0.1.tgz"
+    "elm-test": "^0.19.0-beta10"
   }
 }

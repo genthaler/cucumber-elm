@@ -17,6 +17,7 @@
             "elm-community/json-extra": "4.0.0",
             "elm-community/list-extra": "8.0.0",
             "elm-community/result-extra": "2.2.1",
+            "jorgengranseth/elm-string-format": "1.0.1",
             "the-sett/elm-state-machines": "1.0.1"
         },
         "indirect": {

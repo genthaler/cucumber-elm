@@ -6,13 +6,11 @@ const glob = require("glob")
 const R = require('rambda')
 // const proxyquire = require('proxyquire')
 const compiler = require('node-elm-compiler')
-const compile = compiler.compile;
-const compileToString = compiler.compileToString;
-const supervisor = require(path.resolve(__dirname, 'supervisorWorker.js'));
-// const supervisor = require('cucumber-elm-supervisor');
-const requireFromString = require('require-from-string');
-
-console.log('BLAH')
+const compile = compiler.compile
+const compileToString = compiler.compileToString
+const supervisor = require(path.resolve(__dirname, 'supervisorWorker.js'))
+// const supervisor = require('cucumber-elm-supervisor')
+const requireFromString = require('require-from-string')
 
 const supervisorWorker = supervisor.Elm.Supervisor.Main.init({
   flags: {
@@ -20,31 +18,27 @@ const supervisorWorker = supervisor.Elm.Supervisor.Main.init({
   }
 })
 
-console.log("1")
-
-const send = supervisorWorker.ports.rawResponse.send;
-
-console.log("2")
+const send = supervisorWorker.ports.rawResponse.send
 
 supervisorWorker.ports.request.subscribe(
   cmd => {
     switch (cmd.command) {
       case "Echo":
-        shell.echo(cmd.message);
-        break;
+        shell.echo(cmd.message)
+        break
 
       case "FileRead":
-        send(shell.cat(path.resolve.apply(null, cmd.paths)));
-        break;
+        send(shell.cat(path.resolve.apply(null, cmd.paths)))
+        break
 
       case "ExportedInterfaces":
-        console.log('HELLO ' + path.resolve(__dirname, 'node_modules', '.bin', 'elmi-to-json'));
-        send(shell.exec(path.resolve(__dirname, 'node_modules', '.bin', 'elmi-to-json')));
-        break;
+        const elmiToJsonPath = require("elmi-to-json").paths["elmi-to-json"]
+        send(shell.exec(elmiToJsonPath, { cwd: "cucumber" }))
+        break
 
       case "FileWrite":
-        send(shell.echo(cmd.fileContent).to(path.resolve.apply(null, cmd.paths)));
-        break;
+        send(shell.echo(cmd.fileContent).to(path.resolve.apply(null, cmd.paths)))
+        break
 
       case "FileList":
         glob(cmd.glob, { cwd: path.resolve.apply(null, cmd.cwd) }, (er, files) => {
@@ -52,38 +46,38 @@ supervisorWorker.ports.request.subscribe(
             send({
               code: 0,
               fileList: files
-            });
+            })
           } else {
             send({
               code: 1,
               stderr: er.message
-            });
+            })
           }
-        });
-        break;
+        })
+        break
 
       case "ModuleDirectory":
         send({
           code: 0,
           fileList: [__dirname]
-        });
-        break;
+        })
+        break
 
       case "Copy":
-        console.log("Copy");
-        send(shell.cp('-rf', path.resolve.apply(null, cmd.from), path.resolve.apply(null, cmd.to)));
-        break;
+        console.log("Copy")
+        send(shell.cp('-rf', path.resolve.apply(null, cmd.from), path.resolve.apply(null, cmd.to)))
+        break
 
       case "Shell":
-        send(shell.exec(cmd.cmd));
-        break;
+        send(shell.exec(cmd.cmd))
+        break
 
       case "Require":
-        send(shell.echo(cmd.message));
-        break;
+        send(shell.echo(cmd.message))
+        break
 
       case "Compile":
-        // var result = compiler.compileToStringSync(prependFixturesDir("Parent.elm"), opts);
+        // var result = compiler.compileToStringSync(prependFixturesDir("Parent.elm"), opts)
         compiler.compileToString(path.resolve(source), {
           yes: true,
           verbose: true,
@@ -99,38 +93,38 @@ supervisorWorker.ports.request.subscribe(
             result: '',
             error: error,
             success: false
-          }));
-        break;
+          }))
+        break
 
       case "CucumberBoot":
         (glueFunctionName, runnerSource) => {
-          let runnerWorker = requireFromString(runnerSource).Runner.worker();
-          supervisorWorker.ports.cucumberRunRequest.subscribe(runnerWorker.ports.cucumberRunRequest.send);
-          supervisorWorker.ports.cucumberRunResponse.subscribe(runnerWorker.ports.cucumberRunResponse.send);
+          let runnerWorker = requireFromString(runnerSource).Runner.worker()
+          supervisorWorker.ports.cucumberRunRequest.subscribe(runnerWorker.ports.cucumberRunRequest.send)
+          supervisorWorker.ports.cucumberRunResponse.subscribe(runnerWorker.ports.cucumberRunResponse.send)
           send({
             exitCode: 0
-          });
-        };
-        break;
+          })
+        }
+        break
 
       case "Exit":
-        shell.echo(cmd.message);
-        shell.exit(cmd.exitCode);
-        break;
+        shell.echo(cmd.message)
+        shell.exit(cmd.exitCode)
+        break
 
       default:
         send({
           exitCode: 1,
           stderr: cmd.command + " sent on the wrong port"
-        });
-        break;
+        })
+        break
 
     }
 
-  });
+  })
 
 
-// let runner = require(runnerJs);
+// let runner = require(runnerJs)
 // proxyquire.noPreserveCache()
 // let runnerWorker = proxyquire(resolvedRunnerLocation).Runner.worker()
 // proxyquire.preserveCache()
