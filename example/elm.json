@@ -17,7 +17,8 @@
             "elm/parser": "1.1.0",
             "elm/project-metadata-utils": "1.0.0",
             "elm/regex": "1.0.0",
-            "the-sett/elm-state-machines": "1.0.1"
+            "the-sett/elm-state-machines": "1.0.1",
+            "genthaler/cucumber-elm": "1.0.0"
         },
         "indirect": {
             "elm/time": "1.0.0",

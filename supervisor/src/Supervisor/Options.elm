@@ -1,58 +1,34 @@
-module Supervisor.Options exposing (CliOptions(..), ReportFormat(..), RunOptions, config)
+module Supervisor.Options exposing (config)
 
 import Cli.Option as Option
-import Cli.OptionsParser as OptionsParser exposing (with)
+import Cli.OptionsParser as OptionsParser
 import Cli.Program as Program
-import Json.Decode exposing (..)
-
-
-type CliOptions
-    = Init
-    | RunTests RunOptions
-
-
-type alias RunOptions =
-    { maybeGlueArgumentsFunction : Maybe String
-    , maybeTags : Maybe String
-    , maybeCompilerPath : Maybe String
-    , maybeDependencies : Maybe String
-    , watch : Bool
-    , reportFormat : ReportFormat
-    , testFiles : List String
-    }
-
-
-type ReportFormat
-    = Json
-    | Junit
-    | Console
-
-
-version : String
-version ="1.2.3"
+import Supervisor.Model exposing (..)
+import Supervisor.Package exposing (..)
 
 
 config : Program.Config CliOptions
 config =
-    Program.config { version = version }
+    Program.config { version = cucumberVersionString }
         |> Program.add
-            (OptionsParser.buildSubCommand "init" Init
-                |> OptionsParser.end
+            (OptionsParser.buildSubCommand "init" InitOptions
+                |> OptionsParser.with (Option.optionalKeywordArg "compiler")
+                |> OptionsParser.map Init
             )
         |> Program.add
             (OptionsParser.build RunOptions
-                |> with
+                |> OptionsParser.with
                     (Option.optionalKeywordArg "glue-arguments-function"
                         |> Option.validateMapIfPresent Ok
                     )
-                |> with
+                |> OptionsParser.with
                     (Option.optionalKeywordArg "tags"
                         |> Option.validateMapIfPresent Ok
                     )
-                |> with (Option.optionalKeywordArg "compiler")
-                |> with (Option.optionalKeywordArg "add-dependencies")
-                |> with (Option.flag "watch")
-                |> with
+                |> OptionsParser.with (Option.optionalKeywordArg "compiler")
+                |> OptionsParser.with (Option.optionalKeywordArg "add-dependencies")
+                |> OptionsParser.with (Option.flag "watch")
+                |> OptionsParser.with
                     (Option.optionalKeywordArg "report"
                         |> Option.withDefault "console"
                         |> Option.oneOf Console

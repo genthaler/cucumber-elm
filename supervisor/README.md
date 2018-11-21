@@ -28,7 +28,7 @@ Here's what's needed:
 - get the file listing for the user project
 - assert that there is no cucumber folder under the user project
     - point to the README.md for how we expect to see the project structured
-- generate a cucumebr folder under the user project
+- generate a cucumber folder under the user project
 - assert that there is an elm.json file under the user project
 - get elm.json for the user project
 - parse the elm.json
@@ -64,14 +64,6 @@ Here's what's needed:
     - yep, that seems better, since user would be compiling step defs anyway. 
     - still need to add functions that implement StepDef
     - can I get node-elm-compiler to specify an elm.json? then can parse the given one, add src directories and dependencies and use that instead of overwriting the existing one. If --watch, will need to watch elm.json as well. NO we can't
-
-For init:
-- construct an elm-json 
-    - with user project dependencies
-    - genthaler/cucumber-elm
-- write elm-json to cucumber folder
-
-
 
 # End state
 - need a cucumber folder that can be used as a template

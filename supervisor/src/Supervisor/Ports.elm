@@ -1,4 +1,4 @@
-port module Supervisor.Ports exposing (Response(..), copyRequest, cucumberBootRequest, cucumberTestRequest, decoder, echoRequest, exit, exportedInterfacesRequest, fileListRequest, fileReadRequest, fileWriteRequest, moduleDirectoryRequest, rawResponse, request, response, shellRequest)
+port module Supervisor.Ports exposing (Response(..), cucumberBootRequest, cucumberTestRequest, decoder, echoRequest, exit, exportedInterfacesRequest, fileListRequest, fileReadRequest, fileWriteRequest, makeDirectoriesRequest, moduleDirectoryRequest, rawResponse, request, response, shellRequest)
 
 import Json.Decode as D
 import Json.Decode.Extra as JDE
@@ -22,13 +22,18 @@ fileReadRequest paths =
             ]
 
 
-fileWriteRequest : List String -> String -> Cmd msg
-fileWriteRequest paths fileContent =
+fileWriteRequest : List ( List String, String ) -> Cmd msg
+fileWriteRequest files =
     request <|
         E.object
             [ ( "command", E.string "FileWrite" )
-            , ( "paths", E.list E.string paths )
-            , ( "fileContent", E.string fileContent )
+            , ( "files"
+              , E.list
+                    (\( path, content ) ->
+                        E.object [ ( "path", E.list E.string path ), ( "content", E.string content ) ]
+                    )
+                    files
+              )
             ]
 
 
@@ -50,13 +55,12 @@ moduleDirectoryRequest =
             ]
 
 
-copyRequest : List String -> List String -> Cmd msg
-copyRequest from to =
+makeDirectoriesRequest : List (List String) -> Cmd msg
+makeDirectoriesRequest paths =
     request <|
         E.object
-            [ ( "command", E.string "Copy" )
-            , ( "to", E.list E.string from )
-            , ( "from", E.list E.string to )
+            [ ( "command", E.string "MakeDirectory" )
+            , ( "paths", E.list (E.list E.string) paths )
             ]
 
 

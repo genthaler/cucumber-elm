@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "prepare": "elm make src/RpnCalculator.elm --output=rpncalculator.js",
-    "pretest": "elm-test",
+    "pretest2": "elm-test",
     "test": "elm-cuke basic_arithmetic.feature"
   },
   "dependencies": {

@@ -1,10 +1,15 @@
-module Supervisor.Model exposing (Model(..), elmiModuleListDecoder, toInitCopyingTemplate, toInitGettingCurrentDirListing, toInitGettingModuleDir, toInitStart, toRunCompilingRunner, toRunGettingCurrentDirListing, toRunGettingModuleDir, toRunGettingModulePackageInfo, toRunGettingTypes, toRunGettingUserCucumberPackageInfo, toRunGettingUserPackageInfo, toRunResolvingGherkinFiles, toRunStart, toRunStartingRunner, toRunTestingGherkinFiles, toRunUpdatingUserCucumberElmJson, toRunWatching)
+module Supervisor.Model exposing (CliOptions(..), InitOptions, Model(..), ReportFormat(..), RunOptions, toInitGettingCurrentDirListing, toInitGettingUserProjectInfo, toInitMakingDirectories, toInitStart, toInitWritingTemplates, toRunCompilingRunner, toRunGettingCurrentDirListing, toRunGettingModuleDir, toRunGettingModulePackageInfo, toRunGettingTypes, toRunGettingUserCucumberProjectInfo, toRunGettingUserProjectInfo, toRunResolvingGherkinFiles, toRunStart, toRunStartingRunner, toRunTestingGherkinFiles, toRunUpdatingUserCucumberElmJson, toRunWatching)
 
 import Dict
-import Elm.Project exposing (..)
+import Elm.Constraint
+import Elm.Package
+import Elm.Project
+import Elm.Version
 import Json.Decode as D
+import Set
 import StateMachine exposing (Allowed, State(..), map)
-import Supervisor.Options exposing (RunOptions)
+import String.Format
+import Supervisor.Package exposing (..)
 
 
 
@@ -17,17 +22,44 @@ import Supervisor.Options exposing (RunOptions)
 -}
 
 
+type CliOptions
+    = Init InitOptions
+    | RunTests RunOptions
+
+
+type alias InitOptions =
+    { maybeCompilerPath : Maybe String }
+
+
+type alias RunOptions =
+    { maybeGlueArgumentsFunction : Maybe String
+    , maybeTags : Maybe String
+    , maybeCompilerPath : Maybe String
+    , maybeDependencies : Maybe String
+    , watch : Bool
+    , reportFormat : ReportFormat
+    , testFiles : List String
+    }
+
+
+type ReportFormat
+    = Json
+    | Junit
+    | Console
+
+
 type Model
-    = InitStart (State { initGettingModuleDir : Allowed } {})
-    | InitGettingModuleDir (State { initGettingCurrentDirListing : Allowed } {})
-    | InitGettingCurrentDirListing (State { initCopyingTemplate : Allowed } { moduleDir : String })
-    | InitCopyingTemplate (State {} {})
+    = InitStart (State { initGettingCurrentDirListing : Allowed } { maybeCompilerPath : Maybe String })
+    | InitGettingCurrentDirListing (State { initMakingDirectories : Allowed } { maybeCompilerPath : Maybe String })
+    | InitMakingDirectories (State { initGettingUserProjectInfo : Allowed } { maybeCompilerPath : Maybe String })
+    | InitGettingUserProjectInfo (State { initWritingTemplates : Allowed } { maybeCompilerPath : Maybe String })
+    | InitWritingTemplates (State {} {maybeCompilerPath : Maybe String})
     | RunStart (State { runGettingCurrentDirListing : Allowed } { runOptions : RunOptions })
-    | RunGettingCurrentDirListing (State { runGettingUserPackageInfo : Allowed } { runOptions : RunOptions })
-    | RunGettingUserPackageInfo (State { runGettingUserCucumberPackageInfo : Allowed } { runOptions : RunOptions })
-    | RunGettingUserCucumberPackageInfo (State { runGettingModuleDir : Allowed } { runOptions : RunOptions, userProject : Project })
-    | RunGettingModuleDir (State { runGettingModulePackageInfo : Allowed } { runOptions : RunOptions, userProject : Project, userCucumberProject : Project })
-    | RunGettingModulePackageInfo (State { runUpdatingUserCucumberElmJson : Allowed } { runOptions : RunOptions, userProject : Project, userCucumberProject : Project })
+    | RunGettingCurrentDirListing (State { runGettingUserProjectInfo : Allowed } { runOptions : RunOptions })
+    | RunGettingUserProjectInfo (State { runGettingUserCucumberProjectInfo : Allowed } { runOptions : RunOptions })
+    | RunGettingUserCucumberProjectInfo (State { runGettingModuleDir : Allowed } { runOptions : RunOptions, userProject : Elm.Project.Project })
+    | RunGettingModuleDir (State { runGettingModulePackageInfo : Allowed } { runOptions : RunOptions, userProject : Elm.Project.Project, userCucumberProject : Elm.Project.Project })
+    | RunGettingModulePackageInfo (State { runUpdatingUserCucumberElmJson : Allowed } { runOptions : RunOptions, userProject : Elm.Project.Project, userCucumberProject : Elm.Project.Project })
     | RunUpdatingUserCucumberElmJson (State { runGettingTypes : Allowed } { runOptions : RunOptions })
     | RunGettingTypes (State { runCompilingRunner : Allowed } { runOptions : RunOptions })
     | RunCompilingRunner (State { runStartingRunner : Allowed } { runOptions : RunOptions })
@@ -36,29 +68,34 @@ type Model
     | RunTestingGherkinFiles (State { runWatching : Allowed } { runOptions : RunOptions, remainingGherkinFiles : List String, testedGherkinFiles : List String })
     | RunWatching (State { runResolvingGherkinFiles : Allowed, runCompilingRunner : Allowed } { runOptions : RunOptions })
 
-
+ 
 
 -- Init state constructors.
 
 
-toInitStart : Model
-toInitStart =
-    InitStart <| State {}
+toInitStart : InitOptions -> Model
+toInitStart initOptions =
+    InitStart <| State { maybeCompilerPath = initOptions.maybeCompilerPath }
 
 
-toInitGettingModuleDir : State { a | initGettingModuleDir : Allowed } {} -> Model
-toInitGettingModuleDir (State state) =
-    InitGettingModuleDir <| State state
+toInitGettingCurrentDirListing : State { a | initGettingCurrentDirListing : Allowed } { maybeCompilerPath : Maybe String } -> Model
+toInitGettingCurrentDirListing (State state) =
+    InitGettingCurrentDirListing <| State state
 
 
-toInitGettingCurrentDirListing : State { a | initGettingCurrentDirListing : Allowed } {} -> String -> Model
-toInitGettingCurrentDirListing state moduleDir =
-    InitGettingCurrentDirListing <| State { moduleDir = moduleDir }
+toInitMakingDirectories : State { a | initMakingDirectories : Allowed } { maybeCompilerPath : Maybe String } -> Model
+toInitMakingDirectories (State state) =
+    InitMakingDirectories <| State state
 
 
-toInitCopyingTemplate : State { a | initCopyingTemplate : Allowed } b -> Model
-toInitCopyingTemplate state =
-    InitCopyingTemplate <| State <| {}
+toInitGettingUserProjectInfo : State { a | initGettingUserProjectInfo : Allowed } { maybeCompilerPath : Maybe String } -> Model
+toInitGettingUserProjectInfo (State state) =
+    InitGettingUserProjectInfo <| State state
+
+
+toInitWritingTemplates : State { a | initWritingTemplates : Allowed } { maybeCompilerPath : Maybe String } -> Model
+toInitWritingTemplates (State state) =
+    InitWritingTemplates <| State state
 
 
 
@@ -75,22 +112,22 @@ toRunGettingCurrentDirListing (State state) =
     RunGettingCurrentDirListing <| State state
 
 
-toRunGettingUserPackageInfo : State { a | runGettingUserPackageInfo : Allowed } { runOptions : RunOptions } -> Model
-toRunGettingUserPackageInfo (State state) =
-    RunGettingUserPackageInfo <| State state
+toRunGettingUserProjectInfo : State { a | runGettingUserProjectInfo : Allowed } { runOptions : RunOptions } -> Model
+toRunGettingUserProjectInfo (State state) =
+    RunGettingUserProjectInfo <| State state
 
 
-toRunGettingUserCucumberPackageInfo : State { a | runGettingUserCucumberPackageInfo : Allowed } { runOptions : RunOptions } -> Project -> Model
-toRunGettingUserCucumberPackageInfo (State state) userProject =
-    RunGettingUserCucumberPackageInfo <| State { runOptions = state.runOptions, userProject = userProject }
+toRunGettingUserCucumberProjectInfo : State { a | runGettingUserCucumberProjectInfo : Allowed } { runOptions : RunOptions } -> Elm.Project.Project -> Model
+toRunGettingUserCucumberProjectInfo (State state) userProject =
+    RunGettingUserCucumberProjectInfo <| State { runOptions = state.runOptions, userProject = userProject }
 
 
-toRunGettingModuleDir : State { a | runGettingModuleDir : Allowed } { runOptions : RunOptions, userProject : Project } -> Project -> Model
+toRunGettingModuleDir : State { a | runGettingModuleDir : Allowed } { runOptions : RunOptions, userProject : Elm.Project.Project } -> Elm.Project.Project -> Model
 toRunGettingModuleDir (State state) userCucumberProject =
     RunGettingModuleDir <| State { runOptions = state.runOptions, userProject = state.userProject, userCucumberProject = userCucumberProject }
 
 
-toRunGettingModulePackageInfo : State { a | runGettingModulePackageInfo : Allowed } { runOptions : RunOptions, userProject : Project, userCucumberProject : Project } -> Model
+toRunGettingModulePackageInfo : State { a | runGettingModulePackageInfo : Allowed } { runOptions : RunOptions, userProject : Elm.Project.Project, userCucumberProject : Elm.Project.Project } -> Model
 toRunGettingModulePackageInfo (State state) =
     RunGettingModulePackageInfo <| State state
 
@@ -133,43 +170,3 @@ toRunTestingGherkinFiles (State state) gherkinFiles =
 toRunWatching : State { a | runWatching : Allowed } { b | runOptions : RunOptions } -> List String -> Model
 toRunWatching (State state) gherkinFiles =
     RunWatching <| State { runOptions = state.runOptions }
-
-
-{-
-   Decodes the output of elmi-to-json into a list of tuples of module name and list of names of methods for the module that implement Stepdefs
--}
-
-
-elmiModuleListDecoder : D.Decoder (List ( String, List String ))
-elmiModuleListDecoder =
-    D.list <|
-        D.map2 Tuple.pair
-            (D.field "moduleName" D.string)
-            (D.field "interface" <|
-                D.field "types" <|
-                    D.map
-                        (List.filterMap
-                            (\( typeName, argTypeList ) ->
-                                argTypeList
-                                    |> List.reverse
-                                    |> List.head
-                                    |> Maybe.andThen
-                                        (\( moduleName, name ) ->
-                                            case ( moduleName, name ) of
-                                                ( "Cucumber.StepDefs", "StepDefFunctionResult" ) ->
-                                                    Just typeName
-
-                                                _ ->
-                                                    Nothing
-                                        )
-                            )
-                        )
-                    <|
-                        D.keyValuePairs <|
-                            D.field "annotation" <|
-                                D.field "lambda" <|
-                                    D.list <|
-                                        D.map2 Tuple.pair
-                                            (D.field "moduleName" <| D.field "module" D.string)
-                                            (D.field "name" D.string)
-            )

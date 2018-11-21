@@ -3,7 +3,7 @@ module SupervisorTest exposing (suite)
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
 import Json.Decode as D
-import Supervisor.Model exposing (..)
+import Supervisor.Package exposing (..)
 import Test exposing (..)
 
 

@@ -4,10 +4,13 @@ import Cli.Program as Program
 import Elm.Project exposing (..)
 import Json.Decode as D
 import Json.Encode as E
+import Result.Extra
 import StateMachine exposing (State(..), map, untag)
 import Supervisor.Model exposing (..)
-import Supervisor.Options exposing (..)
+import Supervisor.Options exposing (config)
+import Supervisor.Package exposing (..)
 import Supervisor.Ports exposing (..)
+import Supervisor.Template exposing (..)
 import Task
 
 
@@ -19,12 +22,12 @@ message msg =
 init : Program.FlagsIncludingArgv flags -> CliOptions -> ( Model, Cmd Response )
 init flags options =
     case options of
-        Init ->
+        Init initOptions ->
             let
                 initMessage =
                     "Initializing test suite"
             in
-            ( toInitStart, Cmd.batch [ echoRequest initMessage, message NoOp ] )
+            ( toInitStart initOptions, Cmd.batch [ echoRequest initMessage, message NoOp ] )
 
         RunTests runOptions ->
             let
@@ -44,121 +47,134 @@ init flags options =
 
 
 update : CliOptions -> Response -> Model -> ( Model, Cmd Response )
-update cliOptions msg model =
-    let
-        crash errorMessage =
-            ( model, exit 1 errorMessage )
-    in
-    case ( model, msg ) of
+update _ msg model =
+    (case Debug.log (Debug.toString msg) ( model, msg ) of
         ( _, Stderr stderr ) ->
-            ( model, exit 1 stderr )
+            Err stderr
 
         ( InitStart state, _ ) ->
-            ( toInitGettingModuleDir state, moduleDirectoryRequest )
-
-        ( InitGettingModuleDir state, FileList fileList ) ->
-            case fileList of
-                [ moduleDir ] ->
-                    ( toInitGettingCurrentDirListing state moduleDir, fileListRequest [ moduleDir ] "*" )
-
-                _ ->
-                    crash "expecting a single file as module directory"
+            Ok ( toInitGettingCurrentDirListing state, fileListRequest [ "." ] "*" )
 
         ( InitGettingCurrentDirListing ((State data) as state), FileList fileList ) ->
-            ( toInitCopyingTemplate state, copyRequest [ data.moduleDir, "cucumber" ] [ "." ] )
+            if not (List.member "elm.json" fileList) then
+                Err "Couldn't find elm.json in the current directory"
 
-        ( InitCopyingTemplate state, Stdout stdout ) ->
-            ( model, exit 0 "Init complete" )
+            else if List.member "cucumber" fileList then
+                Err "There is already a cucumber folder in the current directory"
+
+            else
+                Ok ( toInitMakingDirectories state, makeDirectoriesRequest [ [ "cucumber", "src" ], [ "cucumber", "features" ] ] )
+
+        ( InitMakingDirectories state, Stdout stdout ) ->
+            Ok ( toInitGettingUserProjectInfo state, fileReadRequest [ "elm.json" ] )
+
+        ( InitGettingUserProjectInfo state, Stdout stdout ) ->
+            stdout
+                |> parseProject
+                |> Result.andThen mapUserProjectToCucumberProject
+                |> Result.map
+                    (\cucumberProject ->
+                        ( toInitWritingTemplates state
+                        , fileWriteRequest
+                            [ ( [ "cucumber", "elm.json" ], cucumberProject |> Elm.Project.encode |> E.encode 4 )
+                            , ( [ "cucumber", "src", "ExampleStepDefs.elm" ], templateStepDefs )
+                            , ( [ "cucumber", "features", "example.feature" ], templateFeature )
+                            ]
+                        )
+                    )
+
+        ( InitWritingTemplates (State state), Stdout stdout ) ->
+            Ok ( toRunStart (RunOptions Nothing Nothing state.maybeCompilerPath Nothing False Console [ "example.feature" ]), message NoOp )
 
         ( RunStart state, NoOp ) ->
-            ( toRunGettingCurrentDirListing state, fileListRequest [ "." ] "*" )
+            Ok ( toRunGettingCurrentDirListing state, fileListRequest [ "." ] "*" )
 
         ( RunGettingCurrentDirListing state, FileList fileList ) ->
             if not (List.member "elm.json" fileList) then
-                ( model, exit 1 "Couldn't find elm.json in the current directory" )
+                Err "Couldn't find elm.json in the current directory"
 
             else if not (List.member "cucumber" fileList) then
-                ( model, exit 1 "Couldn't find a cucumber folder in the current directory" )
+                Err "Couldn't find a cucumber folder in the current directory"
 
             else
-                ( toRunGettingUserPackageInfo state
-                , fileReadRequest [ "elm.json" ]
-                )
-
-        ( RunGettingUserPackageInfo state, Stdout stdout ) ->
-            case D.decodeString Elm.Project.decoder stdout of
-                Ok userProject ->
-                    ( toRunGettingUserCucumberPackageInfo state userProject
-                    , fileReadRequest [ "cucumber", "elm.json" ]
+                Ok
+                    ( toRunGettingUserProjectInfo state
+                    , fileReadRequest [ "elm.json" ]
                     )
 
-                Err error ->
-                    ( model, exit 1 (D.errorToString error) )
-
-        ( RunGettingUserCucumberPackageInfo state, Stdout stdout ) ->
-            case D.decodeString Elm.Project.decoder stdout of
-                Ok userCucumberProject ->
-                
-                    if 
-                    ( toRunGettingModuleDir state userCucumberProject
-                    , moduleDirectoryRequest
+        ( RunGettingUserProjectInfo state, Stdout stdout ) ->
+            parseProject stdout
+                |> Result.map
+                    (\userProject ->
+                        ( toRunGettingUserCucumberProjectInfo state userProject
+                        , fileReadRequest [ "cucumber", "elm.json" ]
+                        )
                     )
 
-                Err error ->
-                    ( model, exit 1 (D.errorToString error) )
+        ( RunGettingUserCucumberProjectInfo state, Stdout stdout ) ->
+            parseProject stdout
+                |> Result.map
+                    (\userCucumberProject ->
+                        ( toRunGettingModuleDir state userCucumberProject
+                        , moduleDirectoryRequest
+                        )
+                    )
 
         ( RunGettingModuleDir state, FileList fileList ) ->
             case fileList of
                 [ moduleDir ] ->
-                    ( toRunGettingModulePackageInfo state, fileReadRequest [ moduleDir, "elm.json" ] )
+                    Ok ( toRunGettingModulePackageInfo state, fileReadRequest [ moduleDir, "elm.json" ] )
 
                 _ ->
-                    crash "expecting a single file as module directory"
+                    Err "expecting a single file as module directory"
 
         ( RunGettingModulePackageInfo state, Stdout stdout ) ->
-            case D.decodeString Elm.Project.decoder stdout of
-                Ok project ->
-                    ( toRunUpdatingUserCucumberElmJson state
-                    , fileWriteRequest [ "elm.json" ] (E.encode 4 <| Elm.Project.encode project)
+            D.decodeString Elm.Project.decoder stdout
+                |> Result.mapError D.errorToString
+                |> Result.map
+                    (\project ->
+                        ( toRunUpdatingUserCucumberElmJson state
+                        , fileWriteRequest [ ( [ "elm.json" ], E.encode 4 <| Elm.Project.encode project ) ]
+                        )
                     )
-
-                Err error ->
-                    ( model, exit 1 (D.errorToString error) )
 
         ( RunUpdatingUserCucumberElmJson state, Stdout typesJson ) ->
-            ( toRunGettingTypes state, exportedInterfacesRequest )
+            Ok ( toRunGettingTypes state, exportedInterfacesRequest )
 
         ( RunGettingTypes ((State data) as state), Stdout typesJson ) ->
-            case D.decodeString elmiModuleListDecoder typesJson of
-                Ok project ->
-                    ( toRunCompilingRunner state
-                    , shellRequest "Runner.elm with stepdefs from typesJson"
+            typesJson
+                |> D.decodeString elmiModuleListDecoder
+                |> Result.mapError D.errorToString
+                |> Result.map
+                    (\project ->
+                        ( toRunCompilingRunner state
+                        , shellRequest "Runner.elm with stepdefs from typesJson"
+                        )
                     )
 
-                Err error ->
-                    ( model, exit 1 (D.errorToString error) )
-
         ( RunCompilingRunner state, NoOp ) ->
-            ( toRunStartingRunner state, Cmd.none )
+            Ok ( toRunStartingRunner state, Cmd.none )
 
         ( RunStartingRunner state, NoOp ) ->
-            ( toRunResolvingGherkinFiles state, Cmd.none )
+            Ok ( toRunResolvingGherkinFiles state, Cmd.none )
 
         ( RunResolvingGherkinFiles state, NoOp ) ->
-            ( toRunTestingGherkinFiles state [], Cmd.none )
+            Ok ( toRunTestingGherkinFiles state [], Cmd.none )
 
         ( RunTestingGherkinFiles state, NoOp ) ->
-            ( toRunWatching state [], Cmd.none )
+            Ok ( toRunWatching state [], Cmd.none )
 
         ( RunWatching state, NoOp ) ->
-            ( toRunCompilingRunner state, Cmd.none )
+            Ok ( toRunCompilingRunner state, Cmd.none )
 
         ( state, cmd ) ->
             let
                 _ =
                     Debug.log "( state, cmd )" ( state, cmd )
             in
-            ( model, exit 1 "Invalid State Transition" )
+            Err "Invalid State Transition"
+    )
+        |> Result.Extra.extract (\err -> ( model, exit 1 err ))
 
 
 subscriptions : Model -> Sub Response
