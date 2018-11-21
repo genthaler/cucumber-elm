@@ -1,0 +1,21 @@
+{
+  "name": "cucumber-elm-example",
+  "description": "Example module for Cucumber in Elm",
+  "version": "0.0.1",
+  "license": "BSD3",
+  "author": "Gunther Enthaler <genthaler@users.noreply.github.com>",
+  "main": "rpncalculator.js",
+  "private": true,
+  "scripts": {
+    "prepare": "elm make src/RpnCalculator.elm --output=rpncalculator.js",
+    "pretest2": "elm-test",
+    "test": "elm-cuke basic_arithmetic.feature"
+  },
+  "dependencies": {
+    "cucumber-elm": "file:../cucumber-elm-0.0.1.tgz"
+  },
+  "devDependencies": {
+    "elm": "^0.19.0",
+    "elm-test": "^0.19.0-beta10"
+  }
+}

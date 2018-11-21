@@ -1,4 +1,4 @@
-module GherkinMd exposing (..)
+module GherkinMd exposing (asAMd, backgroundMd, examplesMd, featureMd, iWantToMd, inOrderToMd, newline, scenarioMd, stepArgMd, stepMd, tableMd, tagMd, tagsMd)
 
 {-| This module prints out a Gherkin AST in Markdown format, parseable by the elm-markdown parser
 -}
@@ -76,25 +76,26 @@ tableMd (Table header body) =
         constructRow tagbase row =
             row |> List.map (tag tagbase) |> String.join "" |> tag "tr"
     in
-        constructRow "th" header
-            :: (List.map (constructRow "td") body)
-            |> String.join newline
-            |> tag "table"
+    constructRow "th" header
+        :: List.map (constructRow "td") body
+        |> String.join newline
+        |> tag "table"
 
 
 stepMd : Step -> String
 stepMd (Step stepType detail stepArg) =
     let
-        stepArgMd_ name detail theStepArg =
+        stepArgMd_ name detail2 theStepArg =
             "**"
                 ++ name
                 ++ "** "
-                ++ detail
+                ++ detail2
                 ++ newline
                 ++ newline
-                ++ case stepArgMd theStepArg of
-                    element ->
-                        element
+                ++ (case stepArgMd theStepArg of
+                        element ->
+                            element
+                   )
 
         stepTypeDesc =
             case stepType of
@@ -113,9 +114,9 @@ stepMd (Step stepType detail stepArg) =
                 But ->
                     "But"
     in
-        stepArgMd_ stepTypeDesc detail stepArg
-            ++ newline
-            ++ newline
+    stepArgMd_ stepTypeDesc detail stepArg
+        ++ newline
+        ++ newline
 
 
 examplesMd : Examples -> String
@@ -186,3 +187,8 @@ featureMd feature =
                 ++ (String.join (newline ++ newline) <|
                         List.map scenarioMd scenarios
                    )
+
+
+flip : (a -> b -> c) -> b -> a -> c
+flip f b a =
+    f a b

@@ -1,6 +1,6 @@
-module Gherkin exposing (..)
+module Gherkin exposing (AsA(..), Background(..), Examples(..), Feature(..), IWantTo(..), InOrderTo(..), Row, Scenario(..), Step(..), StepArg(..), StepType(..), Table(..), Tag(..))
 
-{-| This library describes a datastructure for the [Gherkin] *ubiquitous language*.
+{-| This library describes a datastructure for the [Gherkin] _ubiquitous language_.
 
 It's intended mainly to be used as the output (AST) of a Gherkin parser,
 but I've tried to make it usable as a DSL in its own right.
@@ -9,23 +9,6 @@ Have a look at GherkinTest in the tests folder for an example of DSL usage.
 In proper Gherkin, it's possible to have multiple languages supported.
 The intention is that this will be supported in the plain text version,
 similarly to extant ports in other languages.
-
-[Gherkin]: https://github.com/cucumber/cucumber/wiki/Gherkin
-
-
-# Feature
-
-@docs Feature, AsA, InOrderTo, IWantTo, Background
-
-
-# Scenario
-
-@docs Scenario, Examples
-
-
-# Step
-
-@docs Step, StepArg, DataTable,
 
 -}
 
@@ -86,9 +69,9 @@ type Scenario
 
 {-| A Step describes an action or assertion.
 
-When automated, the Steps are executed against a list of Glue functions;
-the String and StepArg are passed to each Glue function; if there's a match,
-the Glue function is executed with those as arguments.
+When automated, the Steps are executed against a list of StepDef functions;
+the String and StepArg are passed to each StepDef function; if there's a match,
+the StepDef function is executed with those as arguments.
 There is no functional distinction between Given, When, Then, And or But
 
 See the Cucumber module for examples.
@@ -108,7 +91,7 @@ type StepType
     | But
 
 
-{-| An argument to the Glue function, that's not extracted from the Step description.
+{-| An argument to the StepDef function, that's not extracted from the Step description.
 
 Available options are DataTables and DocStrings.
 

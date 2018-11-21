@@ -1,46 +1,43 @@
 {
-	"name": "cucumber-elm",
-	"description": "An implementation of Cucumber in Elm",
-	"version": "0.0.1",
-	"license": "BSD3",
-	"author": "Gunther Enthaler <genthaler@users.noreply.github.com>",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/genthaler/cucumber-elm"
-	},
-	"bugs": {
-		"url": "https://github.com/genthaler/cucumber-elm/issues"
-	},
-	"keywords": [
-		"elm",
-		"bdd",
-		"cucumber",
-		"gherkin"
-	],
-	"private": true,
-	"build": "elm-package install --yes",
-	"scripts": {
-		"test": "elm-test",
-		"watch": "npm-watch"
-	},
-	"watch": {
-		"test": {
-			"patterns": [
-				"src",
-				"test"
-			],
-			"extensions": "elm",
-			"quiet": false
-		}
-	},
-	"engine-strict": true,
-	"engines": {
-		"node": ">=4.0.0"
-	},
-	"dependencies": {},
-	"devDependencies": {
-		"elm": "^0.18.0",
-		"elm-test": "^0.18.0",
-		"npm-watch": "^0.1.6"
-	}
+  "name": "cucumber-elm",
+  "description": "An implementation of Cucumber in Elm",
+  "version": "0.0.1",
+  "license": "BSD3",
+  "author": "Gunther Enthaler <genthaler@users.noreply.github.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/genthaler/cucumber-elm"
+  },
+  "bugs": {
+    "url": "https://github.com/genthaler/cucumber-elm/issues"
+  },
+  "bin": {
+    "elm-cuke": "supervisor/supervisor.js"
+  },
+  "keywords": [
+    "elm",
+    "bdd",
+    "spec",
+    "cucumber",
+    "gherkin",
+    "cli"
+  ],
+  "private": true,
+  "scripts": {
+    "prepare": "pushd supervisor && npm i && popd",
+    "test": "elm-test && pushd supervisor && npm test && popd && pushd example && npm test && popd"
+  },
+  "dependencies": {
+    "elmi-to-json": "^0.19.0",
+    "glob": "^7.1.3",
+    "node-elm-compiler": "^4.5.0",
+    "proxyquire": "^2.1.0",
+    "rambda": "^1.2.2",
+    "require-from-string": "^2.0.2",
+    "shelljs": "^0.8.2"
+  },
+  "devDependencies": {
+    "elm": "^0.19.0",
+    "elm-test": "^0.19.0-beta10"
+  }
 }

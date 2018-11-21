@@ -1,13 +1,6 @@
-module GherkinFixtures exposing (..)
+module GherkinFixtures exposing (background1, background2, backgroundContent2, butIAmTryingNotToBeAFool, examples, examplesContentWithTag, examplesWithTag, feature, featureContent, featureWith2ScenariosWithTagsContent, featureWithScenarioOutlineWithExamplesWithTags, featureWithScenarioOutlineWithExamplesWithTagsContent, featureWithScenarioWithTags, featureWithTags, featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTags, featureWithTagsAndScenarioWithTagsAndScenarioOutlineWithTagsWithExamplesWithTagsContent, givenIAmTryingToHaveFun, givenJumpsOverTheLazyDog, givenTheQuickBrownFox, givenTheWorldIsRound, noTags, nowIsTheTime, scenario, scenarioContent, scenarioOutline, scenarioOutlineContent, scenarioOutlineWithTags, scenarioOutlineWithTagsContent, scenarioWithTags, scenarioWithTagsContent, simpleFeature, simpleFeatureContent, simpleScenario, stepContent, stepContent2, table1, table2, tableContent1, tableRowContent, tagBlah, tagsFooBar)
 
 import Gherkin exposing (..)
-
-
-{-| defer execution
--}
-defer : a -> (() -> a)
-defer x =
-    \() -> x
 
 
 noTags : List a
@@ -52,7 +45,7 @@ nowIsTheTime =
 
 tableRowContent : String
 tableRowContent =
-    "| Now | is | the | time | "
+    "| Now | is | the | time |\n"
 
 
 table1 : Table
@@ -64,8 +57,9 @@ table1 =
 
 tableContent1 : String
 tableContent1 =
-    """ | Now | is | the | time |
-          | For | all | good | men | """
+    """| Now | is | the | time |
+          | For | all | good | men | 
+    """
 
 
 table2 : Table
@@ -79,7 +73,8 @@ stepContent : String
 stepContent =
     """Given I am trying to have fun
   | Now | is | the | time |
-  | For | all | good | men | """
+  | For | all | good | men | 
+  """
 
 
 stepContent2 : String
@@ -206,7 +201,8 @@ examplesContentWithTag =
     """@blah
     Examples:
       | Now |
-      | For | """
+      | For | 
+    """
 
 
 simpleFeature : Feature
@@ -319,7 +315,7 @@ featureWithScenarioOutlineWithExamplesWithTags =
         [ ScenarioOutline []
             "Have fun"
             [ givenIAmTryingToHaveFun, butIAmTryingNotToBeAFool ]
-            [ (Examples tagBlah table2) ]
+            [ Examples tagBlah table2 ]
         ]
 
 
