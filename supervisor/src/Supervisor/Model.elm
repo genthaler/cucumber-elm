@@ -53,7 +53,7 @@ type Model
     | InitGettingCurrentDirListing (State { initMakingDirectories : Allowed } { maybeCompilerPath : Maybe String })
     | InitMakingDirectories (State { initGettingUserProjectInfo : Allowed } { maybeCompilerPath : Maybe String })
     | InitGettingUserProjectInfo (State { initWritingTemplates : Allowed } { maybeCompilerPath : Maybe String })
-    | InitWritingTemplates (State {} {maybeCompilerPath : Maybe String})
+    | InitWritingTemplates (State {} {maybeCompilerPath : Maybe String, project : Elm.Project.Project})
     | RunStart (State { runGettingCurrentDirListing : Allowed } { runOptions : RunOptions })
     | RunGettingCurrentDirListing (State { runGettingUserProjectInfo : Allowed } { runOptions : RunOptions })
     | RunGettingUserProjectInfo (State { runGettingUserCucumberProjectInfo : Allowed } { runOptions : RunOptions })
@@ -93,9 +93,9 @@ toInitGettingUserProjectInfo (State state) =
     InitGettingUserProjectInfo <| State state
 
 
-toInitWritingTemplates : State { a | initWritingTemplates : Allowed } { maybeCompilerPath : Maybe String } -> Model
-toInitWritingTemplates (State state) =
-    InitWritingTemplates <| State state
+toInitWritingTemplates : State { a | initWritingTemplates : Allowed } { maybeCompilerPath : Maybe String } -> Elm.Project.Project-> Model
+toInitWritingTemplates (State state) project =
+    InitWritingTemplates <| State {maybeCompilerPath = state.maybeCompilerPath, project=project}
 
 
 

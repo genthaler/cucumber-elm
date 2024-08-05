@@ -74,7 +74,7 @@ update _ msg model =
                 |> Result.andThen mapUserProjectToCucumberProject
                 |> Result.map
                     (\cucumberProject ->
-                        ( toInitWritingTemplates state
+                        ( toInitWritingTemplates state cucumberProject
                         , fileWriteRequest
                             [ ( [ "cucumber", "elm.json" ], cucumberProject |> Elm.Project.encode |> E.encode 4 )
                             , ( [ "cucumber", "src", "ExampleStepDefs.elm" ], templateStepDefs )
@@ -86,6 +86,7 @@ update _ msg model =
         ( InitWritingTemplates (State state), Stdout stdout ) ->
             Ok ( toRunStart (RunOptions Nothing Nothing state.maybeCompilerPath Nothing False Console [ "example.feature" ]), message NoOp )
 
+        -- Start of Run states
         ( RunStart state, NoOp ) ->
             Ok ( toRunGettingCurrentDirListing state, fileListRequest [ "." ] "*" )
 

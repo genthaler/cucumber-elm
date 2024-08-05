@@ -145,21 +145,34 @@ validateProject project =
 
 {-| Take a regular elm.json, and turn it into an elm.json that can be used to compile and run a Cucumber test suite.
 
-This entails adding cucumber to the dependencies, and swizzling the source directories so they point to the right locations.
+This entails:
+
+  - adding cucumber to the dependencies, and
+  - swizzling the source directories so they point to the right locations.
+
+Note that a Cucumber project will always be an application, so we have to translate packages to applications.
 
 -}
 mapUserProjectToCucumberProject : Elm.Project.Project -> Result String Elm.Project.Project
 mapUserProjectToCucumberProject project =
-    case project of
+    let
+        swizzleDirs =
+            identity
+    in
+    case project of 
         Elm.Project.Application { elm, dirs, depsDirect, depsIndirect, testDepsDirect, testDepsIndirect } ->
             Result.map2 Tuple.pair (nameResult cucumberElmPackageName) (versionResult cucumberVersionString)
                 |> Result.map
-                    (\dep_ -> Elm.Project.Application <| Elm.Project.ApplicationInfo elm dirs (addPackage depsDirect dep_) (removePackage depsIndirect dep_) testDepsDirect testDepsIndirect)
+                    (\dep_ -> Elm.Project.Application <| Elm.Project.ApplicationInfo elm (swizzleDirs dirs) (addPackage depsDirect dep_) (removePackage depsIndirect dep_) testDepsDirect testDepsIndirect)
 
         Elm.Project.Package { name, summary, license, version, exposed, deps, testDeps, elm } ->
-            Result.map2 Tuple.pair (nameResult cucumberElmPackageName) (constraintResult cucumberConstraintString)
-                |> Result.map
-                    (\dep_ -> Elm.Project.Package <| Elm.Project.PackageInfo name summary license version exposed (addPackage deps dep_) testDeps elm)
+                Result.map2 
+                    (\elm_ dep_ -> Elm.Project.Application <| Elm.Project.ApplicationInfo elm_ (swizzleDirs ["src"]) [] [] []  [])
+                        (versionResult elmVersionString)
+                        (Result.map2 Tuple.pair (nameResult cucumberElmPackageName) (constraintResult cucumberConstraintString))
+
+
+                    -- (\dep_ -> Elm.Project.Package <| Elm.Project.PackageInfo name summary license version exposed (addPackage deps dep_) testDeps elm)
 
 
 {-| Decodes the output of elmi-to-json into a list of tuples of module name and list of names of methods for the module that implement Stepdefs
