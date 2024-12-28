@@ -40,7 +40,7 @@
 	"dependencies": {},
 	"devDependencies": {
 		"elm": "^0.19.1-5",
-		"elm-test": "^0.18.13",
+		"elm-test": "^0.19.1-revision12",
 		"npm-watch": "^0.1.6"
 	}
 }
