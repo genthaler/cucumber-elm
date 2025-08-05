@@ -39,8 +39,5 @@
 	},
 	"dependencies": {},
 	"devDependencies": {
-		"elm": "^0.19.1-5",
-		"elm-test": "^0.19.1-revision12",
-		"npm-watch": "^0.13.0"
 	}
 }
