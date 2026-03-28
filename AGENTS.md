@@ -11,8 +11,7 @@ Completed work:
 - captured the key constraint that the design should work with existing Elm tooling and editor integrations where possible, especially through `elm-test`
 - created a project vision document at `docs/project-vision.md`
 - created a requirements document at `docs/requirements.md`
-- created a repo-local git skill at `.agents/skills/git/`
-- committed the documentation and the local git skill on branch `codex/requirements-elicitation`
+- committed the documentation work on branch `codex/requirements-elicitation`
 
 ## Current Direction
 
@@ -37,5 +36,3 @@ The current intended direction is:
 
 - `docs/project-vision.md`
 - `docs/requirements.md`
-- `.agents/skills/git/SKILL.md`
-- `.agents/skills/git/agents/openai.yaml`
