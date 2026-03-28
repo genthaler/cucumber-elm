@@ -1,4 +1,0 @@
-interface:
-  display_name: "Git Skill"
-  short_description: "Summarize git changes"
-  default_prompt: "Inspect the current git diff, check branch naming against the repo's codex/* rule, and suggest a short imperative commit message with the right change-type prefix."
