@@ -1,38 +1,35 @@
 # AGENTS
 
-## Session Summary
+## Scope
 
-This session focused on requirements elicitation and repository guidance rather than product code changes.
+This file should stay concise and repository-specific.
+Use it for durable project context, architecture direction, and local conventions.
+Do not use it as a session log or a checklist of completed work.
 
-Completed work:
+## Project Direction
 
-- scanned the repository and identified the current shape as an Elm-native Gherkin/Cucumber library rather than a complete working app
-- clarified the intended project direction as Cucumber-style BDD for Elm, adapted to Elm's constraints
-- captured the key constraint that the design should work with existing Elm tooling and editor integrations where possible, especially through `elm-test`
-- created a project vision document at `docs/project-vision.md`
-- created a requirements document at `docs/requirements.md`
-- committed the documentation work on branch `codex/requirements-elicitation`
+This repository is intended to become an Elm-native Cucumber-style BDD library, not a general application.
 
-## Current Direction
-
-The current intended direction is:
+Current direction:
 
 - use Gherkin as the authoring format
 - use explicit Elm step handlers rather than reflection-based discovery
-- prefer compatibility with standard Elm test workflows over building a separate bespoke runtime
-- treat additional IDE integration as optional follow-on work, not a requirement for the core experience
+- integrate with standard Elm test workflows where possible, especially `elm-test`
+- treat extra IDE integration as optional follow-on work rather than a core requirement
 
-## Current Branch
-
-- `codex/requirements-elicitation`
-
-## Notable Repo Observations
-
-- the core value of the repo is in the parser, AST, runner, and tests
-- the repository still targets Elm `0.18`
-- the frontend scaffold appears stale and incomplete relative to the library code
-
-## Relevant Files Added This Session
+The source-of-truth documents for this direction are:
 
 - `docs/project-vision.md`
 - `docs/requirements.md`
+
+## Repo-Specific Guidance
+
+- Prioritize work in the parser, AST, runner, and tests; that is where the core value of the repository currently sits.
+- Treat the frontend scaffold as stale unless the task explicitly requires touching it.
+- Keep Elm `0.18` compatibility in mind when proposing or implementing changes.
+- Prefer changes that preserve or improve compatibility with normal Elm tooling and editor workflows rather than introducing a separate bespoke runtime.
+
+## Maintenance
+
+- Keep this file focused on stable repository context and conventions.
+- Move reusable procedures, personal workflow preferences, thread-routing habits, and tool-specific playbooks into user-level or repo-local skills instead of expanding this file.
